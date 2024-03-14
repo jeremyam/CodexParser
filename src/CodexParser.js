@@ -24,7 +24,6 @@ export default class CodexParser {
     }
     
     scan(text) {
-        let matches = text.match(this.scripturesRegex)
-        console.log(matches)
+        this.passages = text.match(this.scripturesRegex)
     }
 }
