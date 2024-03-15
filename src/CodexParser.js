@@ -27,11 +27,11 @@ export default class CodexParser {
         this.scan(reference)
         for (let i = 0; i < this.found.length; i++) {
             const book = this.found[i].match(this.bookRegex)
-            const chapterMatch = this.found[i].replace(book[0], "").match(this.chapterRegex)
+            const chapter = this.found[i].replace(book[0], "").match(this.chapterRegex)
             const passage = {
                 original: this.found[i],
                 book: book[0],
-                chapter: chapterMatch[0].replace(":", "").trim(),
+                chapter: chapter[0].replace(":", "").trim(),
                 verse: this.found[i].match(this.verseRegex)[0].replace(":", "").trim(),
             }
             passage.verse = passage.verse.split(/,/).filter(Boolean)
