@@ -20,21 +20,22 @@ export default class CodexParser {
     /**
      * Parses the passage using the bookRegex.
      *
-     * @param {string} passage - the passage to be parsed
+     * @param {string} reference - the passage to be parsed
      * @return {Array|null} an array of matches or null if there are no matches
      */
-    parse(passage) {
-        this.scan(passage)
+    parse(reference) {
+        this.scan(reference)
         for (let i = 0; i < this.found.length; i++) {
+            const book = this.found[i].match(this.bookRegex)
+            const chapterMatch = this.found[i].replace(book[0], "").match(this.chapterRegex)
             const passage = {
                 original: this.found[i],
-                book: this.found[i].match(this.bookRegex)[0],
-                chapter: this.found[i].replace(this.bookRegex).match(this.chapterRegex)[0].replace(":", "").trim(),
+                book: book[0],
+                chapter: chapterMatch[0].replace(":", "").trim(),
                 verse: this.found[i].match(this.verseRegex)[0].replace(":", "").trim(),
             }
-            if(/,/.test(passage.verse)){
-                passage.verse = passage.verse.split(/,/)
-            }
+            passage.verse = passage.verse.split(/,/).filter(Boolean)
+            passage.testament = this.bible.old.includes(passage.book) ? "old" : "new"
             this.passages.push(passage)
         }
     }
