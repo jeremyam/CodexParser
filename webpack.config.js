@@ -9,7 +9,7 @@ export default {
         main: ["./src/bible.js", "./src/regex.js", "./src/CodexParser.js"],
     },
     output: {
-        filename: "CodeParser.js",
+        filename: "CodexParser.js",
         path: path.resolve(__dirname, "./dist"),
         library: "CodexParser",
         libraryTarget: "umd",
