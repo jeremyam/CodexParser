@@ -24,6 +24,7 @@ export default class CodexParser {
      * @return {Array|null} an array of matches or null if there are no matches
      */
     parse(reference) {
+        this.passages = []
         this.scan(reference)
         for (let i = 0; i < this.found.length; i++) {
             const book = this.found[i].match(this.bookRegex)
@@ -38,6 +39,7 @@ export default class CodexParser {
             passage.testament = this.bible.old.includes(passage.book) ? "old" : "new"
             this.passages.push(passage)
         }
+        this.found = []
     }
 
     /**
