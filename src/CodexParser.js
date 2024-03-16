@@ -8,8 +8,6 @@ export default class CodexParser {
         this.found = []
         this.passages = []
         this.bible = bible
-        this.nt = false
-        this.ot = false
         this.bookRegex = regex.books
         this.bookAbbrRegex = regex.abbrBooks
         this.chapterRegex = regex.chapter
