@@ -5,4 +5,4 @@ const text = 'The passages that we are looking at tonight are found in 1 John 3:
 const single = 'Revelation 16:8'
 parser.parse(text)
 parser.parse(single)
-console.log(parser)
+console.log(parser.getPassages())

@@ -7,7 +7,7 @@
     "test": "echo \"Error: no test specified\" && exit 1",
     "build": "webpack --mode=production"
   },
-  "author": "",
+  "author": "Jeremy Menicucci",
   "license": "ISC",
   "type": "module",
   "devDependencies": {
