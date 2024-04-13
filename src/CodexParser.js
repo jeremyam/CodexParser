@@ -53,7 +53,7 @@ class CodexParser {
         this.found = []
         return this.passages
     }
-
+    //TODO: Need to create a bookfiy function that will convert abbreviated books into full books
     /**
      * Returns the passages stored in the object.
      *
