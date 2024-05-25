@@ -1,5 +1,6 @@
 const bible = require("./bible")
 const { bookRegex, bookAbbrRegex, chapterRegex, verseRegex, scripturesRegex, abbrScripturesRegex } = require("./regex")
+const abbrevations = require("./abbr")
 
 class CodexParser {
     constructor() {
@@ -12,6 +13,7 @@ class CodexParser {
         this.verseRegex = verseRegex
         this.scripturesRegex = scripturesRegex
         this.abbrScripturesRegex = abbrScripturesRegex
+        this.abbrevations = abbrevations
     }
 
     /**
@@ -55,17 +57,22 @@ class CodexParser {
     }
     bookify(book) {
         let bookified
-        bookified = this.bible.new.find(
-            (b) =>
-                b.charAt(0).toLowerCase() === book.charAt(0).toLowerCase() &&
-                b.toLowerCase().includes(book.toLowerCase())
-        )
+
+        bookified = this.abbrevations[book]
+
         if (!bookified) {
-            bookified = this.bible.old.find(
+            bookified = this.bible.new.find(
                 (b) =>
                     b.charAt(0).toLowerCase() === book.charAt(0).toLowerCase() &&
                     b.toLowerCase().includes(book.toLowerCase())
             )
+            if (!bookified) {
+                bookified = this.bible.old.find(
+                    (b) =>
+                        b.charAt(0).toLowerCase() === book.charAt(0).toLowerCase() &&
+                        b.toLowerCase().includes(book.toLowerCase())
+                )
+            }
         }
         return bookified
     }
