@@ -3,7 +3,7 @@ const bookRegex =
 const bookAbbrRegex =
     /(?:(?:[gG]en|[eE]xo|[lL]ev|[nN]um|[dD]eu|[jJ]os|[jJ]dg|[rR]ut|1 [sS]a|2 [sS]a|1 [kK]gs|2 [kK]gs|1 [cC]hr|2 [cC]hr|[eE]zr|[nN]eh|[eE]st|[jJ]ob|[pP]sa|[pP]ro|[eE]cc|[sS]on|[iI]sa|[jJ]er|[lL]am|[eE]ze|[dD]an|[hH]os|[jJ]oe|[aA]mo|[oO]ba|[jJ]on|[mM]ic|[nN]ah|[hH]ab|[zZ]ep|[hH]ag|[zZ]ec|[mM]al|[mM]att|[mM]ar|[lL]uk|[jJ]oh|[aA]ct|[rR]om|1 [cC]or|2 [cC]or|[gG]al|[eE]ph|[pP]hi|[cC]ol|1 [tT]hess|2 [tT]hess|1 [tT]i|2 [tT]i|[tT]it|[pP]hm|[hH]eb|[jJ]am|1 [pP]e|2 [pP]e|1 [jJ]o|2 [jJ]o|3 [jJ]o|[jJ]ud|[rR]ev))/gim
 const chapterRegex = /(?:\s?\d+:?)/g
-const verseRegex = /\b:\s*?(\d+(?:,?\s*?\d+?|-|–|—\d+)*)?\d+(?!p|j|k|s|c|t)\b/g
+const verseRegex = /\b[:|.]\s*?(\d+(?:,?\s*?\d+?|-|–|—\d+)*)?\d+(?!p|j|k|s|c|t)\b/g
 const scripturesRegex = new RegExp(`(${bookRegex.source})(${chapterRegex.source})?(${verseRegex.source})`, "gm")
 const abbrScripturesRegex = new RegExp(`(${bookAbbrRegex.source})(${chapterRegex.source})?(${verseRegex.source})`, "gm")
 

@@ -43,8 +43,8 @@ class CodexParser {
             const passage = {
                 original: this.found[i],
                 book: book[0].charAt(0).toUpperCase() + book[0].slice(1),
-                chapter: chapter[0].replace(":", "").trim(),
-                verses: this.found[i].match(this.verseRegex)[0].replace(":", "").trim(),
+                chapter: chapter[0].replace(/[:.]/, "").trim(),
+                verses: this.found[i].match(this.verseRegex)[0].replace(/[:.]/, "").trim(),
             }
             passage.verses = passage.verses.split(/,/).filter(Boolean)
             passage.testament = this.bible.old.includes(passage.book) ? "old" : "new"
