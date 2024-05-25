@@ -55,9 +55,17 @@ class CodexParser {
     }
     bookify(book) {
         let bookified
-        bookified = this.bible.new.find((b) => b.toLowerCase().includes(book.toLowerCase()))
+        bookified = this.bible.new.find(
+            (b) =>
+                b.charAt(0).toLowerCase() === book.charAt(0).toLowerCase() &&
+                b.toLowerCase().includes(book.toLowerCase())
+        )
         if (!bookified) {
-            bookified = this.bible.old.find((b) => b.toLowerCase().includes(book.toLowerCase()))
+            bookified = this.bible.old.find(
+                (b) =>
+                    b.charAt(0).toLowerCase() === book.charAt(0).toLowerCase() &&
+                    b.toLowerCase().includes(book.toLowerCase())
+            )
         }
         return bookified
     }
