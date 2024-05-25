@@ -42,7 +42,7 @@ class CodexParser {
             const chapter = this.found[i].replace(book[0], "").match(this.chapterRegex)
             const passage = {
                 original: this.found[i],
-                book: book[0].charAt(0).toUpperCase() + book[0].slice(1),
+                book: this.bookify(book[0].charAt(0).toUpperCase() + book[0].slice(1)),
                 chapter: chapter[0].replace(/[:.]/, "").trim(),
                 verses: this.found[i].match(this.verseRegex)[0].replace(/[:.]/, "").trim(),
             }
@@ -52,6 +52,14 @@ class CodexParser {
         }
         this.found = []
         return this.passages
+    }
+    bookify(book) {
+        let bookified
+        bookified = this.bible.new.find((b) => b.toLowerCase().includes(book.toLowerCase()))
+        if (!bookified) {
+            bookified = this.bible.old.find((b) => b.toLowerCase().includes(book.toLowerCase()))
+        }
+        return bookified
     }
     //TODO: Need to create a bookfiy function that will convert abbreviated books into full books
     /**
