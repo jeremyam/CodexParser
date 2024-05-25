@@ -9,7 +9,6 @@
   },
   "author": "Jeremy Menicucci",
   "license": "ISC",
-  "type": "module",
   "devDependencies": {
     "@babel/cli": "^7.23.9",
     "@babel/core": "^7.24.0",

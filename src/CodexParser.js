@@ -1,5 +1,5 @@
-import { bible } from "./bible.js"
-import { bookRegex, bookAbbrRegex, chapterRegex, verseRegex, scripturesRegex, abbrScripturesRegex } from "./regex.js"
+const bible = require("./bible")
+const { bookRegex, bookAbbrRegex, chapterRegex, verseRegex, scripturesRegex, abbrScripturesRegex } = require("./regex")
 
 class CodexParser {
     constructor() {
@@ -44,9 +44,9 @@ class CodexParser {
                 original: this.found[i],
                 book: book[0].charAt(0).toUpperCase() + book[0].slice(1),
                 chapter: chapter[0].replace(":", "").trim(),
-                verse: this.found[i].match(this.verseRegex)[0].replace(":", "").trim(),
+                verses: this.found[i].match(this.verseRegex)[0].replace(":", "").trim(),
             }
-            passage.verse = passage.verse.split(/,/).filter(Boolean)
+            passage.verses = passage.verses.split(/,/).filter(Boolean)
             passage.testament = this.bible.old.includes(passage.book) ? "old" : "new"
             this.passages.push(passage)
         }
@@ -64,4 +64,4 @@ class CodexParser {
     }
 }
 
-export default CodexParser
+module.exports = CodexParser

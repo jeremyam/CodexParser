@@ -1,4 +1,4 @@
-export const bible = {
+module.exports = {
     old: [
         "Genesis",
         "Exodus",
