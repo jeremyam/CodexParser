@@ -39,6 +39,7 @@ class CodexParser {
         }
         this.passages = []
         this.scan(reference)
+        console.log(this.found)
         for (let i = 0; i < this.found.length; i++) {
             const book = this.found[i].match(this.bookRegex)
             const chapter = this.found[i].replace(book[0], "").match(this.chapterRegex)
