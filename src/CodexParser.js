@@ -1,6 +1,7 @@
 const bible = require("./bible")
 const { bookRegex, bookAbbrRegex, chapterRegex, verseRegex, scripturesRegex, abbrScripturesRegex } = require("./regex")
 const abbrevations = require("./abbr")
+const toc = require("./toc")
 
 class CodexParser {
     constructor() {
@@ -14,6 +15,7 @@ class CodexParser {
         this.scripturesRegex = scripturesRegex
         this.abbrScripturesRegex = abbrScripturesRegex
         this.abbrevations = abbrevations
+        this.toc = toc
     }
 
     /**
