@@ -41,8 +41,6 @@ class CodexParser {
         this.scan(reference)
         for (let i = 0; i < this.found.length; i++) {
             const hasChapterRange = this.found[i].match(/(?<=-\s?)\b\d+[.:].+\b/)
-            console.log( this.found[i])
-            console.log(hasChapterRange)
             const book = this.found[i].match(this.bookRegex)
             const chapter = this.found[i].replace(book[0], "").match(this.chapterRegex)
             const verse = this.found[i].match(this.verseRegex)[0].replace(/[:.]/, "").trim()
@@ -64,8 +62,10 @@ class CodexParser {
             }
             passage.verses = passage.verses.split(/,/).filter(Boolean)
             passage.testament = this.bible.old.includes(passage.book) ? "old" : "new"
+            passage.scripture = this.scripturize(passage)
             this.passages.push(passage)
         }
+
         this.found = []
         return this.passages
     }
@@ -108,6 +108,21 @@ class CodexParser {
      */
     getPassages() {
         return this.passages
+    }
+
+    /**
+     * @param {object} passage - A passage object
+     */
+    scripturize(passage) {
+        const { book, chapter, verses, to } = passage
+        const parts = [book, chapter, ":", verses]
+        if (to) {
+            parts.push("-", to.chapter, ":", to.verses)
+        }
+        return parts
+            .join(" ")
+            .replace(/\s+:\s+/g, ":")
+            .trim()
     }
 }
 
