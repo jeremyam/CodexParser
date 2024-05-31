@@ -1,5 +1,5 @@
 const bible = require("./bible")
-const { bookRegex, bookAbbrRegex, chapterRegex, verseRegex, scripturesRegex, abbrScripturesRegex } = require("./regex")
+const { bookRegex, chapterRegex, verseRegex, scripturesRegex } = require("./regex")
 const abbrevations = require("./abbr")
 const toc = require("./toc")
 
@@ -9,11 +9,9 @@ class CodexParser {
         this.passages = []
         this.bible = bible
         this.bookRegex = bookRegex
-        this.bookAbbrRegex = bookAbbrRegex
         this.chapterRegex = chapterRegex
         this.verseRegex = verseRegex
         this.scripturesRegex = scripturesRegex
-        this.abbrScripturesRegex = abbrScripturesRegex
         this.abbrevations = abbrevations
         this.toc = toc
     }
@@ -79,7 +77,7 @@ class CodexParser {
         }
         return bookified
     }
-    //TODO: Need to create a bookfiy function that will convert abbreviated books into full books
+
     /**
      * Returns the passages stored in the object.
      *
