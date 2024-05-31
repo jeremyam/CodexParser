@@ -44,6 +44,7 @@ class CodexParser {
             const book = this.found[i].match(this.bookRegex)
             const chapter = this.found[i].replace(book[0], "").match(this.chapterRegex)
             const verse = this.found[i].match(this.verseRegex)[0].replace(/[:.]/, "").trim()
+            console.log(this.found[i].match(this.verseRegex))
             const passage = {
                 original: this.found[i],
                 book: this.bookify(book),
