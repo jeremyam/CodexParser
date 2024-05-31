@@ -1,5 +1,5 @@
 const bible = require("./bible")
-const { bookRegex, chapterRegex, verseRegex, scripturesRegex, scanRegex } = require("./regex")
+const { bookRegex, chapterRegex, verseRegex, scripturesRegex } = require("./regex")
 const abbrevations = require("./abbr")
 const toc = require("./toc")
 
@@ -12,7 +12,6 @@ class CodexParser {
         this.chapterRegex = chapterRegex
         this.verseRegex = verseRegex
         this.scripturesRegex = scripturesRegex
-        this.scanRegex = scanRegex
         this.abbrevations = abbrevations
         this.toc = toc
     }
@@ -24,7 +23,7 @@ class CodexParser {
      * @return {array} The found passages from the text.
      */
     scan(text) {
-        this.found = text.match(this.scanRegex)
+        this.found = text.match(this.scripturesRegex)
         return this.found
     }
 

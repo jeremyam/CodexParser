@@ -4,16 +4,11 @@ const chapterRegex = /\b(?:\s?\d+[:|\.]?)\b/gm
 const verseRegex = /\b[:.]\s*?(\d+(?:,?\s*?\d+?|-|–|—\d+)*)?\d+\b/gm
 const chapterRange = /\s?(?:[-|—|–])\s?/gm
 const chapterRangeVerseRegex = /.\d+/gm
-const scanRegex = new RegExp(
+const scripturesRegex = new RegExp(
     `(${bookRegex.source})(${chapterRegex.source})?(${verseRegex.source})(${chapterRange.source}?)?(${chapterRangeVerseRegex.source})?(${chapterRegex.source})?(${chapterRangeVerseRegex.source})?`,
     "gmi"
 )
-const scripturesRegex = new RegExp(
-    `(${bookRegex.source})(${chapterRegex.source})?(${verseRegex.source})((${chapterRange.source})?((${chapterRegex.source})?(${verseRegex.source})?)(${chapterRangeVerseRegex.source})?)`,
-    "gmi"
-)
 
-module.exports.scanRegex = scanRegex
 module.exports.bookRegex = bookRegex
 module.exports.chapterRegex = chapterRegex
 module.exports.scripturesRegex = scripturesRegex
