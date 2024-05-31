@@ -39,15 +39,28 @@ class CodexParser {
         }
         this.passages = []
         this.scan(reference)
-        console.log(this.found)
         for (let i = 0; i < this.found.length; i++) {
+            const hasChapterRange = this.found[i].match(/(?<=-\s?)\b\d+[.:].+\b/)
+            console.log( this.found[i])
+            console.log(hasChapterRange)
             const book = this.found[i].match(this.bookRegex)
             const chapter = this.found[i].replace(book[0], "").match(this.chapterRegex)
+            const verse = this.found[i].match(this.verseRegex)[0].replace(/[:.]/, "").trim()
             const passage = {
                 original: this.found[i],
-                book: this.bookify(book[0].charAt(0).toUpperCase() + book[0].slice(1)),
-                chapter: chapter[0].replace(/[:.]/, "").trim(),
-                verses: this.found[i].match(this.verseRegex)[0].replace(/[:.]/, "").trim(),
+                book: this.bookify(book),
+                chapter: this.chapterify(chapter),
+                verses: verse,
+            }
+
+            if (hasChapterRange) {
+                passage.to = {
+                    book: passage.book,
+                    chapter: this.chapterify(hasChapterRange[0].match(this.chapterRegex)),
+                    verses: hasChapterRange[0].match(this.verseRegex)[0].replace(/[:.]/, "").trim(),
+                }
+                passage.to.verses = passage.to.verses.split(/,/).filter(Boolean)
+                passage.to.testament = this.bible.old.includes(passage.to.book) ? "old" : "new"
             }
             passage.verses = passage.verses.split(/,/).filter(Boolean)
             passage.testament = this.bible.old.includes(passage.book) ? "old" : "new"
@@ -56,9 +69,19 @@ class CodexParser {
         this.found = []
         return this.passages
     }
+    chapterify(chapter) {
+        return chapter[0].replace(/[:\.]/, "").trim()
+    }
+
+    /**
+     * Converts a book name to its corresponding full name from the bible.
+     *
+     * @param {string} book - The abbreviated or partial name of the book.
+     * @return {string|undefined} The full name of the book if found, otherwise undefined.
+     */
     bookify(book) {
         let bookified
-
+        book = book[0].charAt(0).toUpperCase() + book[0].slice(1)
         bookified = this.abbrevations[book]
 
         if (!bookified) {
