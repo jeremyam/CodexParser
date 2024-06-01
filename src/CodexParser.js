@@ -42,7 +42,6 @@ class CodexParser {
         for (let i = 0; i < this.found.length; i++) {
             const hasChapterRange = this.found[i].match(/(?<=-\s?)\b\d+[.:].+\b/)
             const book = this.found[i].match(this.bookRegex)
-            console.log(book)
             const chapter = this.found[i].replace(book[0], "").match(this.chapterRegex)
             const verse = this.found[i].match(this.verseRegex)[0].replace(/[:.]/, "").trim()
             const passage = {
