@@ -23,15 +23,7 @@ class CodexParser {
      * @return {array} The found passages from the text.
      */
     scan(text) {
-        const judeRegex = /\b(?:[J|j][ude|d]+)\.?\s?\d+\b/gim
-        const jude = text.match(judeRegex)
         this.found = text.match(this.scripturesRegex)
-        if (!this.found) {
-            this.found = []
-        }
-        if (jude) {
-            this.found.push(...jude.map((item) => item.trim()))
-        }
         return this.found
     }
 
@@ -48,20 +40,13 @@ class CodexParser {
         this.passages = []
         this.scan(reference)
         for (let i = 0; i < this.found.length; i++) {
-            console.log(this.found[i])
             const hasChapterRange = this.found[i].match(/(?<=-\s?)\b\d+[.:].+\b/)
-            const book = this.bookify(this.found[i].match(this.bookRegex))
-            let chapter, verse
-            if (book.toLowerCase() !== "jude") {
-                chapter = this.found[i].replace(book[0], "").match(this.chapterRegex)
-                verse = this.found[i].match(this.verseRegex)[0].replace(/[:.]/, "").trim()
-            } else {
-                chapter = 1
-                verse = this.found[i].replace(book[0], "").match(this.chapterRegex)
-            }
+            const book = this.found[i].match(this.bookRegex)
+            const chapter = this.found[i].replace(book[0], "").match(this.chapterRegex)
+            const verse = this.found[i].match(this.verseRegex)[0].replace(/[:.]/, "").trim()
             const passage = {
                 original: this.found[i],
-                book: book,
+                book: this.bookify(book),
                 chapter: this.chapterify(chapter),
                 verses: verse,
             }
@@ -75,12 +60,7 @@ class CodexParser {
                 passage.to.verses = passage.to.verses.split(/,/).filter(Boolean)
                 passage.to.testament = this.bible.old.includes(passage.to.book) ? "old" : "new"
             }
-            console.log(typeof passage.verses)
-            if (typeof passage.verses === "object" || typeof passage.verses === "array") {
-                passage.verses = passage.verses.map((verse) => verse.trim())
-            } else {
-                passage.verses.split(/,/).filter(Boolean)
-            }
+            passage.verses = passage.verses.split(/,/).filter(Boolean)
             passage.testament = this.bible.old.includes(passage.book) ? "old" : "new"
             passage.scripture = this.scripturize(passage)
             this.passages.push(passage)
@@ -90,8 +70,7 @@ class CodexParser {
         return this.passages
     }
     chapterify(chapter) {
-        if (typeof chapter === "array") return chapter[0].replace(/[:\.]/, "").trim()
-        else return chapter
+        return chapter[0].replace(/[:\.]/, "").trim()
     }
 
     /**
