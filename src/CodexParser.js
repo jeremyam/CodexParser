@@ -23,7 +23,16 @@ class CodexParser {
      * @return {array} The found passages from the text.
      */
     scan(text) {
+        const judeRegex = /(?:[j|J][d|ude]+.?\s?\d+)/gim
+        const jude = text.match(judeRegex)
         this.found = text.match(this.scripturesRegex)
+        if (!this.found) {
+            this.found = []
+        }
+        if (jude) {
+            this.found.push(...jude)
+        }
+        console.log(this.found)
         return this.found
     }
 
@@ -42,8 +51,14 @@ class CodexParser {
         for (let i = 0; i < this.found.length; i++) {
             const hasChapterRange = this.found[i].match(/(?<=-\s?)\b\d+[.:].+\b/)
             const book = this.found[i].match(this.bookRegex)
-            const chapter = this.found[i].replace(book[0], "").match(this.chapterRegex)
-            const verse = this.found[i].match(this.verseRegex)[0].replace(/[:.]/, "").trim()
+            let verse,
+                chapter = this.found[i].replace(book[0], "").match(this.chapterRegex)
+            if (this.found[i].match(this.verseRegex))
+                verse = this.found[i].match(this.verseRegex)[0].replace(/[:.]/, "").trim()
+            else {
+                verse = chapter
+                chapter = "1"
+            }
             const passage = {
                 original: this.found[i],
                 book: this.bookify(book),
@@ -60,7 +75,10 @@ class CodexParser {
                 passage.to.verses = passage.to.verses.split(/,/).filter(Boolean)
                 passage.to.testament = this.bible.old.includes(passage.to.book) ? "old" : "new"
             }
-            passage.verses = passage.verses.split(/,/).filter(Boolean)
+            passage.verses =
+                typeof passage.verses !== "object"
+                    ? passage.verses.split(/,/).filter(Boolean)
+                    : passage.verses.filter((item) => item.trim())
             passage.testament = this.bible.old.includes(passage.book) ? "old" : "new"
             passage.scripture = this.scripturize(passage)
             this.passages.push(passage)

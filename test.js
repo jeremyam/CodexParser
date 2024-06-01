@@ -7,4 +7,7 @@ const single = "Ge 27.27-29,89-40 Heb 11.20"
 const jd = "Jd. 5"
 const passages = parser.parse(single)
 console.log(passages)
-
+const textParser = parser.parse(text)
+console.log(textParser)
+const jude = parser.parse(jd)
+console.log(jude)
