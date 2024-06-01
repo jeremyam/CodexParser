@@ -32,7 +32,6 @@ class CodexParser {
         if (jude) {
             this.found.push(...jude)
         }
-        console.log(this.found)
         return this.found
     }
 
