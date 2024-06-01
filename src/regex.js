@@ -7,7 +7,7 @@ const chapterRangeVerseRegex = /(?:.\d+)?/gm
 const chapterVerseRange =
     /.?\s?\d+((?:[:.]\d+)?(\s?[-–—]\s?)?(?:\d+)(?:(,\s\d+)*)?([:.]?\d+)?(,\s?\d+[–—-]\s?\d+)?)?/gim
 const scripturesRegex = new RegExp(`(${bookRegex.source})(${chapterVerseRange.source})`, "gmi")
-
+console.log(scripturesRegex)
 module.exports.bookRegex = bookRegex
 module.exports.chapterRegex = chapterRegex
 module.exports.scripturesRegex = scripturesRegex
