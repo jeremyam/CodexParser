@@ -50,14 +50,18 @@ class CodexParser {
         for (let i = 0; i < this.found.length; i++) {
             const hasChapterRange = this.found[i].match(/(?<=-\s?)\b\d+[.:].+\b/)
             const book = this.found[i].match(this.bookRegex)
-            if(book === null) continue
+            if (book === null) continue
             let verse,
                 chapter = this.found[i].replace(book[0], "").match(this.chapterRegex)
             if (this.found[i].match(this.verseRegex))
                 verse = this.found[i].match(this.verseRegex)[0].replace(/[:.]/, "").trim()
             else {
-                verse = chapter
-                chapter = "1"
+                if (this.bookify(book).toLowerCase() === "jude" || this.bookify(book).toLowerCase() === "philemon") {
+                    verse = chapter
+                    chapter = "1"
+                } else {
+                    verse = []
+                }
             }
             const passage = {
                 original: this.found[i],
@@ -133,7 +137,8 @@ class CodexParser {
      */
     scripturize(passage) {
         const { book, chapter, verses, to } = passage
-        const parts = [book, chapter, ":", verses]
+        const colon = verses.length !== 0 ? ":" : ""
+        const parts = [book, chapter, colon, verses]
         if (to) {
             parts.push("-", to.chapter, ":", to.verses)
         }
