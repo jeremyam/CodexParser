@@ -64,7 +64,7 @@ class CodexParser {
                 }
             }
             const passage = {
-                original: this.found[i],
+                original: this.found[i].replace(/([.,])\1*$/, "").trim(),
                 book: this.bookify(book),
                 chapter: this.chapterify(chapter),
                 verses: verse,
