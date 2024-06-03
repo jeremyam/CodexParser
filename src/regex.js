@@ -4,7 +4,7 @@ const verseRegex = /\b[:.](\d+(?:,?\s*?\d+?|-|–|—\d+)*)?\d+(?:[abcde])?(?:,\
 const chapterRange = /.?\s?(?:[-—–])\s?/gm
 const chapterRangeVerseRegex = /(?:.\d+)?/gm
 const chapterVerseRange =
-    /.?\s?\d+((?:[:.]\d+)?(\s?[-–—]\s?)?(?:\d+)(?:(,\s?\d+)*)?\S([:.]?\d+)?(,\s?\d+[–—-]\s?\d+)?)?(?:[:.]\d+)?(?:[abcde])?(?:,\d+)*/gim
+    /.?\s?\d+((?:[:.]\d+)?(\s?[-–—]\s?)?(?:\d+)(?:(,\s?\d+)*)?\S([:.]?\d+)?(,\s?\d+[–—-]\s?\d+)?)?(?:[:.]\d+)?(?:[abcde])?(?:,\d+)*(?:[-–—]\d?\s?)?/gim
 const scripturesRegex = new RegExp(`(${bookRegex.source})(${chapterVerseRange.source})`, "gmi")
 module.exports.bookRegex = bookRegex
 module.exports.chapterRegex = chapterRegex
