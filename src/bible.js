@@ -22,6 +22,7 @@ module.exports = {
         "Proverbs",
         "Ecclesiastes",
         "Song of Solomon",
+        "Song of Songs",
         "Isaiah",
         "Jeremiah",
         "Lamentations",
