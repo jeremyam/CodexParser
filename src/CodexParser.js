@@ -43,7 +43,7 @@ class CodexParser {
      */
     parse(reference) {
         if (!reference) {
-            return null // return null if no reference is provided
+            throw new Error("Parse error (parse(), line 46): reference is undefined")
         }
         this.passages = []
         this.scan(reference)
@@ -63,7 +63,6 @@ class CodexParser {
                     verse = []
                 }
             }
-            console.log(verse)
             const passage = {
                 original: this.found[i].replace(/([.,])\1*$/, "").trim(),
                 book: this.bookify(book),
