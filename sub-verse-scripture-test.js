@@ -1,6 +1,5 @@
 const CodexParser = require("./src/CodexParser.js")
 
 const parser = new CodexParser()
-const text = parser.parse("Nehemiah 1:1d")
-const multiNoSpace = parser.parse('Ps 109:4,5,7,8')
-console.log(multiNoSpace)
+const text = parser.parse("Joel 2:10, 11")
+console.log(text)
