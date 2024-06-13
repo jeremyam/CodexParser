@@ -63,6 +63,7 @@ class CodexParser {
                     verse = []
                 }
             }
+            console.log(verse)
             const passage = {
                 original: this.found[i].replace(/([.,])\1*$/, "").trim(),
                 book: this.bookify(book),
@@ -105,7 +106,7 @@ class CodexParser {
         let bookified
         book = book[0].charAt(0).toUpperCase() + book[0].slice(1)
         bookified = this.abbrevations[book]
-
+        
         if (!bookified) {
             bookified = this.bible.new.find(
                 (b) =>
