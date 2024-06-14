@@ -102,8 +102,10 @@ class CodexParser {
      * @return {string|undefined} The full name of the book if found, otherwise undefined.
      */
     bookify(book) {
+        if(typeof book !== "string") {
+            book = book[0]
+        }
         let bookified
-        book = book[0].charAt(0).toUpperCase() + book[0].slice(1)
         bookified = this.abbrevations[book]
         
         if (!bookified) {
@@ -136,6 +138,7 @@ class CodexParser {
      * @param {object} passage - A passage object
      */
     scripturize(passage) {
+        console.log(passage)
         const { book, chapter, verses, to } = passage
         const colon = verses.length !== 0 ? ":" : ""
         const parts = [book, chapter, colon, verses]
