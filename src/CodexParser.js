@@ -2,6 +2,7 @@ const bible = require("./bible")
 const { bookRegex, chapterRegex, verseRegex, scripturesRegex } = require("./regex")
 const abbrevations = require("./abbr")
 const toc = require("./toc")
+const crawler = require("bible-passage-reference-parser/js/en_bcv_parser").bcv_parser
 
 class CodexParser {
     constructor() {
@@ -14,6 +15,7 @@ class CodexParser {
         this.scripturesRegex = scripturesRegex
         this.abbrevations = abbrevations
         this.toc = toc
+        this.crawler = new crawler()
     }
 
     /**
@@ -23,16 +25,8 @@ class CodexParser {
      * @return {array} The found passages from the text.
      */
     scan(text) {
-        const judeRegex = /(?:[j|J][d|ude]+.?\s?\d+)/gim
-        const jude = text.match(judeRegex)
-        this.found = text.match(this.scripturesRegex)
-        if (!this.found) {
-            this.found = []
-        }
-        if (jude) {
-            this.found.push(...jude)
-        }
-        return this.found
+        const passages = this.crawler.parse(text).parsed_entities()
+        this.found.push(...passages.flatMap(passage => passage.entities))
     }
 
     /**
@@ -48,6 +42,15 @@ class CodexParser {
         this.passages = []
         this.scan(reference)
         for (let i = 0; i < this.found.length; i++) {
+            console.log(this.found[i])
+            const passage = {
+                book: this.bookify(this.found[i].start.b),
+                chapter: this.chapterify(this.found[i]),
+                verses: ""
+            }
+            console.log(passage)
+        }
+        /* for (let i = 0; i < this.found.length; i++) {
             const hasChapterRange = this.found[i].match(/(?<=-\s?)\b\d+[.:].+\b/)
             const book = this.found[i].match(this.bookRegex)
             if (book === null) continue
@@ -89,10 +92,12 @@ class CodexParser {
         }
 
         this.found = []
-        return this.passages
+        return this.passages */
     }
     chapterify(chapter) {
-        return chapter[0].replace(/[:\.]/, "").trim()
+        if(chapter.type === "range") {
+            return `${chapter.start.c} - ${chapter.end}`
+        }
     }
 
     /**
@@ -107,7 +112,6 @@ class CodexParser {
         }
         let bookified
         bookified = this.abbrevations[book]
-        
         if (!bookified) {
             bookified = this.bible.new.find(
                 (b) =>
