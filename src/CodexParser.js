@@ -82,7 +82,6 @@ class CodexParser {
                         ? [initialPassage.start.v, initialPassage.end.v]
                         : [initialPassage.start.v]
             }
-            console.log("First Passage, First Log: ", firstPassage)
             for (let j = 0; j < booksWithResults[i].length; j++) {
                 const passage = booksWithResults[i][j]
                 if (passage.type === "integer") {
@@ -133,7 +132,6 @@ class CodexParser {
                     this.passages.push(subPassage)
                 }
             }
-            console.log(firstPassage)
             this.passages.push(firstPassage)
             //console.log(this.passages)
         }
