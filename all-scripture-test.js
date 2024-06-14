@@ -6,18 +6,5 @@ const text =
 const single = "Ge 27.27-29,89-40 Heb 11.20 Heb. 12.17 Jonah 3"
 const jd = "Jd. 5"
 const cor = "Hos 1:1-3, 8 Song of Solomon 1:2, Song of Songs 2:2. Ezek 17:3. Ezekiel 17:3"
-const passages = parser.parse(single)
+const passages = parser.parse(single + " " + text + " " + jd + " " + cor)
 console.log(passages)
-
-const jude = parser.parse(jd)
-console.log(jude)
-
-
-const fullText = parser.parse(text)
-console.log(fullText)
-
-const textParser = parser.parse(cor)
-console.log(textParser)
-
-const daniel = parser.parse("Daniel 10:6, 16, 18")
-console.log(daniel)
