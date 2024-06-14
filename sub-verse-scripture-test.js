@@ -1,5 +1,6 @@
 const CodexParser = require("./src/CodexParser.js")
 
 const parser = new CodexParser()
-const text = parser.parse("Joel 2:10, 11")
-console.log(text)
+const scripture = "Hos 1:1-3, 8"
+console.log(scripture)
+parser.parse(`${scripture}. Please turn in your Bibles.`)
