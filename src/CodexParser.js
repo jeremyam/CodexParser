@@ -135,6 +135,7 @@ class CodexParser {
             this.passages.push(firstPassage)
             //console.log(this.passages)
         }
+        return this
         //console.log(booksWithResults)
         /* for (let i = 0; i < this.found.length; i++) {
             const hasChapterRange = this.found[i].match(/(?<=-\s?)\b\d+[.:].+\b/)
