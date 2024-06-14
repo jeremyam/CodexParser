@@ -128,9 +128,11 @@ class CodexParser {
                         subPassage.verses =
                             passage.start.v !== passage.end.v ? [passage.start.v, passage.end.v] : [passage.start.v]
                     }
+                    subPassage.testament = this.bible.old.includes(subPassage.book) ? "old" : "new"
                     this.passages.push(subPassage)
                 }
             }
+            firstPassage.testament = this.bible.old.includes(firstPassage.book) ? "old" : "new"
             this.passages.push(firstPassage)
             //console.log(this.passages)
         }
