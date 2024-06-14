@@ -49,8 +49,7 @@ class CodexParser {
         }
         const uniqueBooks = [...new Set(books)]
         const booksWithResults = []
-        //TODO: Need to loop through and create an array of all the same passage
-        // in order to be able to identify if comma separated verses goes with it or not.
+
         for (const book of uniqueBooks) {
             const found = this.found.filter((passage) => passage.start.b === book)
             booksWithResults.push(found)
