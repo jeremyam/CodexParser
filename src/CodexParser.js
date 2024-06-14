@@ -135,6 +135,7 @@ class CodexParser {
             this.passages.push(firstPassage)
             //console.log(this.passages)
         }
+        this.found = []
         return this
         //console.log(booksWithResults)
         /* for (let i = 0; i < this.found.length; i++) {
@@ -200,7 +201,7 @@ class CodexParser {
      * @return {string|undefined} The full name of the book if found, otherwise undefined.
      */
     bookify(book) {
-        if(typeof book !== "string") {
+        if (typeof book !== "string") {
             book = book[0]
         }
         let bookified
