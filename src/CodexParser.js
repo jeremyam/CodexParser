@@ -15,7 +15,9 @@ class CodexParser {
         this.scripturesRegex = scripturesRegex
         this.abbrevations = abbrevations
         this.toc = toc
-        this.crawler = new crawler()
+        this.crawler = new crawler({
+            sequence_combination_strategy: "separate"
+        })
     }
 
     /**
@@ -26,7 +28,7 @@ class CodexParser {
      */
     scan(text) {
         const passages = this.crawler.parse(text).parsed_entities()
-        this.found.push(...passages.flatMap(passage => passage.entities))
+        this.found.push(...passages.flatMap((passage) => passage.entities))
     }
 
     /**
@@ -41,15 +43,19 @@ class CodexParser {
         }
         this.passages = []
         this.scan(reference)
+        const books = []
         for (let i = 0; i < this.found.length; i++) {
-            console.log(this.found[i])
-            const passage = {
-                book: this.bookify(this.found[i].start.b),
-                chapter: this.chapterify(this.found[i]),
-                verses: ""
-            }
-            console.log(passage)
+           books.push(this.found[i].start.b)
         }
+        const uniqueBooks = [...new Set(books)]
+        const booksWithResults = []
+        //TODO: Need to loop through and create an array of all the same passage 
+        // in order to be able to identify if comma separated verses goes with it or not.
+        for(const book of uniqueBooks) {
+            const found = this.found.filter(passage => passage.start.b === book)
+            booksWithResults.push(found)
+        }
+        console.log(booksWithResults)
         /* for (let i = 0; i < this.found.length; i++) {
             const hasChapterRange = this.found[i].match(/(?<=-\s?)\b\d+[.:].+\b/)
             const book = this.found[i].match(this.bookRegex)
@@ -95,7 +101,7 @@ class CodexParser {
         return this.passages */
     }
     chapterify(chapter) {
-        if(chapter.type === "range") {
+        if (chapter.type === "range") {
             return `${chapter.start.c} - ${chapter.end}`
         }
     }
