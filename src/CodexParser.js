@@ -3,7 +3,6 @@ const { bookRegex, chapterRegex, verseRegex, scripturesRegex } = require("./rege
 const abbrevations = require("./abbr")
 const toc = require("./toc")
 const crawler = require("bible-passage-reference-parser/js/en_bcv_parser").bcv_parser
-const unidecode = require("unidecode")
 
 class CodexParser {
     constructor() {
@@ -28,23 +27,31 @@ class CodexParser {
      * @return {array} The found passages from the text.
      */
     scan(text) {
-        text = Buffer.from(unidecode(text), "utf-8").toString().trim()
-        const abbrs = text.match(/He(?=.?\d)/gim)
-        if (abbrs) {
-            const matches = [...abbrs].map((match) => {
-                return {
-                    abbr: match[0],
-                    book: this.bookify(match[0]),
-                    index: match.index,
-                }
+        const regex = /(?:He(?=\s?\d+))/g
+        let match
+        const matches = []
+
+        while ((match = regex.exec(text)) !== null) {
+            const index = match.index
+            const book = this.bookify(match[0])
+            matches.push({
+                abbr: match[0],
+                book: book,
+                index: index,
             })
-            for (let i = matches.length - 1; i >= 0; i--) {
-                const match = matches[i]
-                text = text.substring(0, match.index) + match.book + text.substring(match.index + match.abbr.length)
-            }
+        }
+        for (let i = matches.length - 1; i >= 0; i--) {
+            const match = matches[i]
+            text = text.substring(0, match.index) + match.book + text.substring(match.index + match.abbr.length)
         }
         const passages = this.crawler.parse(text).parsed_entities()
-        this.found.push(...passages.flatMap((passage) => passage.entities))
+        for (let j = 0; j < passages.length; j++) {
+            const passage = passages[j]
+            for (let i = 0; i < passage.entities.length; i++) {
+                const entity = passage.entities[i]
+                this.found.push(entity)
+            }
+        }
     }
 
     /**
@@ -72,6 +79,7 @@ class CodexParser {
         }
         //console.log(booksWithResults)
         for (let i = 0; i < booksWithResults.length; i++) {
+            // Shift the first passage from the array
             const initialPassage = booksWithResults[i].shift()
             const firstPassage = {
                 original: initialPassage.osis,
@@ -113,13 +121,8 @@ class CodexParser {
                             firstPassage.verses.push(passage.end.v)
                             firstPassage.original += ", " + passage.start.v + ", " + passage.end.v
                         } else {
-                            firstPassage.verses.push(passage.start.v)
                             firstPassage.original += ", " + passage.start.v
                         }
-                    }
-                } else if (passage.type === "range") {
-                    if (firstPassage.chapter === passage.start.c) {
-                        firstPassage.verses.push(passage.start.v + "-" + passage.end.v)
                     }
                 } else {
                     const subPassage = {
@@ -150,7 +153,6 @@ class CodexParser {
             }
             firstPassage.testament = this.bible.old.includes(firstPassage.book) ? "old" : "new"
             this.passages.push(firstPassage)
-            //console.log(this.passages)
         }
         this.found = []
         return this
