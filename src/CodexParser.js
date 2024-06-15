@@ -61,6 +61,7 @@ class CodexParser {
      * @return {array} An array of parsed passages.
      */
     parse(reference) {
+        //TODO: Need to fix chapter ranges when another verse is tacted onto the end of it.
         if (!reference) {
             throw new Error("Parse error (parse(): reference is undefined")
         }
