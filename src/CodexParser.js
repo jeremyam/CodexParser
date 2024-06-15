@@ -154,50 +154,6 @@ class CodexParser {
         }
         this.found = []
         return this
-        //console.log(booksWithResults)
-        /* for (let i = 0; i < this.found.length; i++) {
-            const hasChapterRange = this.found[i].match(/(?<=-\s?)\b\d+[.:].+\b/)
-            const book = this.found[i].match(this.bookRegex)
-            if (book === null) continue
-            let verse,
-                chapter = this.found[i].replace(book[0], "").match(this.chapterRegex)
-            if (this.found[i].match(this.verseRegex))
-                verse = this.found[i].match(this.verseRegex)[0].replace(/[:.]/, "").trim()
-            else {
-                if (this.bookify(book).toLowerCase() === "jude" || this.bookify(book).toLowerCase() === "philemon") {
-                    verse = chapter
-                    chapter = "1"
-                } else {
-                    verse = []
-                }
-            }
-            const passage = {
-                original: this.found[i].replace(/([.,])\1*$/, "").trim(),
-                book: this.bookify(book),
-                chapter: this.chapterify(chapter),
-                verses: verse,
-            }
-
-            if (hasChapterRange) {
-                passage.to = {
-                    book: passage.book,
-                    chapter: this.chapterify(hasChapterRange[0].match(this.chapterRegex)),
-                    verses: hasChapterRange[0].match(this.verseRegex)[0].replace(/[:.]/, "").trim(),
-                }
-                passage.to.verses = passage.to.verses.split(/,/).filter(Boolean)
-                passage.to.testament = this.bible.old.includes(passage.to.book) ? "old" : "new"
-            }
-            passage.verses =
-                typeof passage.verses !== "object"
-                    ? passage.verses.split(/,/).filter(Boolean)
-                    : passage.verses.filter((item) => item.trim())
-            passage.testament = this.bible.old.includes(passage.book) ? "old" : "new"
-            passage.scripture = this.scripturize(passage)
-            this.passages.push(passage)
-        }
-
-        this.found = []
-        return this.passages */
     }
     chapterify(chapter) {
         if (chapter.type === "range") {
