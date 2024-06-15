@@ -27,17 +27,21 @@ class CodexParser {
      * @return {array} The found passages from the text.
      */
     scan(text) {
-        const abbrs = text.match(/(?:He)(?=.\d+)/gm)
+        text = text.trim()
+        console.log(text)
+        const abbrs = text.matchAll(/He(?=.\d)/gim)
         if (abbrs) {
-            const matches = abbrs.map((string) => {
+            const matches = [...abbrs].map((match) => {
                 return {
-                    abbr: string,
-                    book: this.bookify(string),
+                    abbr: match[0],
+                    book: this.bookify(match[0]),
+                    index: match.index,
                 }
             })
-            for (let i = 0; i < matches.length; i++) {
+            console.log(matches)
+            for (let i = matches.length - 1; i >= 0; i--) {
                 const match = matches[i]
-                text = text.replace(match.abbr, match.book)
+                text = text.substring(0, match.index) + match.book + text.substring(match.index + match.abbr.length)
             }
         }
         const passages = this.crawler.parse(text).parsed_entities()
