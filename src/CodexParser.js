@@ -3,6 +3,7 @@ const { bookRegex, chapterRegex, verseRegex, scripturesRegex } = require("./rege
 const abbrevations = require("./abbr")
 const toc = require("./toc")
 const crawler = require("bible-passage-reference-parser/js/en_bcv_parser").bcv_parser
+const unidecode = require("unidecode")
 
 class CodexParser {
     constructor() {
@@ -27,9 +28,9 @@ class CodexParser {
      * @return {array} The found passages from the text.
      */
     scan(text) {
-        text = text.trim()
+        text = Buffer.from(unidecode(text), "utf-8").toString().trim()
         console.log(text)
-        const abbrs = text.matchAll(/He(?=.\d)/gim)
+        const abbrs = text.match(/He(?=.?\d)/gim)
         if (abbrs) {
             const matches = [...abbrs].map((match) => {
                 return {
@@ -38,7 +39,6 @@ class CodexParser {
                     index: match.index,
                 }
             })
-            console.log(matches)
             for (let i = matches.length - 1; i >= 0; i--) {
                 const match = matches[i]
                 text = text.substring(0, match.index) + match.book + text.substring(match.index + match.abbr.length)
