@@ -1,5 +1,5 @@
 const BibleParser = require("./src/CodexParser.js")
 const parser = new BibleParser()
-const string = "Genesis 1.1 He 4.4"
-const result = parser.parse(string)
+const scripture = "Genesis 2.2 Не 4.4"
+const result = parser.parse(scripture)
 console.log(result.getPassages())
