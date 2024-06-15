@@ -29,7 +29,6 @@ class CodexParser {
      */
     scan(text) {
         text = Buffer.from(unidecode(text), "utf-8").toString().trim()
-        console.log(text)
         const abbrs = text.match(/He(?=.?\d)/gim)
         if (abbrs) {
             const matches = [...abbrs].map((match) => {
