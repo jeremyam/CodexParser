@@ -79,7 +79,6 @@ class CodexParser {
         }
         //console.log(booksWithResults)
         for (let i = 0; i < booksWithResults.length; i++) {
-            // Shift the first passage from the array
             const initialPassage = booksWithResults[i].shift()
             const firstPassage = {
                 original: initialPassage.osis,
@@ -121,8 +120,13 @@ class CodexParser {
                             firstPassage.verses.push(passage.end.v)
                             firstPassage.original += ", " + passage.start.v + ", " + passage.end.v
                         } else {
+                            firstPassage.verses.push(passage.start.v)
                             firstPassage.original += ", " + passage.start.v
                         }
+                    }
+                } else if (passage.type === "range") {
+                    if (firstPassage.chapter === passage.start.c) {
+                        firstPassage.verses.push(passage.start.v + "-" + passage.end.v)
                     }
                 } else {
                     const subPassage = {
@@ -153,6 +157,7 @@ class CodexParser {
             }
             firstPassage.testament = this.bible.old.includes(firstPassage.book) ? "old" : "new"
             this.passages.push(firstPassage)
+            //console.log(this.passages)
         }
         this.found = []
         return this
