@@ -55,7 +55,7 @@ class CodexParser {
      */
     parse(reference) {
         if (!reference) {
-            throw new Error("Parse error (parse(), line 46): reference is undefined")
+            throw new Error("Parse error (parse(): reference is undefined")
         }
         this.passages = []
         this.scan(reference)
