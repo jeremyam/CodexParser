@@ -28,18 +28,20 @@ class CodexParser {
      */
     scan(text) {
         const abbrs = text.match(/(?:He)(?=.\d+)/gm)
-        const matches = abbrs.map(string => {
-            return {
-                abbr: string,
-                book: this.bookify(string)
+        if (abbrs) {
+            const matches = abbrs.map((string) => {
+                return {
+                    abbr: string,
+                    book: this.bookify(string),
+                }
+            })
+            for (let i = 0; i < matches.length; i++) {
+                const match = matches[i]
+                text = text.replace(match.abbr, match.book)
             }
-        })
-        for(let i = 0; i < matches.length; i++) {
-            const match = matches[i]
-            text = text.replace(match.abbr, match.book)
         }
         const passages = this.crawler.parse(text).parsed_entities()
-        this.found.push(...passages.flatMap((passage) => passage.entities)) 
+        this.found.push(...passages.flatMap((passage) => passage.entities))
     }
 
     /**
