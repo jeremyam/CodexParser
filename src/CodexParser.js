@@ -82,7 +82,7 @@ class CodexParser {
         for (let i = 0; i < booksWithResults.length; i++) {
             const initialPassage = booksWithResults[i].shift()
             const shouldBeRange = initialPassage.osis.match(/[-–—]/)
-            if(shouldBeRange) {
+            if(shouldBeRange && initialPassage.type !== "range") {
                 initialPassage.type = "range"
             }
             const firstPassage = {
