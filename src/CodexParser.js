@@ -15,9 +15,11 @@ class CodexParser {
         this.scripturesRegex = scripturesRegex
         this.abbrevations = abbrevations
         this.toc = toc
-        this.crawler = new crawler({
-            sequence_combination_strategy: "separate",
-        })
+        this.crawler = new crawler()
+    }
+
+    options(options) {
+        this.crawler.set_options(options)
     }
 
     /**
