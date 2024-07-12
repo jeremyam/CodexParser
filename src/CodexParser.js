@@ -237,10 +237,6 @@ class CodexParser {
             .replace(/\s+:\s+/g, ":")
             .trim()
     }
-    
-    options(options)  {
-        
-    }
 }
 
 module.exports = CodexParser
