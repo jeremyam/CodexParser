@@ -79,6 +79,7 @@ class CodexParser {
 
         for (const book of uniqueBooks) {
             const found = this.found.filter((passage) => passage.start.b === book)
+            console.log(found)
             booksWithResults.push(found)
         }
         for (let i = 0; i < booksWithResults.length; i++) {
