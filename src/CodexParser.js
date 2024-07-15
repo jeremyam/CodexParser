@@ -82,90 +82,24 @@ class CodexParser {
             booksWithResults.push(found)
         }
         for (let i = 0; i < booksWithResults.length; i++) {
-            const initialPassage = booksWithResults[i].shift()
-            const shouldBeRange = initialPassage.osis.match(/[-–—]/)
-            if (shouldBeRange && initialPassage.type !== "range") {
-                if (initialPassage.end.v - initialPassage.start.v > 1) {
-                    initialPassage.type = "range"
+            const results = booksWithResults[i]
+
+            for (let j = 0; j < results.length; j++) {
+                const result = results[j]
+                const next = results[j + 1]
+                const passage = {
+                    book: this.bookify(result.start.b),
+                    chapter: result.start.c,
+                    verses: this.versify(result),
                 }
-            }
-            const firstPassage = {
-                original: initialPassage.osis,
-                book: this.bookify(initialPassage.start.b),
-                chapter: initialPassage.start.c,
-                type: initialPassage.type,
-                entities: initialPassage.entities,
-            }
-            if (initialPassage.type === "range") {
-                if (initialPassage.start.c !== initialPassage.end.c) {
-                    firstPassage.verses = [initialPassage.start.v]
-                    firstPassage.to = {
-                        book: this.bookify(initialPassage.end.b),
-                        chapter: initialPassage.end.c,
-                        verses: [initialPassage.end.v],
-                    }
-                } else {
-                    firstPassage.verses = [initialPassage.start.v + "-" + initialPassage.end.v]
+
+                if (j < results.length - 1 && next.type === "integer") {
+                    passage.verses.push(next.start.v)
+                    j++
                 }
-            } else {
-                firstPassage.verses =
-                    initialPassage.start.v !== initialPassage.end.v
-                        ? [initialPassage.start.v, initialPassage.end.v]
-                        : [initialPassage.start.v]
+
+                this.passages.push(passage)
             }
-            for (let j = 0; j < booksWithResults[i].length; j++) {
-                const passage = booksWithResults[i][j]
-                if (passage.type === "integer") {
-                    if (firstPassage.type === "range") {
-                        if (passage.start.c !== passage.end.c) {
-                            firstPassage.to.verses.push(passage.start.v)
-                        } else {
-                            firstPassage.verses.push(passage.start.v)
-                        }
-                        firstPassage.original += ", " + passage.start.v
-                    } else {
-                        if (passage.start.v !== passage.end.v) {
-                            firstPassage.verses.push(passage.start.v)
-                            firstPassage.verses.push(passage.end.v)
-                            firstPassage.original += ", " + passage.start.v + ", " + passage.end.v
-                        } else {
-                            firstPassage.verses.push(passage.start.v)
-                            firstPassage.original += ", " + passage.start.v
-                        }
-                    }
-                } else if (passage.type === "range") {
-                    if (firstPassage.chapter === passage.start.c) {
-                        firstPassage.verses.push(passage.start.v + "-" + passage.end.v)
-                    }
-                } else {
-                    const subPassage = {
-                        original: passage.osis,
-                        book: this.bookify(passage.start.b),
-                        chapter: passage.start.c,
-                        type: passage.type,
-                        entities: passage.entities,
-                    }
-                    if (passage.type === "range") {
-                        if (passage.start.c !== passage.end.c) {
-                            subPassage.to = {
-                                book: this.bookify(passage.end.b),
-                                chapter: passage.end.c,
-                                verses: [passage.end.v],
-                            }
-                        } else {
-                            subPassage.verses =
-                                passage.start.v !== passage.end.v ? [passage.start.v, passage.end.v] : [passage.start.v]
-                        }
-                    } else {
-                        subPassage.verses =
-                            passage.start.v !== passage.end.v ? [passage.start.v, passage.end.v] : [passage.start.v]
-                    }
-                    subPassage.testament = this.bible.old.includes(subPassage.book) ? "old" : "new"
-                    this.passages.push(subPassage)
-                }
-            }
-            firstPassage.testament = this.bible.old.includes(firstPassage.book) ? "old" : "new"
-            this.passages.push(firstPassage)
             //console.log(this.passages)
         }
         this.passages.sort((a, b) => a.chapter - b.chapter)
@@ -178,8 +112,8 @@ class CodexParser {
         }
     }
 
-    versify(passage, type) {
-        if (type !== "range")
+    versify(passage) {
+        if (passage.type !== "range")
             return passage.start.v !== passage.end.v ? [passage.start.v, passage.end.v] : [passage.start.v]
         else return [passage.start.v + "-" + passage.end.v]
     }
@@ -238,10 +172,8 @@ class CodexParser {
             .replace(/\s+:\s+/g, ":")
             .trim()
     }
-    
-    options(options)  {
-        
-    }
+
+    options(options) {}
 }
 
 module.exports = CodexParser
