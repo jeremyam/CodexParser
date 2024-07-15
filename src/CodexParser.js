@@ -102,7 +102,7 @@ class CodexParser {
                     firstPassage.to = {
                         book: this.bookify(initialPassage.end.b),
                         chapter: initialPassage.end.c,
-                        verses: [initialPassage.start.v],
+                        verses: [initialPassage.end.v],
                     }
                 } else {
                     firstPassage.verses = [initialPassage.start.v + "-" + initialPassage.end.v]
