@@ -47,6 +47,7 @@ class CodexParser {
             text = text.substring(0, match.index) + match.book + text.substring(match.index + match.abbr.length)
         }
         const passages = this.crawler.parse(text).parsed_entities()
+
         for (let j = 0; j < passages.length; j++) {
             const passage = passages[j]
             for (let i = 0; i < passage.entities.length; i++) {
@@ -167,6 +168,7 @@ class CodexParser {
             this.passages.push(firstPassage)
             //console.log(this.passages)
         }
+        this.passages.sort((a, b) => a.chapter - b.chapter)
         this.found = []
         return this
     }
