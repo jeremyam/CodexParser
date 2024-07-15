@@ -80,7 +80,7 @@ class CodexParser {
             const found = this.found.filter((passage) => passage.start.b === book)
             booksWithResults.push(found)
         }
-        //console.log(booksWithResults)
+        console.log(booksWithResults[0][0])
         for (let i = 0; i < booksWithResults.length; i++) {
             const initialPassage = booksWithResults[i].shift()
             const shouldBeRange = initialPassage.osis.match(/[-–—]/)
