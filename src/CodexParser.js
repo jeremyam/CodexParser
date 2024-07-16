@@ -3,6 +3,11 @@ const { bookRegex, chapterRegex, verseRegex, scripturesRegex } = require("./rege
 const abbrevations = require("./abbr")
 const toc = require("./toc")
 const crawler = require("bible-passage-reference-parser/js/en_bcv_parser").bcv_parser
+const util = require("util")
+
+const dump = (item) => {
+    console.log(util.inspect(item, { depth: null, colors: true }))
+}
 
 class CodexParser {
     constructor() {
@@ -75,32 +80,45 @@ class CodexParser {
             books.push(this.found[i].start.b)
         }
         const uniqueBooks = [...new Set(books)]
-        const booksWithResults = []
 
+        const booksWithResults = []
         for (const book of uniqueBooks) {
             const found = this.found.filter((passage) => passage.start.b === book)
             booksWithResults.push(found)
         }
+
         for (let i = 0; i < booksWithResults.length; i++) {
             const results = booksWithResults[i]
-
             for (let j = 0; j < results.length; j++) {
                 const result = results[j]
-                const next = results[j + 1]
                 const passage = {
                     book: this.bookify(result.start.b),
                     chapter: result.start.c,
                     verses: this.versify(result),
+                    type: result.type,
                 }
-
-                if (j < results.length - 1 && next.type === "integer") {
+                let next = results[j + 1]
+                while (next && next.type === "integer" && next.end.c === result.start.c) {
                     passage.verses.push(next.start.v)
+                    passage.subType = next.type
                     j++
+                    next = results[j + 1]
                 }
-
+                if (passage.type === "range") {
+                    if (result.start.c !== result.end.c) {
+                        passage.verses = [result.start.v]
+                        passage.to = {
+                            book: this.bookify(result.end.b),
+                            chapter: result.end.c,
+                            verses: result.end.v,
+                        }
+                    }
+                }
+                passage.indices = result.indices
+                passage.original = result.osis
+                passage.entities = result.entities
                 this.passages.push(passage)
             }
-            //console.log(this.passages)
         }
         this.passages.sort((a, b) => a.chapter - b.chapter)
         this.found = []
@@ -113,9 +131,23 @@ class CodexParser {
     }
 
     versify(passage) {
-        if (passage.type !== "range")
-            return passage.start.v !== passage.end.v ? [passage.start.v, passage.end.v] : [passage.start.v]
-        else return [passage.start.v + "-" + passage.end.v]
+        if (passage.start.v !== passage.end.v) {
+            if (passage.type === "range") {
+                return [`${passage.start.v}-${passage.end.v}`]
+            } else {
+                if (passage.end.v - passage.start.v > 1) {
+                    const verses = []
+                    for (let i = passage.start.v; i <= passage.end.v; i++) {
+                        verses.push(i)
+                    }
+                    return verses
+                } else {
+                    return [passage.start.v, passage.end.v]
+                }
+            }
+        } else {
+            return [passage.start.v]
+        }
     }
 
     /**
@@ -160,7 +192,6 @@ class CodexParser {
      * @param {object} passage - A passage object
      */
     scripturize(passage) {
-        console.log(passage)
         const { book, chapter, verses, to } = passage
         const colon = verses.length !== 0 ? ":" : ""
         const parts = [book, chapter, colon, verses]
