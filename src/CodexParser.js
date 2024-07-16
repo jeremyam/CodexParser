@@ -91,6 +91,7 @@ class CodexParser {
             const results = booksWithResults[i]
             for (let j = 0; j < results.length; j++) {
                 const result = results[j]
+                dump(result)
                 const passage = {
                     book: this.bookify(result.start.b),
                     chapter: result.start.c,
@@ -100,6 +101,7 @@ class CodexParser {
                 let next = results[j + 1]
                 while (next && next.type === "integer" && next.end.c === result.start.c) {
                     passage.verses.push(next.start.v)
+                    if (next.end.v !== next.start.v) passage.verses.push(next.end.v)
                     passage.subType = next.type
                     j++
                     next = results[j + 1]
