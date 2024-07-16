@@ -132,22 +132,23 @@ class CodexParser {
     }
 
     versify(passage) {
-        if (passage.start.v !== passage.end.v) {
-            if (passage.type === "range") {
-                return [`${passage.start.v}-${passage.end.v}`]
-            } else {
-                if (passage.end.v - passage.start.v > 1) {
+        const singleBooks = ["Obadiah", "Philemon", "2 John", "3 John", "Jude"]
+        if (passage.start.b && singleBooks.includes(passage.start.b)) {
+            return [passage.start.v + "-" + passage.end.v]
+        } else {
+            if (passage.start.v !== passage.end.v) {
+                if (passage.type === "range") {
+                    return [`${passage.start.v}-${passage.end.v}`]
+                } else {
                     const verses = []
                     for (let i = passage.start.v; i <= passage.end.v; i++) {
                         verses.push(i)
                     }
                     return verses
-                } else {
-                    return [passage.start.v, passage.end.v]
                 }
+            } else {
+                return [passage.start.v]
             }
-        } else {
-            return [passage.start.v]
         }
     }
 
