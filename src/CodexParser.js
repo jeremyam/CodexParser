@@ -114,8 +114,9 @@ class CodexParser {
                         }
                     }
                 }
-                passage.indices = result.indices
                 passage.original = result.osis
+                passage.scripture = this.scripturize(passage)
+                passage.indices = result.indices
                 passage.entities = result.entities
                 this.passages.push(passage)
             }
@@ -203,8 +204,6 @@ class CodexParser {
             .replace(/\s+:\s+/g, ":")
             .trim()
     }
-
-    options(options) {}
 }
 
 module.exports = CodexParser
