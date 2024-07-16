@@ -91,7 +91,6 @@ class CodexParser {
             const results = booksWithResults[i]
             for (let j = 0; j < results.length; j++) {
                 const result = results[j]
-                dump(result)
                 const passage = {
                     book: this.bookify(result.start.b),
                     chapter: result.start.c,
