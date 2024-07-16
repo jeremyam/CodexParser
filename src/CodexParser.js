@@ -97,6 +97,7 @@ class CodexParser {
                     verses: this.versify(result),
                     type: result.type,
                 }
+                passage.testament = this.bible.old.includes(passage.book) ? "old" : "new"
                 let next = results[j + 1]
                 while (next && next.type === "integer" && next.end.c === result.start.c) {
                     passage.verses.push(next.start.v)
