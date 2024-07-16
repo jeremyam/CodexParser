@@ -126,9 +126,7 @@ class CodexParser {
         return this
     }
     chapterify(chapter) {
-        if (chapter.type === "range") {
-            return `${chapter.start.c} - ${chapter.end}`
-        }
+        return chapter.start.c
     }
 
     versify(passage) {
