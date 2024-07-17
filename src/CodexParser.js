@@ -169,19 +169,17 @@ class CodexParser {
         if (typeof book !== "string") {
             book = book[0]
         }
-        let bookified
-        bookified = this.abbrevations[book]
+        let bookified = Object.keys(this.abbrevations).find((abbr) => {
+            return abbr.toLowerCase() === book.toLowerCase()
+        })
+        bookified = this.abbrevations[bookified]
         if (!bookified) {
             bookified = this.bible.new.find(
-                (b) =>
-                    b.charAt(0).toLowerCase() === book.charAt(0).toLowerCase() &&
-                    b.toLowerCase().includes(book.toLowerCase())
+                (b) => b.toLowerCase() === book.toLowerCase() && b.toLowerCase().includes(book.toLowerCase())
             )
             if (!bookified) {
                 bookified = this.bible.old.find(
-                    (b) =>
-                        b.charAt(0).toLowerCase() === book.charAt(0).toLowerCase() &&
-                        b.toLowerCase().includes(book.toLowerCase())
+                    (b) => b.toLowerCase() === book.toLowerCase() && b.toLowerCase().includes(book.toLowerCase())
                 )
             }
         }
@@ -285,6 +283,7 @@ class CodexParser {
             let verse, chapter
             const hasChapterRange = this.found[i].match(/(?<=-\s?)\b\d+[.:].+\b/)
             const book = this.found[i].match(this.bookRegex)
+            console.log("Book that is found is ", book, this.bookify(book))
             if (book === null) continue
             chapter = this.found[i].replace(book[0], "").match(this.chapterRegex)
 
@@ -324,7 +323,6 @@ class CodexParser {
                 passage.to.verses = passage.to.verses.split(/,/).filter(Boolean)
                 passage.to.testament = this.bible.old.includes(passage.to.book) ? "old" : "new"
             }
-            console.log(passage)
             passage.verses =
                 typeof passage.verses !== "object"
                     ? passage.verses.split(/,/).filter(Boolean)

@@ -9,13 +9,19 @@ Ge 27.27-29,89-40 Heb 11.20 Heb. 12.17 Jonah 3
 Jd. 5
 Jd 6
 
-1 Cor 12:34 2 Cor 3:4. He 4.12 Re 1.16
+1Cor 12:34 2 Cor 3:4. He 4.12 Re 1.16
 
 Leviticus 16:6 He 5.3 He 7.27
 
 Hos 10:1-3, 8 and 1 John 2:23
 
-exod15.18. 2 Cor 12:23 Malachi 3:32`
+exod15.18. 2 Cor 12:23 Malachi 3:32 Hebrews 9:20; 10:29; 13:20 `
 
-parser.regex(text).regexParser()
+const philemon = "Phlm 1    Phlm 1:2    Philemon 1:3    Phil 2:3  Phile 7"
+
+const ez = "Ezekiel 12:3 Ezek 1:2 Ezk 2:2 Ezra 1:1 Ezr 1:2 Ez 3:4-5"
+
+const noSpace = "1pet2.6"
+
+parser.regex("1sam1:1").regexParser()
 console.log(parser.getPassages())
