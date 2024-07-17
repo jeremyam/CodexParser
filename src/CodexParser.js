@@ -273,7 +273,6 @@ class CodexParser {
 
     regex(text) {
         this.found = text.match(this.scripturesRegex)
-        console.log(this.found)
         return this
     }
 
@@ -283,7 +282,6 @@ class CodexParser {
             let verse, chapter
             const hasChapterRange = this.found[i].match(/(?<=-\s?)\b\d+[.:].+\b/)
             const book = this.found[i].match(this.bookRegex)
-            console.log("Book that is found is ", book, this.bookify(book))
             if (book === null) continue
             chapter = this.found[i].replace(book[0], "").match(this.chapterRegex)
 

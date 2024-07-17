@@ -21,7 +21,7 @@ const philemon = "Phlm 1    Phlm 1:2    Philemon 1:3    Phil 2:3  Phile 7"
 
 const ez = "Ezekiel 12:3 Ezek 1:2 Ezk 2:2 Ezra 1:1 Ezr 1:2 Ez 3:4-5"
 
-const noSpace = "1pet2.6"
+const noSpace = "1 Thess 2.15-16"
 
-parser.regex("1sam1:1").regexParser()
+parser.regex(noSpace).regexParser()
 console.log(parser.getPassages())
