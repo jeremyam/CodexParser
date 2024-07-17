@@ -23,8 +23,15 @@ class CodexParser {
         this.crawler = new crawler()
     }
 
+    /**
+     * Sets the options for the crawler and returns the current instance.
+     *
+     * @param {Object} options - The options to set.
+     * @return {Object} The current instance.
+     */
     options(options) {
         this.crawler.set_options(options)
+        return this
     }
 
     /**
@@ -71,7 +78,8 @@ class CodexParser {
     parse(reference) {
         //TODO: Need to fix chapter ranges when another verse is tacted onto the end of it.
         if (!reference) {
-            throw new Error("Parse error (parse(): reference is undefined")
+            this.passages = []
+            return this
         }
         this.passages = []
         this.scan(reference)
@@ -205,311 +213,129 @@ class CodexParser {
             .trim()
     }
     find(text) {
-        const books = [
-            "Gen",
-            "Ge",
-            "Gn",
-            "Exo",
-            "Ex",
-            "Exod",
-            "Lev",
-            "Le",
-            "Lv",
-            "Num",
-            "Nu",
-            "Nm",
-            "Nb",
-            "Deut",
-            "Dt",
-            "Josh",
-            "Jos",
-            "Jsh",
-            "Judg",
-            "Jdg",
-            "Jg",
-            "Jdgs",
-            "Rth",
-            "Ru",
-            "Sam",
-            "Samuel",
-            "Kings",
-            "Kgs",
-            "Kin",
-            "Chron",
-            "Chronicles",
-            "Ezra",
-            "Ezr",
-            "Ez",
-            "Neh",
-            "Ne",
-            "Esth",
-            "Es",
-            "Job",
-            "Job",
-            "Jb",
-            "Pslm",
-            "Ps",
-            "Psalms",
-            "Psa",
-            "Psm",
-            "Pss",
-            "Prov",
-            "Pr",
-            "Prv",
-            "Eccles",
-            "Ec",
-            "Song",
-            "So",
-            "Canticles",
-            "Song of Songs",
-            "SOS",
-            "Isa",
-            "Is",
-            "Jer",
-            "Je",
-            "Jr",
-            "Lam",
-            "La",
-            "Ezek",
-            "Eze",
-            "Ezk",
-            "Dan",
-            "Da",
-            "Dn",
-            "Hos",
-            "Ho",
-            "Joel",
-            "Joe",
-            "Jl",
-            "Amos",
-            "Am",
-            "Obad",
-            "Ob",
-            "Jnh",
-            "Jon",
-            "Micah",
-            "Mic",
-            "Nah",
-            "Na",
-            "Hab",
-            "Zeph",
-            "Zep",
-            "Zp",
-            "Haggai",
-            "Hag",
-            "Hg",
-            "Zech",
-            "Zec",
-            "Zc",
-            "Mal",
-            "Mal",
-            "Ml",
-            "Matt",
-            "Mt",
-            "Mrk",
-            "Mk",
-            "Mr",
-            "Luk",
-            "Lk",
-            "John",
-            "Jn",
-            "Jhn",
-            "Acts",
-            "Ac",
-            "Rom",
-            "Ro",
-            "Rm",
-            "Co",
-            "Cor",
-            "Corinthians",
-            "Gal",
-            "Ga",
-            "Ephes",
-            "Eph",
-            "Phil",
-            "Php",
-            "Col",
-            "Col",
-            "Th",
-            "Thes",
-            "Thess",
-            "Thessalonians",
-            "Ti",
-            "Tim",
-            "Timothy",
-            "Titus",
-            "Tit",
-            "Philem",
-            "Phm",
-            "Hebrews",
-            "Heb",
-            "He",
-            "James",
-            "Jas",
-            "Jm",
-            "Pe",
-            "Pet",
-            "Pt",
-            "Peter",
-            "Jn",
-            "Jo",
-            "Joh",
-            "Jhn",
-            "John",
-            "Jude",
-            "Jd",
-            "Jud",
-            "Jud",
-            "Rev",
-            "The Revelation",
-            "Genesis",
-            "Exodus",
-            "Leviticus",
-            "Numbers",
-            "Deuteronomy",
-            "Joshua",
-            "Judges",
-            "Ruth",
-            "Samuel",
-            "Kings",
-            "Chronicles",
-            "Ezra",
-            "Nehemiah",
-            "Esther",
-            "Job",
-            "Psalms",
-            "Psalm",
-            "Proverbs",
-            "Ecclesiastes",
-            "Song of Solomon",
-            "Isaiah",
-            "Jeremiah",
-            "Lamentations",
-            "Ezekiel",
-            "Daniel",
-            "Hosea",
-            "Joel",
-            "Amos",
-            "Obadiah",
-            "Jonah",
-            "Micah",
-            "Nahum",
-            "Habakkuk",
-            "Zephaniah",
-            "Haggai",
-            "Zechariah",
-            "Malachi",
-            "Matthew",
-            "Mark",
-            "Luke",
-            "John",
-            "Acts",
-            "Romans",
-            "Corinthians",
-            "Galatians",
-            "Ephesians",
-            "Philippians",
-            "Colossians",
-            "Thessalonians",
-            "Timothy",
-            "Titus",
-            "Philemon",
-            "Hebrews",
-            "James",
-            "Peter",
-            "John",
-            "Revelation",
-            "Re",
-            "Ap",
-            "Jd.",
-            "Heb.",
-        ]
+        const books = [...this.bible.old, ...this.bible.new]
+        const found = []
+        const passages = []
+        for (let i = 0; i < books.length; i++) {
+            const book = books[i].toLowerCase()
+            const index = text.toLowerCase().indexOf(book)
+            // Checks to see if the previous character is a colon. If it is, skip.
+            // This makes sure that if you have a case like Genesis 1:1 John 1:1, the code knows that
+            // the book cannot be 1 John.
+            if (text[index - 1] && text[index - 1].includes(":")) continue
 
-        const preStrings = ["III", "II", "I", "1st", "2nd", "3rd", "First", "Second", "Third", "1", "2", "3"]
-        const preStringed = [
-            "Sam",
-            "Samuel",
-            "Kings",
-            "Kgs",
-            "Kin",
-            "Chron",
-            "Chronicles",
-            "Corinthians",
-            "Co",
-            "Cor",
-            "Thessalonians",
-            "Th",
-            "Thes",
-            "Thess",
-            "Timothy",
-            "Ti",
-            "Tim",
-            "Peter",
-            "Pe",
-            "Pet",
-            "Pt",
-            "John",
-            "Jn",
-            "Jhn",
-        ]
-
-        //add the prestringed versions e.g. 1 Peter
-        for (let b = 0; b < preStringed.length; b++) {
-            for (let pre = 0; pre < preStrings.length; pre++) {
-                books.push(preStrings[pre] + " " + preStringed[b])
-            }
-        }
-        // add the book name with . at the end as this seems to be added sometimes, at least to the shortened forms
-        const length = books.length
-        for (let b = 0; b < length; b++) {
-            books.push(books[b] + ".")
-        }
-
-        // sort descending - longer items first
-        books.sort((a, b) => b.length - a.length)
-        let booksAt = []
-        // go thro' each book finding where it matches in text
-        for (let b = 0; b < books.length; b++) {
-            const book = books[b]
-            let chNoInText = 0
-            while (chNoInText < text.length) {
-                let j = text.indexOf(book, chNoInText)
-                if (j < 0) break
-                if (j + book.length < text.length && !text.charAt(j + book.length).match(/^[a-z]+$/)) {
-                    booksAt.push([book, j])
-                    let replacement = book
-                    for (let k = 0; k < book.length; k++) {
-                        replacement = replacement.replace(book.charAt(k), "X")
-                    }
-                    text = text.replace(book, replacement) // to prevent a shorter version matching
+            // Get the book and chapter
+            if (index > -1) {
+                const bookEndIndex = index + book.length - 1
+                const passage = {
+                    book: text.substring(index, bookEndIndex + 1),
                 }
-                chNoInText = j + book.length + 1
+                let chapter = 0
+                let chapterStartIndex = null
+                let chapterEndIndex = null
+                let j = bookEndIndex + 1
+                while (j < text.length) {
+                    const match = text.substring(j).match(/^\s*(\d+)/)
+                    if (match) {
+                        chapter = match[1]
+                        chapterStartIndex = j
+                        chapterEndIndex = j + match[0].length
+                        break
+                    }
+                    j++
+                }
+
+                let verseIndex = chapterEndIndex + 1
+                let verseStartIndex = null
+                let verseEndIndex = null
+                let verse
+                while (verseIndex < text.length) {
+                    const match = text.substring(verseIndex).match(/^\s*?(\d+)[^a-zA-Z]*/)
+
+                    if (match) {
+                        verseStartIndex = verseIndex
+                        verseEndIndex = verseIndex + match[0].length
+                        break
+                    }
+                    verseIndex++
+                }
+                verse = parseInt(text.substring(verseStartIndex, verseEndIndex))
+
+                if (chapter > 0) passage.chapter = chapter
+                if (verse > 0) passage.verse = verse
+
+                passage.index = {
+                    start: index,
+                }
+                found.push(passage)
             }
         }
-        // into ascending order of start position
-        booksAt.sort(function (a, b) {
-            return a[1] - b[1]
-        })
-        let newText = ""
-        let chNoInText = 0
-        for (let b = 0; b < booksAt.length; b++) {
-            while (chNoInText < booksAt[b][1]) {
-                //copy across characters to start of book
-                newText += text.charAt(chNoInText)
-                chNoInText++
+        return found
+    }
+
+    regex(text) {
+        this.found = text.match(this.scripturesRegex)
+        console.log(this.found)
+        return this
+    }
+
+    regexParser() {
+        this.passages = []
+        for (let i = 0; i < this.found.length; i++) {
+            let verse, chapter
+            const hasChapterRange = this.found[i].match(/(?<=-\s?)\b\d+[.:].+\b/)
+            const book = this.found[i].match(this.bookRegex)
+            if (book === null) continue
+            chapter = this.found[i].replace(book[0], "").match(this.chapterRegex)
+
+            if (Array.isArray(chapter)) {
+                chapter = chapter[0]
             }
-            newText += booksAt[b][0]
-            chNoInText += booksAt[b][0].length //skip the 'fill-in characters
-            for (let i = 0; i < 100; i++) {
-                chNoInText++
-                const nextCh = text.charAt(chNoInText)
-                //test whether are at the end of the chapter(s) and verse(s)
-                if (nextCh.match(/^[a-z]+$/)) break
-                if (nextCh.match(/^[A-Z]+$/)) break
-                newText += text.charAt(chNoInText - 1)
+            if (
+                this.bookify(book).toLowerCase() === "jude" ||
+                this.bookify(book).toLowerCase() === "philemon" ||
+                this.bookify(book).toLowerCase() === "obadiah" ||
+                this.bookify(book).toLowerCase() === "2 john" ||
+                this.bookify(book).toLowerCase() === "3 john"
+            ) {
+                verse = this.found[i].split(" ")[1]
+                chapter = "1"
+            } else {
+                if (this.found[i].match(this.verseRegex))
+                    verse = this.found[i].match(this.verseRegex)[0].replace(/[:.]/, "").trim()
             }
+            if (!verse && this.found[i].match(/\d+/)) {
+                chapter = this.found[i].match(/\d+/)[0]
+            }
+
+            const passage = {
+                original: this.found[i].replace(/([.,])\1*$/, "").trim(),
+                book: this.bookify(book),
+                chapter: chapter,
+                verses: verse ?? [],
+            }
+
+            if (hasChapterRange) {
+                passage.to = {
+                    book: passage.book,
+                    chapter: hasChapterRange[0].match(this.chapterRegex),
+                    verses: hasChapterRange[0].match(this.verseRegex)[0].replace(/[:.]/, "").trim(),
+                }
+                passage.to.verses = passage.to.verses.split(/,/).filter(Boolean)
+                passage.to.testament = this.bible.old.includes(passage.to.book) ? "old" : "new"
+            }
+            console.log(passage)
+            passage.verses =
+                typeof passage.verses !== "object"
+                    ? passage.verses.split(/,/).filter(Boolean)
+                    : passage.verses.filter((item) => item.trim())
+            passage.testament = this.bible.old.includes(passage.book) ? "old" : "new"
+            passage.scripture = this.scripturize(passage)
+            this.passages.push(passage)
         }
-        return newText
+
+        this.found = []
+        return this
     }
 }
 
