@@ -1,7 +1,7 @@
 const bible = require("./bible")
 const { bookRegex, chapterRegex, verseRegex, scripturesRegex } = require("./regex")
 const abbrevations = require("./abbr")
-const toc = require("./toc")
+//const toc = require("./toc")
 const crawler = require("bible-passage-reference-parser/js/en_bcv_parser").bcv_parser
 const util = require("util")
 
@@ -19,7 +19,7 @@ class CodexParser {
         this.verseRegex = verseRegex
         this.scripturesRegex = scripturesRegex
         this.abbrevations = abbrevations
-        this.toc = toc
+        //this.toc = toc
         this.crawler = new crawler()
     }
 
