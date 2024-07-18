@@ -347,4 +347,8 @@ class CodexParser {
     }
 }
 
+if (typeof window !== "undefined" && window) {
+    if (!window.CodexParser) window.CodexParser = CodexParser
+}
+
 module.exports = CodexParser
