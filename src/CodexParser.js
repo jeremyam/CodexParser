@@ -298,8 +298,12 @@ class CodexParser {
                 verse = this.found[i].split(" ")[1]
                 chapter = "1"
             } else {
-                if (this.found[i].match(this.verseRegex))
+                if (this.found[i].match(this.verseRegex) && !hasChapterRange)
                     verse = this.found[i].match(this.verseRegex)[0].replace(/[:.]/, "").trim()
+                else if (this.found[i].match(this.verseRegex) && hasChapterRange)
+                    verse = this.found[i].match(this.verseRegex)
+                        ? this.found[i].match(this.verseRegex)[0].split("-")[0].trim()
+                        : ["Empty"]
             }
             if (!verse && this.found[i].match(/\d+/)) {
                 chapter = this.found[i].match(/\d+/)[0]
@@ -315,8 +319,8 @@ class CodexParser {
             if (hasChapterRange) {
                 passage.to = {
                     book: passage.book,
-                    chapter: hasChapterRange[0].match(this.chapterRegex),
-                    verses: hasChapterRange[0].match(this.verseRegex)[0].replace(/[:.]/, "").trim(),
+                    chapter: hasChapterRange[0].match(this.chapterRegex)[0],
+                    verses: hasChapterRange[0].match(this.verseRegex)[0],
                 }
                 passage.to.verses = passage.to.verses.split(/,/).filter(Boolean)
                 passage.to.testament = this.bible.old.includes(passage.to.book) ? "old" : "new"

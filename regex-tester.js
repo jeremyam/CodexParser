@@ -1,8 +1,13 @@
 const CodexParser = require("./src/CodexParser")
+const util = require("util")
+
+const dump = (item) => {
+    console.log(util.inspect(item, { depth: null, colors: true }))
+}
 
 const parser = new CodexParser()
 const passage = "jer 9.24 1 cor 1.31 Jd 1"
-let text = `Joel 10:13 The passages Luke 2:32 and Lk 1:23 that we are looking at tonight 1 Cor 12:34 2 Cor 3:4 are found Jude 6, in Jude 5, Genesis 2:1 - 3:19, 1 John 3:16-17, 1 Peter 1:1, and Romans 10:13, 15, 17. Please turn in your Bibles. Ps 109:4,5,6,8.  Isaiah 61.2-3 Mt 5.4
+let text = `Joel 10:13 The passages Luke 2:32 and Lk 1:23 that we are looking at tonight 1 Cor 12:34 2 Cor 3:4 are found Jude 6, in Jude 5, Genesis 2:1 - 3:19. 1 John 3:16-17, 1 Peter 1:1, and Romans 10:13, 15, 17. Please turn in your Bibles. Ps 109:4,5,6,8.  Isaiah 61.2-3 Mt 5.4
 
 Ge 27.27-29,89-40 Heb 11.20 Heb. 12.17 Jonah 3
 
@@ -15,7 +20,7 @@ Leviticus 16:6 He 5.3 He 7.27
 
 Hos 10:1-3, 8 and 1 John 2:23
 
-exod15.18. 2 Cor 12:23 Malachi 3:32 Hebrews 9:20; 10:29; 13:20 `
+exod15.18. 2 Cor 12:23 Malachi 3:32 Hebrews 9:20; 10:29; 13:20 2 Kings 4:8,17-37`
 
 const philemon = "Phlm 1    Phlm 1:2    Philemon 1:3    Phil 2:3  Phile 7"
 
@@ -23,5 +28,5 @@ const ez = "Ezekiel 12:3 Ezek 1:2 Ezk 2:2 Ezra 1:1 Ezr 1:2 Ez 3:4-5"
 
 const noSpace = "1 Thess 2.15-16"
 
-parser.regex(noSpace).regexParser()
-console.log(parser.getPassages())
+parser.regex(text).regexParser()
+dump(parser.getPassages())
