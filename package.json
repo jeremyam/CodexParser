@@ -1,12 +1,12 @@
 {
   "name": "codexparser",
-  "version": "0.0.62",
+  "version": "0.0.63",
   "description": "This is a Javascript Bible parser and text scanner. It will search through texts and collate all scripture references into an array and parse them into objects, and it will parse passages into objects by book, chapter, verse, and testament. ",
   "main": "index.js",
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1",
     "webpack": "webpack --mode=production",
-    "build": "webpack"
+    "build": "browserify ./src/CodexParser.js -o ./dist/bundle.js"
   },
   "author": "Jeremy Menicucci",
   "license": "ISC",
