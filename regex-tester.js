@@ -20,7 +20,7 @@ Leviticus 16:6 He 5.3 He 7.27
 
 Hos 10:1-3, 8 and 1 John 2:23
 
-exod15.18. 2 Cor 12:23 Malachi 3:32 Hebrews 9:20; 10:29; 13:20 2 Kings 4:8,17-37`
+exod15.18. 2 Cor 12:23 Malachi 3:32 Hebrews 9:20; 10:29; 13:20 2 Kings 4:8,17-37 Psalm 113-118`
 
 const philemon = "Phlm 1    Phlm 1:2    Philemon 1:3    Phil 2:3  Phile 7"
 

@@ -204,6 +204,7 @@ const abbrevations = {
     Eph: "Ephesians",
     Ephes: "Ephesians",
     Php: "Philippians",
+    Phil: "Philippians",
     Pp: "Philippians",
     Col: "Colossians",
     Co: "Colossians",

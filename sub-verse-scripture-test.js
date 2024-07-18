@@ -8,5 +8,5 @@ const string = "Malachi 3:32"
 const parser = new BibleParser()
 parser.options({ invalid_passage_strategy: "include", invalid_sequence_strategy: "include" })
 console.log(parser)
-const result = parser.parse(string)
+const result = parser.parse("Psalms 113-118")
 dump(result.getPassages())
