@@ -1,5 +1,5 @@
 const bible = require("./bible")
-const { bookRegex, chapterRegex, verseRegex, scripturesRegex } = require("./regex")
+const { bookRegex, chapterRegex, verseRegex, scripturesRegex, EzraAbbrv } = require("./regex")
 const abbrevations = require("./abbr")
 //const toc = require("./toc")
 const crawler = require("bible-passage-reference-parser/js/en_bcv_parser").bcv_parser
@@ -19,6 +19,7 @@ class CodexParser {
         this.verseRegex = verseRegex
         this.scripturesRegex = scripturesRegex
         this.abbrevations = abbrevations
+        this.EzraAbbrv = EzraAbbrv
         //this.toc = toc
         this.crawler = new crawler()
     }
@@ -57,6 +58,11 @@ class CodexParser {
         for (let i = matches.length - 1; i >= 0; i--) {
             const match = matches[i]
             text = text.substring(0, match.index) + match.book + text.substring(match.index + match.abbr.length)
+        }
+        const bookShouldBeEra = text.match(this.EzraAbbrv)
+
+        if (bookShouldBeEra) {
+            text = text.replace(this.EzraAbbrv, "Ezra")
         }
         const passages = this.crawler.parse(text).parsed_entities()
 
@@ -99,6 +105,7 @@ class CodexParser {
             const results = booksWithResults[i]
             for (let j = 0; j < results.length; j++) {
                 const result = results[j]
+
                 const passage = {
                     book: this.bookify(result.start.b),
                     chapter: result.start.c,

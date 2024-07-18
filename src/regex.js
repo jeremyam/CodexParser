@@ -12,3 +12,4 @@ module.exports.bookRegex = new RegExp(`(${bookRegex.source}|${EzraAbbrv.source})
 module.exports.chapterRegex = chapterRegex
 module.exports.scripturesRegex = scripturesRegex
 module.exports.verseRegex = verseRegex
+module.exports.EzraAbbrv = EzraAbbrv

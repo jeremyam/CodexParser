@@ -14,8 +14,9 @@ const text =
 const single = "Ge 27.27-29,89-40 Heb 11.20 Heb. 12.17 Jonah 3"
 const jd = "Jd. 5"
 const cor = "1 Cor 12:4 2 Cor 3:4"
-const noSpace = "Re13.8"
-const passages = parser.parse(text + single + jd + cor + noSpace)
+const noSpace = "Re13.8 "
+const ezra = " Ez 1:3"
+const passages = parser.parse(text + single + jd + cor + noSpace + ezra)
 passages.getPassages().forEach((passage) => {
     dump(passage)
 })
