@@ -7,5 +7,5 @@ const dump = (item) => {
 const string = "Malachi 3:32"
 const parser = new BibleParser()
 parser.options({ invalid_passage_strategy: "include", invalid_sequence_strategy: "include" })
-const result = parser.parse("Philippians 4:18")
+const result = parser.parse("Is 28.16 LXX")
 dump(result.getPassages())

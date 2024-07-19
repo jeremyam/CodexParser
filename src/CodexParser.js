@@ -135,6 +135,13 @@ class CodexParser {
                 passage.scripture = this.scripturize(passage)
                 passage.indices = result.indices
                 passage.entities = result.entities
+                if (passage.entities[0].translations) {
+                    passage.version = {
+                        name: passage.entities[0].translations[0].translation, 
+                        alias: passage.entities[0].translations[0].alias, 
+                        abbreviation: passage.entities[0].translations[0].osis
+                    }
+                }
                 this.passages.push(passage)
             }
         }
