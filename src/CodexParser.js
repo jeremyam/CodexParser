@@ -91,6 +91,16 @@ class CodexParser {
         this.scan(reference)
         for (let i = 0; i < this.found.length; i++) {
             const result = this.found[i]
+            if (result.type === "range" && result.start.b !== result.end.b) {
+                console.log("=================")
+                const newPassageFound = result.end.b + " " + result.end.c + ":" + result.end.v
+                const newPassageToAdd = this.crawler.parse(newPassageFound).parsed_entities()[0].entities
+                this.found.splice(i + 1, 0, ...newPassageToAdd)
+                result.end.b = result.start.b
+                result.end.c = result.start.c
+                result.end.v = result.start.v
+            }
+
             const passage = {
                 book: this.bookify(result.start.b),
                 chapter: result.start.c,
@@ -99,14 +109,21 @@ class CodexParser {
             }
             passage.testament = this.bible.old.includes(passage.book) ? "old" : "new"
             let next = this.found[i + 1]
-            while (next && next.type === "integer" && next.start.b === result.end.b && next.end.c === result.start.c) {
-                passage.verses.push(next.start.v)
-                if (next.end.v !== next.start.v) passage.verses.push(next.end.v)
-                passage.subType = next.type
-                i++
-                next = this.found[i + 1]
+            if (next && next.type === "integer" && next.start.b === result.end.b && next.end.c === result.start.c) {
+                while (
+                    next &&
+                    next.type === "integer" &&
+                    next.start.b === result.end.b &&
+                    next.end.c === result.start.c
+                ) {
+                    passage.verses.push(next.start.v)
+                    if (next.end.v !== next.start.v) passage.verses.push(next.end.v)
+                    passage.subType = next.type
+                    i++
+                    next = this.found[i + 1]
+                }
             }
-            if (passage.type === "range") {
+            if (passage.type === "range" && passage.book === result.end.b) {
                 if (result.start.c !== result.end.c) {
                     passage.verses = [result.start.v]
                     passage.to = {
@@ -139,7 +156,11 @@ class CodexParser {
     versify(passage) {
         if (passage.start.v !== passage.end.v) {
             if (passage.type === "range") {
-                return [`${passage.start.v}-${passage.end.v}`]
+                if (passage.start.b === passage.end.b) {
+                    return [`${passage.start.v}-${passage.end.v}`]
+                } else {
+                    return [passage.start.v]
+                }
             } else {
                 if (passage.type !== "bc") {
                     const verses = []
@@ -208,16 +229,15 @@ class CodexParser {
             .trim()
     }
     find(text) {
-        const books = [...this.bible.old, ...this.bible.new]
-        const found = []
-        const passages = []
+        const bookNames = this.bookRegex.toString().split("|").slice(8)
+        const books = [...this.bible.old, ...this.bible.new, ...bookNames]
         for (let i = 0; i < books.length; i++) {
             const book = books[i].toLowerCase()
             const index = text.toLowerCase().indexOf(book)
             // Checks to see if the previous character is a colon. If it is, skip.
             // This makes sure that if you have a case like Genesis 1:1 John 1:1, the code knows that
             // the book cannot be 1 John.
-            if (text[index - 1] && text[index - 1].includes(":")) continue
+            if (text[index - 1] && text[index - 1].includes(":") && text[index - 1].match(/[a-zA-Z]/)) continue
 
             // Get the book and chapter
             if (index > -1) {
@@ -229,10 +249,10 @@ class CodexParser {
                 let chapterStartIndex = null
                 let chapterEndIndex = null
                 let j = bookEndIndex + 1
-                while (j < text.length) {
+                while (j < text.length && !text[j].match(/[a-zA-Z]/)) {
                     const match = text.substring(j).match(/^\s*(\d+)/)
                     if (match) {
-                        chapter = match[1]
+                        chapter = parseInt(match[1])
                         chapterStartIndex = j
                         chapterEndIndex = j + match[0].length
                         break
@@ -244,9 +264,8 @@ class CodexParser {
                 let verseStartIndex = null
                 let verseEndIndex = null
                 let verse
-                while (verseIndex < text.length) {
+                while (verseIndex < text.length && !text[verseIndex].match(/[a-zA-Z]/)) {
                     const match = text.substring(verseIndex).match(/^\s*?(\d+)[^a-zA-Z]*/)
-
                     if (match) {
                         verseStartIndex = verseIndex
                         verseEndIndex = verseIndex + match[0].length
@@ -262,14 +281,15 @@ class CodexParser {
                 passage.index = {
                     start: index,
                 }
-                found.push(passage)
+                this.passages.push(passage)
             }
         }
-        return found
+        return this
     }
 
     regex(text) {
         this.found = text.match(this.scripturesRegex)
+        console.log(this.found)
         return this
     }
 
@@ -332,7 +352,7 @@ class CodexParser {
             this.passages.push(passage)
         }
 
-        this.found = []
+        this.found = this.passages.map((passage) => passage.scripture)
         return this
     }
 }
