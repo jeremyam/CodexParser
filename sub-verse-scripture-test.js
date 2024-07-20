@@ -6,6 +6,10 @@ const dump = (item) => {
 }
 const string = "Malachi 3:32"
 const parser = new BibleParser()
-parser.options({ invalid_passage_strategy: "include", invalid_sequence_strategy: "include" })
-const result = parser.parse("Is 28.16 LXX")
+parser.options({
+    invalid_passage_strategy: "include",
+    invalid_sequence_strategy: "include",
+    single_chapter_1_strategy: "verse",
+})
+const result = parser.parse("Lk 1.47 2 Cor 7.6")
 dump(result.getPassages())
