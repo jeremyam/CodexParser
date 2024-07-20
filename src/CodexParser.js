@@ -89,63 +89,46 @@ class CodexParser {
         }
         this.passages = []
         this.scan(reference)
-        const books = []
         for (let i = 0; i < this.found.length; i++) {
-            books.push(this.found[i].start.b)
-        }
-        const uniqueBooks = [...new Set(books)]
-
-        const booksWithResults = []
-        for (const book of uniqueBooks) {
-            const found = this.found.filter((passage) => passage.start.b === book)
-            booksWithResults.push(found)
-        }
-
-        for (let i = 0; i < booksWithResults.length; i++) {
-            const results = booksWithResults[i]
-            for (let j = 0; j < results.length; j++) {
-                const result = results[j]
-
-                const passage = {
-                    book: this.bookify(result.start.b),
-                    chapter: result.start.c,
-                    verses: this.versify(result),
-                    type: result.type,
-                }
-                passage.testament = this.bible.old.includes(passage.book) ? "old" : "new"
-                let next = results[j + 1]
-                while (next && next.type === "integer" && next.end.c === result.start.c) {
-                    passage.verses.push(next.start.v)
-                    if (next.end.v !== next.start.v) passage.verses.push(next.end.v)
-                    passage.subType = next.type
-                    j++
-                    next = results[j + 1]
-                }
-                if (passage.type === "range") {
-                    if (result.start.c !== result.end.c) {
-                        passage.verses = [result.start.v]
-                        passage.to = {
-                            book: this.bookify(result.end.b),
-                            chapter: result.end.c,
-                            verses: result.end.v,
-                        }
-                    }
-                }
-                passage.original = result.osis
-                passage.scripture = this.scripturize(passage)
-                passage.indices = result.indices
-                passage.entities = result.entities
-                if (passage.entities[0].translations) {
-                    passage.version = {
-                        name: passage.entities[0].translations[0].translation, 
-                        alias: passage.entities[0].translations[0].alias, 
-                        abbreviation: passage.entities[0].translations[0].osis
-                    }
-                }
-                this.passages.push(passage)
+            const result = this.found[i]
+            const passage = {
+                book: this.bookify(result.start.b),
+                chapter: result.start.c,
+                verses: this.versify(result),
+                type: result.type,
             }
+            passage.testament = this.bible.old.includes(passage.book) ? "old" : "new"
+            let next = this.found[i + 1]
+            while (next && next.type === "integer" && next.start.b === result.end.b && next.end.c === result.start.c) {
+                passage.verses.push(next.start.v)
+                if (next.end.v !== next.start.v) passage.verses.push(next.end.v)
+                passage.subType = next.type
+                i++
+                next = this.found[i + 1]
+            }
+            if (passage.type === "range") {
+                if (result.start.c !== result.end.c) {
+                    passage.verses = [result.start.v]
+                    passage.to = {
+                        book: this.bookify(result.end.b),
+                        chapter: result.end.c,
+                        verses: result.end.v,
+                    }
+                }
+            }
+            passage.original = result.osis
+            passage.scripture = this.scripturize(passage)
+            passage.indices = result.indices
+            passage.entities = result.entities
+            if (passage.entities[0].translations) {
+                passage.version = {
+                    name: passage.entities[0].translations[0].translation,
+                    alias: passage.entities[0].translations[0].alias,
+                    abbreviation: passage.entities[0].translations[0].osis,
+                }
+            }
+            this.passages.push(passage)
         }
-        this.passages.sort((a, b) => a.chapter - b.chapter)
         this.found = []
         return this
     }
