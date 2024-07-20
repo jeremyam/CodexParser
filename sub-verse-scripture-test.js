@@ -11,5 +11,5 @@ parser.options({
     invalid_sequence_strategy: "include",
     single_chapter_1_strategy: "verse",
 })
-const result = parser.parse("Lk 1.47 2 Cor 7.6")
+const result = parser.parse("Ex 9.16 LXX")
 dump(result.getPassages())
