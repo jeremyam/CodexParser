@@ -91,6 +91,10 @@ class CodexParser {
         this.scan(reference)
         for (let i = 0; i < this.found.length; i++) {
             const result = this.found[i]
+            if (!result.entities[0].valid.valid) {
+                continue
+            }
+
             if (result.type === "range" && result.start.b !== result.end.b) {
                 console.log("=================")
                 const newPassageFound = result.end.b + " " + result.end.c + ":" + result.end.v
@@ -116,9 +120,11 @@ class CodexParser {
                     next.start.b === result.end.b &&
                     next.end.c === result.start.c
                 ) {
-                    passage.verses.push(next.start.v)
-                    if (next.end.v !== next.start.v) passage.verses.push(next.end.v)
-                    passage.subType = next.type
+                    if (next.start.v > result.start.v) {
+                        passage.verses.push(next.start.v)
+                        if (next.end.v !== next.start.v) passage.verses.push(next.end.v)
+                        passage.subType = next.type
+                    }
                     i++
                     next = this.found[i + 1]
                 }
