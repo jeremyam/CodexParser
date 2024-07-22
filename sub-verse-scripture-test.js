@@ -11,5 +11,5 @@ parser.options({
     invalid_sequence_strategy: "include",
     single_chapter_1_strategy: "verse",
 })
-const result = parser.parse("Gen  15:13 - Ph Her 266; QuGen  3:10; Ps-Ph 9:3")
+const result = parser.parse("Gen  15:13 - Ph Her 266; QuGen  3:10; Ps-Ph 9:3 malachi 4:1 lxx")
 dump(result.getPassages())

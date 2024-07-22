@@ -65,7 +65,7 @@ class CodexParser {
             text = text.replace(this.EzraAbbrv, "Ezra")
         }
         const passages = this.crawler.parse(text).parsed_entities()
-
+        
         for (let j = 0; j < passages.length; j++) {
             const passage = passages[j]
             for (let i = 0; i < passage.entities.length; i++) {
