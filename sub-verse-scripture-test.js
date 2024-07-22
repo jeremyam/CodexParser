@@ -11,5 +11,5 @@ parser.options({
     invalid_sequence_strategy: "include",
     single_chapter_1_strategy: "verse",
 })
-const result = parser.parse("Ps 139:1 Allusions Rev 8:27")
+const result = parser.parse("Genesis 3:17-19 // Genesis 3:17 Genesis 3:18-19 Genesis 3:19")
 dump(result.getPassages())

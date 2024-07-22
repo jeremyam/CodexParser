@@ -43,7 +43,6 @@ class CodexParser {
      */
     scan(text) {
         text = text.replace(/Rev(?=\s|\.)/gim, "Revelation")
-        console.log(text)
         const regex = /(?:He(?=\s?\d+))/g
         let match
         const matches = []
@@ -94,7 +93,6 @@ class CodexParser {
         for (let i = 0; i < this.found.length; i++) {
             const result = this.found[i]
             if (result.type === "range" && result.start.b !== result.end.b) {
-                console.log("=================")
                 const newPassageFound = result.end.b + " " + result.end.c + ":" + result.end.v
                 const newPassageToAdd = this.crawler.parse(newPassageFound).parsed_entities()[0].entities
                 this.found.splice(i + 1, 0, ...newPassageToAdd)
@@ -293,7 +291,6 @@ class CodexParser {
 
     regex(text) {
         this.found = text.match(this.scripturesRegex)
-        console.log(this.found)
         return this
     }
 
@@ -302,7 +299,6 @@ class CodexParser {
         for (let i = 0; i < this.found.length; i++) {
             let verse, chapter
             const hasChapterRange = this.found[i].match(/(?<=-\s?)\b\d+[.:].+\b/)
-            console.log(hasChapterRange)
             const book = this.found[i].match(this.bookRegex)
             if (book === null) continue
             chapter = this.found[i].replace(book[0], "").match(this.chapterRegex)
