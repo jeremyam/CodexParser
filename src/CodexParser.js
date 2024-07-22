@@ -42,6 +42,8 @@ class CodexParser {
      * @return {array} The found passages from the text.
      */
     scan(text) {
+        text = text.replace(/Rev(?=\s|\.)/gim, "Revelation")
+        console.log(text)
         const regex = /(?:He(?=\s?\d+))/g
         let match
         const matches = []
@@ -65,7 +67,7 @@ class CodexParser {
             text = text.replace(this.EzraAbbrv, "Ezra")
         }
         const passages = this.crawler.parse(text).parsed_entities()
-        
+
         for (let j = 0; j < passages.length; j++) {
             const passage = passages[j]
             for (let i = 0; i < passage.entities.length; i++) {
@@ -91,10 +93,6 @@ class CodexParser {
         this.scan(reference)
         for (let i = 0; i < this.found.length; i++) {
             const result = this.found[i]
-            if (!result.entities[0].valid.valid) {
-                continue
-            }
-
             if (result.type === "range" && result.start.b !== result.end.b) {
                 console.log("=================")
                 const newPassageFound = result.end.b + " " + result.end.c + ":" + result.end.v
