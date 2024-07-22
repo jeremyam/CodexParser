@@ -91,7 +91,7 @@ class CodexParser {
         this.scan(reference)
         for (let i = 0; i < this.found.length; i++) {
             const result = this.found[i]
-            if (!result.entities[0].valid.valid || result.entities[0].valid.messages.end_chapter_not_exist) {
+            if (!result.entities[0].valid.valid) {
                 continue
             }
 
