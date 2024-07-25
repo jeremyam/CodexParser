@@ -1,3 +1,5 @@
+const BibleParser = require("./src/CodexParser.js")
+const parser = new BibleParser()
 const books = [
     "Gen",
     "Ge",
@@ -298,13 +300,16 @@ booksAt.sort(function (a, b) {
 })
 newText = ""
 let chNoInText = 0
+
+let passages = []
 for (let b = 0; b < booksAt.length; b++) {
     while (chNoInText < booksAt[b][1]) {
         //copy across characters to start of book
         newText += text.charAt(chNoInText)
         chNoInText++
     }
-    newText += booksAt[b][0]
+    newText += "<span class='passage'>" + booksAt[b][0]
+    let passage = booksAt[b][0]
     chNoInText += booksAt[b][0].length //skip the 'fill-in characters
     for (let i = 0; i < 100; i++) {
         chNoInText++
@@ -313,8 +318,12 @@ for (let b = 0; b < booksAt.length; b++) {
         if (nextCh.match(/^[a-z]+$/)) break
         if (nextCh.match(/^[A-Z]+$/)) break
         newText += text.charAt(chNoInText - 1)
+        passage += text.charAt(chNoInText - 1)
     }
-    newText += " "
+    passages.push(passage.trim())
+    newText += "</span>&nbsp;"
 }
 
-console.log(newText)
+const found = parser.find(text)
+
+
