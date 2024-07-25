@@ -157,7 +157,7 @@ class CodexParser {
 
     versify(passage) {
         if (passage.start.v !== passage.end.v) {
-            if (passage.type === "range") {
+            if (passage.type === "range" || passage.type === "ff") {
                 if (passage.start.b === passage.end.b) {
                     return [`${passage.start.v}-${passage.end.v}`]
                 } else {
