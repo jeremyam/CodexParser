@@ -11,5 +11,5 @@ parser.options({
     invalid_sequence_strategy: "include",
     single_chapter_1_strategy: "verse",
 })
-const result = parser.parse("Psalm 34:12f")
+const result = parser.parse("Isaiah 8:21-9:6")
 dump(result.getPassages())

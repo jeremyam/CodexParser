@@ -125,7 +125,8 @@ class CodexParser {
                     next = this.found[i + 1]
                 }
             }
-            if (passage.type === "range" && passage.book === result.end.b) {
+
+            if (passage.type === "range" && result.start.b === result.end.b) {
                 if (result.start.c !== result.end.c) {
                     passage.verses = [result.start.v]
                     passage.to = {

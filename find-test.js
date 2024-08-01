@@ -16,5 +16,5 @@ Hos 10:1-3, 8 and 1 John 2:23f
 exod15.18. 2 Cor 12:23 Malachi 3:32`
 
 const parser = new BibleParser()
-const result = parser.find(text).enhance()
+const result = parser.find("Isaiah 29:16; 45:9 // Romans 9:20").enhance()
 console.log(result)
