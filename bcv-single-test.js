@@ -4,11 +4,12 @@ const util = require("util")
 const dump = (item) => {
     console.log(util.inspect(item, { depth: null, colors: true }))
 }
-const text = "Psalm 34:12f"
+const text = "Romans 16:27"
 
 const parser = new bcv_parser({
     invalid_sequence_strategy: "include",
     invalid_passage_strategy: "include",
+    sequence_combination_strategy: "combine"
 })
 const textParser = parser.parse(text)
 console.log(textParser)

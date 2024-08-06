@@ -10,6 +10,7 @@ parser.options({
     invalid_passage_strategy: "include",
     invalid_sequence_strategy: "include",
     single_chapter_1_strategy: "verse",
+    sequence_combination_strategy: "combine"
 })
-const result = parser.parse("Isaiah 8:21-9:6")
+const result = parser.parse("Revelation 2:4 // Jeremiah 2:32 Hosea 1-3")
 dump(result.getPassages())
