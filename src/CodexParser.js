@@ -221,7 +221,6 @@ class CodexParser {
      * @param {object} passage - A passage object
      */
     scripturize(passage) {
-        console.log(passage)
         const { book, chapter, verses, to } = passage
         const colon = verses.length !== 0 ? ":" : ""
         const parts = [book, chapter, colon, verses]
