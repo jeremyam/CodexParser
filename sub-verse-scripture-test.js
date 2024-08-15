@@ -12,5 +12,5 @@ parser.options({
     single_chapter_1_strategy: "verse",
     sequence_combination_strategy: "combine"
 })
-const result = parser.parse("John 17 Deuteronomy 31-33 Gen. 49; Josh. 23–24; 1 Sam. 12; 1 Kings 2:1–12; 1 Chron. 28–29")
+const result = parser.parse("Jude 1 Gen. 4:1–25 Num. 22–24")
 dump(result.getPassages())

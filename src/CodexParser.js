@@ -552,7 +552,7 @@ class CodexParser {
                     original: this.found[i],
                     book: this.bookify(this.found[i].match(this.bookRegex)[0]),
                     chapter: this.found[i].match(this.chapterRegex),
-                    verse: this.found[i].match(/(?<=[.:])(\d+.+)/),
+                    verse: this.found[i].match(/(?<=[.:])(\d+.+)/)[0],
                 }
                 this.passages.push(passage)
             }
