@@ -542,6 +542,7 @@ class CodexParser {
             this.found.push(passage.trim())
             newText += "</span>&nbsp;"
         }
+        console.log(newText)
         return this
     }
 
@@ -552,7 +553,7 @@ class CodexParser {
                     original: this.found[i],
                     book: this.bookify(this.found[i].match(this.bookRegex)[0]),
                     chapter: this.found[i].match(this.chapterRegex),
-                    verse: this.found[i].match(/(?<=[.:])(\d+.+)/)[0],
+                    verse: this.found[i].match(this.verseRegex)[0],
                 }
                 this.passages.push(passage)
             }
