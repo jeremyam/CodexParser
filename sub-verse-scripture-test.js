@@ -12,5 +12,5 @@ parser.options({
     single_chapter_1_strategy: "verse",
     sequence_combination_strategy: "combine",
 })
-const result = parser.parse("1 Cor 1.20 Matt 1.1 Job 12.17 Is 19.12")
+const result = parser.parse("John 3:1-3")
 dump(result.getPassages())

@@ -230,6 +230,7 @@ class CodexParser {
         return parts
             .join(" ")
             .replace(/\s+:\s+/g, ":")
+            .replace(/\s[-–—]\s/, "-")
             .trim()
     }
     find(text) {
