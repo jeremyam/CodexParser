@@ -13,5 +13,4 @@ parser.options({
     sequence_combination_strategy: "combine",
 })
 const result = parser.parse("1 Cor 1.20 Matt 1.1 Job 12.17 Is 19.12")
-const result = parser.parse("Jude 1 Gen. 4:1–25 Num. 22–24")
 dump(result.getPassages())
