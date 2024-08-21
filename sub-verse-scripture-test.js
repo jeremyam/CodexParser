@@ -12,5 +12,5 @@ parser.options({
     single_chapter_1_strategy: "verse",
     sequence_combination_strategy: "combine"
 })
-const result = parser.parse("Jude 1 Gen. 4:1–25 Num. 22–24")
+const result = parser.parse("John 12:38 John 1:29,34 Isaiah 6:3 LXX Isaiah 52:13 LXX Isaiah 53:1 Isaiah 6:10 Isaiah 6:1 Isaiah 52:13 Isaiah 6:7 Isaiah 53:12 Isaiah 52:13 - 53:12")
 dump(result.getPassages())

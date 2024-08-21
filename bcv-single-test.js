@@ -4,7 +4,7 @@ const util = require("util")
 const dump = (item) => {
     console.log(util.inspect(item, { depth: null, colors: true }))
 }
-const text = "Romans 16:27"
+const text = "John 12:38 John 1:29,34 Isaiah 53:1 Isaiah 6:10 Isaiah 6:1 Isaiah 52:13 Isaiah 6:3 LXX Isaiah 52:13 LXX Isaiah 6:7 Isaiah 53:12 Isaiah 52:13 - 53:12"
 
 const parser = new bcv_parser({
     invalid_sequence_strategy: "include",

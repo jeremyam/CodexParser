@@ -22,6 +22,35 @@ class CodexParser {
         this.EzraAbbrv = EzraAbbrv
         //this.toc = toc
         this.crawler = new crawler()
+        this.preStrings = ["III", "II", "I", "1st", "2nd", "3rd", "First", "Second", "Third", "1", "2", "3"]
+        this.preStringed = [
+            "Sam",
+            "Samuel",
+            "Kings",
+            "Kgs",
+            "Kin",
+            "Chron",
+            "Chronicles",
+            "Corinthians",
+            "Co",
+            "Cor",
+            "Thessalonians",
+            "Th",
+            "Thes",
+            "Thess",
+            "Timothy",
+            "Ti",
+            "Tim",
+            "Peter",
+            "Pe",
+            "Pet",
+            "Pt",
+            "John",
+            "Jn",
+            "Jhn",
+        ]
+
+        this.text = String
     }
 
     /**
@@ -233,259 +262,14 @@ class CodexParser {
             .trim()
     }
     find(text) {
-        const books = [
-            "Gen",
-            "Ge",
-            "Gn",
-            "Exo",
-            "Ex",
-            "Exod",
-            "Lev",
-            "Le",
-            "Lv",
-            "Num",
-            "Nu",
-            "Nm",
-            "Nb",
-            "Deut",
-            "Dt",
-            "Josh",
-            "Jos",
-            "Jsh",
-            "Judg",
-            "Jdg",
-            "Jg",
-            "Jdgs",
-            "Rth",
-            "Ru",
-            "Sam",
-            "Samuel",
-            "Kings",
-            "Kgs",
-            "Kin",
-            "Chron",
-            "Chronicles",
-            "Ezra",
-            "Ezr",
-            "Ez",
-            "Neh",
-            "Ne",
-            "Esth",
-            "Es",
-            "Job",
-            "Job",
-            "Jb",
-            "Pslm",
-            "Ps",
-            "Psalms",
-            "Psa",
-            "Psm",
-            "Pss",
-            "Prov",
-            "Pr",
-            "Prv",
-            "Eccles",
-            "Ec",
-            "Song",
-            "So",
-            "Canticles",
-            "Song of Songs",
-            "SOS",
-            "Isa",
-            "Is",
-            "Jer",
-            "Je",
-            "Jr",
-            "Lam",
-            "La",
-            "Ezek",
-            "Eze",
-            "Ezk",
-            "Dan",
-            "Da",
-            "Dn",
-            "Hos",
-            "Ho",
-            "Joel",
-            "Joe",
-            "Jl",
-            "Amos",
-            "Am",
-            "Obad",
-            "Ob",
-            "Jnh",
-            "Jon",
-            "Micah",
-            "Mic",
-            "Nah",
-            "Na",
-            "Hab",
-            "Zeph",
-            "Zep",
-            "Zp",
-            "Haggai",
-            "Hag",
-            "Hg",
-            "Zech",
-            "Zec",
-            "Zc",
-            "Mal",
-            "Mal",
-            "Ml",
-            "Matt",
-            "Mt",
-            "Mrk",
-            "Mk",
-            "Mr",
-            "Luk",
-            "Lk",
-            "John",
-            "Jn",
-            "Jhn",
-            "Acts",
-            "Ac",
-            "Rom",
-            "Ro",
-            "Rm",
-            "Co",
-            "Cor",
-            "Corinthians",
-            "Gal",
-            "Ga",
-            "Ephes",
-            "Eph",
-            "Phil",
-            "Php",
-            "Col",
-            "Col",
-            "Th",
-            "Thes",
-            "Thess",
-            "Thessalonians",
-            "Ti",
-            "Tim",
-            "Timothy",
-            "Titus",
-            "Tit",
-            "Philem",
-            "Phm",
-            "Hebrews",
-            "Heb",
-            "He",
-            "James",
-            "Jas",
-            "Jm",
-            "Pe",
-            "Pet",
-            "Pt",
-            "Peter",
-            "Jn",
-            "Jo",
-            "Joh",
-            "Jhn",
-            "John",
-            "Jude",
-            "Jd",
-            "Jud",
-            "Jud",
-            "Rev",
-            "The Revelation",
-            "Genesis",
-            "Exodus",
-            "Leviticus",
-            "Numbers",
-            "Deuteronomy",
-            "Joshua",
-            "Judges",
-            "Ruth",
-            "Samuel",
-            "Kings",
-            "Chronicles",
-            "Ezra",
-            "Nehemiah",
-            "Esther",
-            "Job",
-            "Psalms",
-            "Psalm",
-            "Proverbs",
-            "Ecclesiastes",
-            "Song of Solomon",
-            "Isaiah",
-            "Jeremiah",
-            "Lamentations",
-            "Ezekiel",
-            "Daniel",
-            "Hosea",
-            "Joel",
-            "Amos",
-            "Obadiah",
-            "Jonah",
-            "Micah",
-            "Nahum",
-            "Habakkuk",
-            "Zephaniah",
-            "Haggai",
-            "Zechariah",
-            "Malachi",
-            "Matthew",
-            "Mark",
-            "Luke",
-            "John",
-            "Acts",
-            "Romans",
-            "Corinthians",
-            "Galatians",
-            "Ephesians",
-            "Philippians",
-            "Colossians",
-            "Thessalonians",
-            "Timothy",
-            "Titus",
-            "Philemon",
-            "Hebrews",
-            "James",
-            "Peter",
-            "John",
-            "Revelation",
-            "Re",
-            "Ap",
-            "Jd.",
-            "Heb.",
-        ]
+        const books = [...Object.keys(this.abbrevations), ...this.bible.new, ...this.bible.old]
 
-        const preStrings = ["III", "II", "I", "1st", "2nd", "3rd", "First", "Second", "Third", "1", "2", "3"]
-        const preStringed = [
-            "Sam",
-            "Samuel",
-            "Kings",
-            "Kgs",
-            "Kin",
-            "Chron",
-            "Chronicles",
-            "Corinthians",
-            "Co",
-            "Cor",
-            "Thessalonians",
-            "Th",
-            "Thes",
-            "Thess",
-            "Timothy",
-            "Ti",
-            "Tim",
-            "Peter",
-            "Pe",
-            "Pet",
-            "Pt",
-            "John",
-            "Jn",
-            "Jhn",
-        ]
         let newText = ""
 
         //add the prestringed versions e.g. 1 Peter
-        for (let b = 0; b < preStringed.length; b++) {
-            for (let pre = 0; pre < preStrings.length; pre++) {
-                books.push(preStrings[pre] + " " + preStringed[b])
+        for (let b = 0; b < this.preStringed.length; b++) {
+            for (let pre = 0; pre < this.preStrings.length; pre++) {
+                books.push(this.preStrings[pre] + " " + this.preStringed[b])
             }
         }
         // add the book name with . at the end as this seems to be added sometimes, at least to the shortened forms
@@ -530,29 +314,63 @@ class CodexParser {
             newText += "<span class='passage'>" + booksAt[b][0]
             let passage = booksAt[b][0]
             chNoInText += booksAt[b][0].length //skip the 'fill-in characters
+            let abbr
             for (let i = 0; i < 100; i++) {
                 chNoInText++
-                const nextCh = text.charAt(chNoInText)
+                let nextCh = text.charAt(chNoInText)
+                const testStr = text.substring(chNoInText, chNoInText + 5).toLowerCase()
+                if (testStr.includes("lxx")) abbr = "lxx"
+                if (testStr.includes("na")) abbr = "na"
+                if (testStr.includes("ubs")) abbr = "ubs"
+                if (testStr.includes("mt")) abbr = "mt"
+                if (testStr.includes("bhs")) abbr = "bhs"
+                if (testStr.includes("lxx")) abbr = "lxx"
+                if (testStr.includes("na")) abbr = "na"
+                if (testStr.includes("ubs")) abbr = "ubs"
+                if (testStr.includes("mt")) abbr = "mt"
+                if (testStr.includes("bhs")) abbr = "bhs"
                 //test whether are at the end of the chapter(s) and verse(s)
                 if (nextCh.match(/^[a-z]+$/) && nextCh !== "f" && nextCh !== "ff") break
                 if (nextCh.match(/^[A-Z]+$/)) break
                 newText += text.charAt(chNoInText - 1)
                 passage += text.charAt(chNoInText - 1)
             }
-            this.found.push(passage.trim())
+            this.found.push(passage.trim() + (abbr ? " " + abbr.toUpperCase() : ""))
             newText += "</span>&nbsp;"
         }
+        this.text = newText
         return this
+    }
+
+    getText() {
+        return this.text
     }
 
     enhance() {
         if (this.found.length > 0) {
             for (let i = 0; i < this.found.length; i++) {
+                const found = this.found[i]
+                const book = this.bookify(this.found[i].match(this.bookRegex)[0])
+                const passageWithoutBook = found.replace(book, "")
+                let chapter, verse
+                if (/[:\.]/.test(passageWithoutBook)) {
+                    chapter = parseInt(passageWithoutBook.split(":").shift().trim(), 10)
+                    verse = parseInt(passageWithoutBook.split(":").pop().trim(), 10)
+                } else {
+                    if (/\d+/gim.test(passageWithoutBook)) {
+                        chapter = parseInt(passageWithoutBook.trim())
+                        verse = null
+                    }
+                }
+
+                let type = "verseRange"
+
                 const passage = {
                     original: this.found[i],
-                    book: this.bookify(this.found[i].match(this.bookRegex)[0]),
-                    chapter: this.found[i].match(this.chapterRegex),
-                    verse: this.found[i].match(/(?<=[.:])(\d+.+)/)[0],
+                    book: book,
+                    chapter: chapter,
+                    verse: verse,
+                    type: type,
                 }
                 this.passages.push(passage)
             }
