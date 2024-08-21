@@ -259,6 +259,7 @@ class CodexParser {
         return parts
             .join(" ")
             .replace(/\s+:\s+/g, ":")
+            .replace(/\s[-–—]\s/, "-")
             .trim()
     }
     find(text) {
@@ -367,10 +368,9 @@ class CodexParser {
 
                 const passage = {
                     original: this.found[i],
-                    book: book,
-                    chapter: chapter,
-                    verse: verse,
-                    type: type,
+                    book: this.bookify(this.found[i].match(this.bookRegex)[0]),
+                    chapter: this.found[i].match(this.chapterRegex),
+                    verse: this.found[i].match(/(?<=[.:])(\d+.+)/)[0],
                 }
                 this.passages.push(passage)
             }
