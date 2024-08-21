@@ -316,10 +316,11 @@ class CodexParser {
             let passage = booksAt[b][0]
             chNoInText += booksAt[b][0].length //skip the 'fill-in characters
             let abbr
+            let index = []
             for (let i = 0; i < 100; i++) {
                 chNoInText++
                 let nextCh = text.charAt(chNoInText)
-                const testStr = text.substring(chNoInText, chNoInText + 5).toLowerCase()
+                const testStr = text.substring(chNoInText - passage.length, chNoInText + 5).toLowerCase()
                 if (testStr.includes("lxx")) abbr = "lxx"
                 if (testStr.includes("na")) abbr = "na"
                 if (testStr.includes("ubs")) abbr = "ubs"
@@ -335,7 +336,11 @@ class CodexParser {
                 if (nextCh.match(/^[A-Z]+$/)) break
                 newText += text.charAt(chNoInText - 1)
                 passage += text.charAt(chNoInText - 1)
+                index.push(chNoInText - 1)
             }
+
+            index = [index[0], index[index.length - 1]]
+            console.log(index)
             this.found.push(passage.trim() + (abbr ? " " + abbr.toUpperCase() : ""))
             newText += "</span>&nbsp;"
         }
