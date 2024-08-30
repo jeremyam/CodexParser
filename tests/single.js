@@ -3,8 +3,7 @@ const dump = require("../src/functions.js").dump
 
 const parser = new BibleParser()
 
-const text = "Job 1:1-5"
+const text = "Genesis 31:55-56"
 
 const passages = parser.parse(text).getPassages()
 
-dump(passages)

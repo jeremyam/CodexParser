@@ -1,13 +1,10 @@
+const versified = require("./versified")
 const bible = require("./bible")
 const { bookRegex, chapterRegex, verseRegex, scripturesRegex, EzraAbbrv } = require("./regex")
 const abbrevations = require("./abbr")
-//const toc = require("./toc")
 const crawler = require("bible-passage-reference-parser/js/en_bcv_parser").bcv_parser
 const util = require("util")
-
-const dump = (item) => {
-    console.log(util.inspect(item, { depth: null, colors: true }))
-}
+const dump = require("./functions").dump
 
 class CodexParser {
     constructor() {
@@ -22,35 +19,7 @@ class CodexParser {
         this.EzraAbbrv = EzraAbbrv
         //this.toc = toc
         this.crawler = new crawler()
-        this.preStrings = ["III", "II", "I", "1st", "2nd", "3rd", "First", "Second", "Third", "1", "2", "3"]
-        this.preStringed = [
-            "Sam",
-            "Samuel",
-            "Kings",
-            "Kgs",
-            "Kin",
-            "Chron",
-            "Chronicles",
-            "Corinthians",
-            "Co",
-            "Cor",
-            "Thessalonians",
-            "Th",
-            "Thes",
-            "Thess",
-            "Timothy",
-            "Ti",
-            "Tim",
-            "Peter",
-            "Pe",
-            "Pet",
-            "Pt",
-            "John",
-            "Jn",
-            "Jhn",
-        ]
-
-        this.text = String
+        this.versificationDifferences = versified
     }
 
     /**
@@ -181,7 +150,27 @@ class CodexParser {
             this.passages.push(passage)
         }
         this.found = []
+        this.versification()
         return this
+    }
+
+    versification() {
+        for (let i = 0; i < this.passages.length; i++) {
+            const passage = this.passages[i]
+            const hasVersification = this.versificationDifferences[passage.book]
+            if (hasVersification) {
+                for (let j = 0; j < hasVersification.length; j++) {
+                    const versification = hasVersification[j]
+                    if (passage.verses.some((item) => versification.verses.includes(item)) && versification.chapter === passage.chapter) {
+                        passage.versification = {
+                            mt: versification.mt,
+                            lxx: versification.lxx,
+                        }
+                    }
+                }
+            }
+        }
+        dump(this.passages)
     }
 
     populate(entities, verses) {
@@ -293,193 +282,6 @@ class CodexParser {
             .replace(/\s+:\s+/g, ":")
             .replace(/\s[-–—]\s/, "-")
             .trim()
-    }
-    find(text) {
-        const books = [...Object.keys(this.abbrevations), ...this.bible.new, ...this.bible.old]
-
-        let newText = ""
-
-        //add the prestringed versions e.g. 1 Peter
-        for (let b = 0; b < this.preStringed.length; b++) {
-            for (let pre = 0; pre < this.preStrings.length; pre++) {
-                books.push(this.preStrings[pre] + " " + this.preStringed[b])
-            }
-        }
-        // add the book name with . at the end as this seems to be added sometimes, at least to the shortened forms
-        const length = books.length
-        for (let b = 0; b < length; b++) {
-            books.push(books[b] + ".")
-        }
-
-        // sort descending - longer items first
-        books.sort((a, b) => b.length - a.length)
-        let booksAt = []
-        // go thro' each book finding where it matches in text
-        for (let b = 0; b < books.length; b++) {
-            const book = books[b]
-            let chNoInText = 0
-            while (chNoInText < text.length) {
-                let j = text.indexOf(book, chNoInText)
-                if (j < 0) break
-                if (j + book.length < text.length && !text.charAt(j + book.length).match(/^[a-z]+$/)) {
-                    booksAt.push([book, j])
-                    let replacement = book
-                    for (let k = 0; k < book.length; k++) {
-                        replacement = replacement.replace(book.charAt(k), "X")
-                    }
-                    text = text.replace(book, replacement) // to prevent a shorter version matching
-                }
-                chNoInText = j + book.length + 1
-            }
-        }
-        // into ascending order of start position
-        booksAt.sort(function (a, b) {
-            return a[1] - b[1]
-        })
-        newText = ""
-        let chNoInText = 0
-        for (let b = 0; b < booksAt.length; b++) {
-            while (chNoInText < booksAt[b][1]) {
-                //copy across characters to start of book
-                newText += text.charAt(chNoInText)
-                chNoInText++
-            }
-            newText += "<span class='passage'>" + booksAt[b][0]
-            let passage = booksAt[b][0]
-            chNoInText += booksAt[b][0].length //skip the 'fill-in characters
-            let abbr
-            let index = []
-            for (let i = 0; i < 100; i++) {
-                chNoInText++
-                let nextCh = text.charAt(chNoInText)
-                const testStr = text.substring(chNoInText - passage.length, chNoInText + 5).toLowerCase()
-                if (testStr.includes("lxx")) abbr = "lxx"
-                if (testStr.includes("na")) abbr = "na"
-                if (testStr.includes("ubs")) abbr = "ubs"
-                if (testStr.includes("mt")) abbr = "mt"
-                if (testStr.includes("bhs")) abbr = "bhs"
-                if (testStr.includes("lxx")) abbr = "lxx"
-                if (testStr.includes("na")) abbr = "na"
-                if (testStr.includes("ubs")) abbr = "ubs"
-                if (testStr.includes("mt")) abbr = "mt"
-                if (testStr.includes("bhs")) abbr = "bhs"
-                //test whether are at the end of the chapter(s) and verse(s)
-                if (nextCh.match(/^[a-z]+$/) && nextCh !== "f" && nextCh !== "ff" && nextCh !== "a") break
-                if (nextCh.match(/^[A-Z]+$/)) break
-                newText += text.charAt(chNoInText - 1)
-                passage += text.charAt(chNoInText - 1)
-                index.push(chNoInText - 1)
-            }
-
-            index = [index[0], index[index.length - 1]]
-            console.log(index)
-            this.found.push(passage.trim() + (abbr ? " " + abbr.toUpperCase() : ""))
-            newText += "</span>&nbsp;"
-        }
-        this.text = newText
-        return this
-    }
-
-    getText() {
-        return this.text
-    }
-
-    enhance() {
-        if (this.found.length > 0) {
-            for (let i = 0; i < this.found.length; i++) {
-                const found = this.found[i]
-                const book = this.bookify(this.found[i].match(this.bookRegex)[0])
-                const passageWithoutBook = found.replace(book, "")
-                let chapter, verse
-                if (/[:\.]/.test(passageWithoutBook)) {
-                    chapter = parseInt(passageWithoutBook.split(":").shift().trim(), 10)
-                    verse = parseInt(passageWithoutBook.split(":").pop().trim(), 10)
-                } else {
-                    if (/\d+/gim.test(passageWithoutBook)) {
-                        chapter = parseInt(passageWithoutBook.trim())
-                        verse = null
-                    }
-                }
-
-                let type = "verseRange"
-
-                const passage = {
-                    original: this.found[i],
-                    book: this.bookify(this.found[i].match(this.bookRegex)[0]),
-                    chapter: this.found[i].match(this.chapterRegex),
-                    verse: this.found[i].match(/(?<=[.:])(\d+.+)/)[0],
-                }
-                this.passages.push(passage)
-            }
-        }
-        return this.passages
-    }
-
-    regex(text) {
-        this.found = text.match(this.scripturesRegex)
-        return this
-    }
-
-    regexParser() {
-        this.passages = []
-        for (let i = 0; i < this.found.length; i++) {
-            let verse, chapter
-            const hasChapterRange = this.found[i].match(/(?<=-\s?)\b\d+[.:].+\b/)
-            const book = this.found[i].match(this.bookRegex)
-            if (book === null) continue
-            chapter = this.found[i].replace(book[0], "").match(this.chapterRegex)
-
-            if (Array.isArray(chapter)) {
-                chapter = chapter[0]
-            }
-            if (
-                this.bookify(book).toLowerCase() === "jude" ||
-                this.bookify(book).toLowerCase() === "philemon" ||
-                this.bookify(book).toLowerCase() === "obadiah" ||
-                this.bookify(book).toLowerCase() === "2 john" ||
-                this.bookify(book).toLowerCase() === "3 john"
-            ) {
-                verse = this.found[i].split(" ")[1]
-                chapter = "1"
-            } else {
-                if (this.found[i].match(this.verseRegex) && !hasChapterRange)
-                    verse = this.found[i].match(this.verseRegex)[0].replace(/[:.]/, "").trim()
-                else if (this.found[i].match(this.verseRegex) && hasChapterRange)
-                    verse = this.found[i].match(this.verseRegex)
-                        ? this.found[i].match(this.verseRegex)[0].split("-")[0].trim()
-                        : ["Empty"]
-            }
-            if (!verse && this.found[i].match(/\d+/)) {
-                chapter = this.found[i].match(/\d+/)[0]
-            }
-
-            const passage = {
-                original: this.found[i].replace(/([.,])\1*$/, "").trim(),
-                book: this.bookify(book),
-                chapter: chapter,
-                verses: verse ?? [],
-            }
-
-            if (hasChapterRange) {
-                passage.to = {
-                    book: passage.book,
-                    chapter: hasChapterRange[0].match(this.chapterRegex)[0],
-                    verses: hasChapterRange[0].match(this.verseRegex)[0],
-                }
-                passage.to.verses = passage.to.verses.split(/,/).filter(Boolean)
-                passage.to.testament = this.bible.old.includes(passage.to.book) ? "old" : "new"
-            }
-            passage.verses =
-                typeof passage.verses !== "object"
-                    ? passage.verses.split(/,/).filter(Boolean)
-                    : passage.verses.filter((item) => item.trim())
-            passage.testament = this.bible.old.includes(passage.book) ? "old" : "new"
-            passage.scripture = this.scripturize(passage)
-            this.passages.push(passage)
-        }
-
-        this.found = this.passages.map((passage) => passage.scripture)
-        return this
     }
 }
 
