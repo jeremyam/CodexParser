@@ -168,13 +168,14 @@ class CodexParser {
             }
             passage.original = result.osis
             passage.scripture = this.scripturize(passage)
+            passage.passages = this.populate(result.entities[0], passage.verses)
             passage.indices = result.indices
-            passage.entities = result.entities
-            if (passage.entities[0].translations) {
+            passage.entities = result.entities[0]
+            if (passage.entities.translations) {
                 passage.version = {
-                    name: passage.entities[0].translations[0].translation,
-                    alias: passage.entities[0].translations[0].alias,
-                    abbreviation: passage.entities[0].translations[0].osis,
+                    name: passage.entities.translations[0].translation,
+                    alias: passage.entities.translations[0].alias,
+                    abbreviation: passage.entities.translations[0].osis,
                 }
             }
             this.passages.push(passage)
@@ -182,6 +183,37 @@ class CodexParser {
         this.found = []
         return this
     }
+
+    populate(entities, verses) {
+        let passages = []
+        for (let i = entities.start.v; i <= entities.end.v; i++) {
+            passages.push({
+                book: entities.start.b,
+                chapter: entities.start.c,
+                verse: i,
+            })
+        }
+
+        if (verses.length > 1) {
+            for (let i = 0; i < verses.length; i++) {
+                const passage = {
+                    book: entities.start.b,
+                    chapter: entities.start.c,
+                    verse: verses[i],
+                }
+                if (
+                    !passages.find(
+                        (p) => p.book === passage.book && p.chapter === passage.chapter && p.verse === passage.verse
+                    )
+                ) {
+                    passages.push(passage)
+                }
+            }
+        }
+
+        return [...new Set(passages)]
+    }
+
     chapterify(chapter) {
         return chapter.start.c
     }
@@ -332,7 +364,7 @@ class CodexParser {
                 if (testStr.includes("mt")) abbr = "mt"
                 if (testStr.includes("bhs")) abbr = "bhs"
                 //test whether are at the end of the chapter(s) and verse(s)
-                if (nextCh.match(/^[a-z]+$/) && nextCh !== "f" && nextCh !== "ff") break
+                if (nextCh.match(/^[a-z]+$/) && nextCh !== "f" && nextCh !== "ff" && nextCh !== "a") break
                 if (nextCh.match(/^[A-Z]+$/)) break
                 newText += text.charAt(chNoInText - 1)
                 passage += text.charAt(chNoInText - 1)
