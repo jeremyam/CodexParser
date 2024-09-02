@@ -3,7 +3,8 @@ const dump = require("../src/functions.js").dump
 
 const parser = new BibleParser()
 
-const text = "Genesis 31:55-56"
+const text = "Genesis 22:1-2,14,19"
 
 const passages = parser.parse(text).getPassages()
 
+dump(passages)

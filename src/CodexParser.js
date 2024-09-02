@@ -5,6 +5,7 @@ const abbrevations = require("./abbr")
 const crawler = require("bible-passage-reference-parser/js/en_bcv_parser").bcv_parser
 const util = require("util")
 const dump = require("./functions").dump
+const dd = require("./functions").dd
 
 class CodexParser {
     constructor() {
@@ -180,6 +181,22 @@ class CodexParser {
         }
 
         if (verses.length > 1) {
+            const hasDashes = verses.find((verse) => verse.includes("-"))
+            if (hasDashes) {
+                const newVerses = []
+                for (let i = 0; i < verses.length; i++) {
+                    const verse = verses[i]
+                    if (/[-–—]/gim.verse) {
+                        const [start, end] = verse.split("-").map((v) => parseInt(v))
+                        for (let j = start; j <= end; j++) {
+                            newVerses.push(j)
+                        }
+                    } else {
+                        newVerses.push(parseInt(verse))
+                    }
+                }
+                verses = newVerses.sort((a, b) => a - b)
+            }
             for (let i = 0; i < verses.length; i++) {
                 const passage = {
                     book: this.bookify(entities.start.b),
