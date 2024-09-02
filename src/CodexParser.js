@@ -104,6 +104,7 @@ class CodexParser {
                 chapter: result.start.c,
                 verses: this.versify(result),
                 type: result.type,
+                ...result["entities"][0],
             }
             passage.testament = this.bible.old.includes(passage.book) ? "old" : "new"
             let next = this.found[i + 1]
@@ -138,14 +139,6 @@ class CodexParser {
             passage.scripture = this.scripturize(passage)
             passage.passages = this.populate(result.entities[0], passage.verses)
             passage.indices = result.indices
-            passage.entities = result.entities[0]
-            if (passage.entities.translations) {
-                passage.version = {
-                    name: passage.entities.translations[0].translation,
-                    alias: passage.entities.translations[0].alias,
-                    abbreviation: passage.entities.translations[0].osis,
-                }
-            }
             this.passages.push(passage)
         }
         this.found = []
