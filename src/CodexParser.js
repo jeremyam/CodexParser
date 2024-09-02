@@ -81,7 +81,6 @@ class CodexParser {
      * @return {array} An array of parsed passages.
      */
     parse(reference) {
-        //TODO: Need to fix chapter ranges when another verse is tacted onto the end of it.
         if (!reference) {
             this.passages = []
             return this
@@ -158,26 +157,30 @@ class CodexParser {
         for (let i = 0; i < this.passages.length; i++) {
             const passage = this.passages[i]
             const hasVersification = this.versificationDifferences[passage.book]
-            if (hasVersification) {
-                for (let j = 0; j < hasVersification.length; j++) {
-                    const versification = hasVersification[j]
-                    if (passage.verses.some((item) => versification.verses.includes(item)) && versification.chapter === passage.chapter) {
-                        passage.versification = {
-                            mt: versification.mt,
-                            lxx: versification.lxx,
-                        }
-                    }
+            for (let j = 0; j < passage.passages.length; j++) {
+                const subPassage = passage.passages[j]
+                if (hasVersification) {
+                    if (this.versificationDifferences[passage.book][subPassage.chapter + ":" + subPassage.verse])
+                        subPassage.versification =
+                            this.versificationDifferences[passage.book][subPassage.chapter + ":" + subPassage.verse]
                 }
             }
         }
-        dump(this.passages)
     }
 
+    /**
+     * Populate a Set of passages from entities.start.v to entities.end.v,
+     * and then add any additional verses from the verses array.
+     *
+     * @param {Object} entities - Entities object from the bible-passage-reference-parser
+     * @param {Array} verses - Array of verse numbers to add to the set of passages
+     * @return {Array} Array of passage objects
+     */
     populate(entities, verses) {
         let passages = []
         for (let i = entities.start.v; i <= entities.end.v; i++) {
             passages.push({
-                book: entities.start.b,
+                book: this.bookify(entities.start.b),
                 chapter: entities.start.c,
                 verse: i,
             })
@@ -186,7 +189,7 @@ class CodexParser {
         if (verses.length > 1) {
             for (let i = 0; i < verses.length; i++) {
                 const passage = {
-                    book: entities.start.b,
+                    book: this.bookify(entities.start.b),
                     chapter: entities.start.c,
                     verse: verses[i],
                 }
@@ -207,6 +210,14 @@ class CodexParser {
         return chapter.start.c
     }
 
+    /**
+     * Given a passage, return an array of verses. If the passage is a range, the
+     * array will contain a single string in the format "start-end". If the passage
+     * is not a range, the array will contain each verse number as a separate element.
+     *
+     * @param {Object} passage - A passage object from the bible-passage-reference-parser
+     * @return {Array} Array of verse numbers
+     */
     versify(passage) {
         if (passage.start.v !== passage.end.v) {
             if (passage.type === "range" || passage.type === "ff") {
@@ -268,7 +279,10 @@ class CodexParser {
     }
 
     /**
-     * @param {object} passage - A passage object
+     * Converts a passage object into a scripturize object with human-readable name, chapter and verses and a hash.
+     *
+     * @param {object} passage - The passage object to scripturize.
+     * @return {object} The object with the human-readable name, chapter and verses and a hash.
      */
     scripturize(passage) {
         const { book, chapter, verses, to } = passage
@@ -277,11 +291,17 @@ class CodexParser {
         if (to) {
             parts.push("-", to.chapter, ":", to.verses)
         }
-        return parts
+        const full = parts
             .join(" ")
             .replace(/\s+:\s+/g, ":")
             .replace(/\s[-–—]\s/, "-")
             .trim()
+        const hash = full.toLowerCase().replace(/ /g, "_").replace(/:/g, ".").replace(/-/g, ".").replace(/,/g, ".")
+        return {
+            passage: full,
+            cv: chapter + colon + verses,
+            hash,
+        }
     }
 }
 
