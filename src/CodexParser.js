@@ -181,7 +181,6 @@ class CodexParser {
         }
 
         if (verses.length > 1) {
-            dump(verses)
             const hasDashes = verses.find((verse) => /[-–—]/gim.test(verse))
             if (hasDashes) {
                 const newVerses = []
