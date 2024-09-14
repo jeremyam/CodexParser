@@ -19,6 +19,7 @@ module.exports = {
         "Esther",
         "Job",
         "Psalms",
+        "Psalm",
         "Proverbs",
         "Ecclesiastes",
         "Song of Solomon",
