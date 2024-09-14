@@ -1,0 +1,23 @@
+module.exports = {
+    1: Array.from({ length: 51 }, (_, i) => i + 1), // John 1 has 51 verses
+    2: Array.from({ length: 25 }, (_, i) => i + 1), // John 2 has 25 verses
+    3: Array.from({ length: 36 }, (_, i) => i + 1), // John 3 has 36 verses
+    4: Array.from({ length: 54 }, (_, i) => i + 1), // John 4 has 54 verses
+    5: Array.from({ length: 47 }, (_, i) => i + 1), // John 5 has 47 verses
+    6: Array.from({ length: 71 }, (_, i) => i + 1), // John 6 has 71 verses
+    7: Array.from({ length: 53 }, (_, i) => i + 1), // John 7 has 53 verses
+    8: Array.from({ length: 59 }, (_, i) => i + 1), // John 8 has 59 verses
+    9: Array.from({ length: 41 }, (_, i) => i + 1), // John 9 has 41 verses
+    10: Array.from({ length: 42 }, (_, i) => i + 1), // John 10 has 42 verses
+    11: Array.from({ length: 57 }, (_, i) => i + 1), // John 11 has 57 verses
+    12: Array.from({ length: 50 }, (_, i) => i + 1), // John 12 has 50 verses
+    13: Array.from({ length: 38 }, (_, i) => i + 1), // John 13 has 38 verses
+    14: Array.from({ length: 31 }, (_, i) => i + 1), // John 14 has 31 verses
+    15: Array.from({ length: 27 }, (_, i) => i + 1), // John 15 has 27 verses
+    16: Array.from({ length: 33 }, (_, i) => i + 1), // John 16 has 33 verses
+    17: Array.from({ length: 26 }, (_, i) => i + 1), // John 17 has 26 verses
+    18: Array.from({ length: 40 }, (_, i) => i + 1), // John 18 has 40 verses
+    19: Array.from({ length: 42 }, (_, i) => i + 1), // John 19 has 42 verses
+    20: Array.from({ length: 31 }, (_, i) => i + 1), // John 20 has 31 verses
+    21: Array.from({ length: 25 }, (_, i) => i + 1), // John 21 has 25 verses
+}

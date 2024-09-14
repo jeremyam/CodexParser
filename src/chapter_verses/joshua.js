@@ -1,0 +1,26 @@
+module.exports = {
+    1: Array.from({ length: 18 }, (_, i) => i + 1), // Joshua 1 has 18 verses
+    2: Array.from({ length: 24 }, (_, i) => i + 1), // Joshua 2 has 24 verses
+    3: Array.from({ length: 17 }, (_, i) => i + 1), // Joshua 3 has 17 verses
+    4: Array.from({ length: 24 }, (_, i) => i + 1), // Joshua 4 has 24 verses
+    5: Array.from({ length: 15 }, (_, i) => i + 1), // Joshua 5 has 15 verses
+    6: Array.from({ length: 27 }, (_, i) => i + 1), // Joshua 6 has 27 verses
+    7: Array.from({ length: 26 }, (_, i) => i + 1), // Joshua 7 has 26 verses
+    8: Array.from({ length: 35 }, (_, i) => i + 1), // Joshua 8 has 35 verses
+    9: Array.from({ length: 27 }, (_, i) => i + 1), // Joshua 9 has 27 verses
+    10: Array.from({ length: 43 }, (_, i) => i + 1), // Joshua 10 has 43 verses
+    11: Array.from({ length: 23 }, (_, i) => i + 1), // Joshua 11 has 23 verses
+    12: Array.from({ length: 24 }, (_, i) => i + 1), // Joshua 12 has 24 verses
+    13: Array.from({ length: 33 }, (_, i) => i + 1), // Joshua 13 has 33 verses
+    14: Array.from({ length: 15 }, (_, i) => i + 1), // Joshua 14 has 15 verses
+    15: Array.from({ length: 63 }, (_, i) => i + 1), // Joshua 15 has 63 verses
+    16: Array.from({ length: 10 }, (_, i) => i + 1), // Joshua 16 has 10 verses
+    17: Array.from({ length: 18 }, (_, i) => i + 1), // Joshua 17 has 18 verses
+    18: Array.from({ length: 28 }, (_, i) => i + 1), // Joshua 18 has 28 verses
+    19: Array.from({ length: 51 }, (_, i) => i + 1), // Joshua 19 has 51 verses
+    20: Array.from({ length: 9 }, (_, i) => i + 1), // Joshua 20 has 9 verses
+    21: Array.from({ length: 45 }, (_, i) => i + 1), // Joshua 21 has 45 verses
+    22: Array.from({ length: 34 }, (_, i) => i + 1), // Joshua 22 has 34 verses
+    23: Array.from({ length: 16 }, (_, i) => i + 1), // Joshua 23 has 16 verses
+    24: Array.from({ length: 33 }, (_, i) => i + 1), // Joshua 24 has 33 verses
+}

@@ -5,6 +5,7 @@ const abbrevations = require("./abbr")
 const util = require("util")
 const dump = require("./functions").dump
 const dd = require("./functions").dd
+const chapter_verses = require("./chapterVerseCombine")
 
 class CodexParser {
     constructor() {
@@ -18,6 +19,14 @@ class CodexParser {
         this.abbreviations = abbrevations
         this.EzraAbbrv = EzraAbbrv
         this.versificationDifferences = versified
+        this.singleChapterBook = [
+            { Jude: Array.from({ length: 25 }, (_, i) => i + 1) }, // Jude has 25 verses
+            { "2 John": Array.from({ length: 13 }, (_, i) => i + 1) }, // 2 John has 13 verses
+            { "3 John": Array.from({ length: 15 }, (_, i) => i + 1) }, // 3 John has 15 verses
+            { Obadiah: Array.from({ length: 21 }, (_, i) => i + 1) }, // Obadiah has 21 verses
+            { Philemon: Array.from({ length: 25 }, (_, i) => i + 1) }, // Philemon has 25 verses
+        ]
+        this.chapterVerses = chapter_verses
     }
 
     /**
@@ -166,9 +175,22 @@ class CodexParser {
 
     parse(reference) {
         this.scan(reference) // Call scan to populate this.found
+        this.passages = this.found.map((passage) => {
+            const book = this.bookify(passage.book)
+            console.log(book)
 
-        dump(this.found)
+            const parsedPassage = {
+                book: book,
+                chapter: Number,
+                verse: Array,
+                to: Object,
+                type: String,
+                testament: this.bible.old.find((bible) => bible === book) ? "old" : "new",
+            }
 
+            return parsedPassage
+        })
+        console.log(this.chapterVerses)
         return this // Return this instance
     }
 
@@ -207,10 +229,10 @@ class CodexParser {
         if (typeof book !== "string") {
             book = book[0]
         }
-        let bookified = Object.keys(this.abbrevations).find((abbr) => {
+        let bookified = Object.keys(this.abbreviations).find((abbr) => {
             return abbr.toLowerCase() === book.toLowerCase()
         })
-        bookified = this.abbrevations[bookified]
+        bookified = this.abbreviations[bookified]
         if (!bookified) {
             bookified = this.bible.new.find(
                 (b) => b.toLowerCase() === book.toLowerCase() && b.toLowerCase().includes(book.toLowerCase())
