@@ -13,6 +13,11 @@ const versified = {
     Nehemiah: require("./versifications/nehemiah"),
     Job: require("./versifications/job"),
     Psalms: require("./versifications/psalms"),
+    Proverbs: require("./versifications/proverbs"),
+    Ecclesiastes: require("./versifications/ecclesiastes"),
+    "Song of Songs": require("./versifications/song"),
+    Isaiah: require("./versifications/isaiah"),
+    Jeremiah: require("./versifications/jeremiah"),
 }
 
 module.exports = versified
