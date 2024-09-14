@@ -26,9 +26,9 @@ class CodexParser {
      * @return {CodexParser} This instance, for method chaining.
      */
     scan(text) {
+        text = text.replace(this.EzraAbbrv, "Ezr")
         const fullNames = [...this.bible.old, ...this.bible.new] // Full Bible book names
         const abbreviations = Object.keys(this.abbreviations) // Abbreviations for Bible books
-        const numberedBooks = ["1", "2", "3"] // Books that have numbered prefixes
 
         this.found = []
 
@@ -45,19 +45,27 @@ class CodexParser {
         }
 
         // Function to check if a character at a given index is non-alphabetic or at the boundary of the text
-        const isBoundaryOrNonAlphabetic = (index) => {
-            return index < 0 || index >= lowerCaseText.length || /[^a-z]/i.test(lowerCaseText[index])
+        const isBoundaryOrNonAlphabetic = (index, text) => {
+            return index < 0 || index >= text.length || /[^a-z]/i.test(text[index])
         }
 
-        // Check if the upcoming characters form a new Bible book like "2 Corinthians"
-        const isNextBibleBook = (text, index) => {
+        // Function to check if the next part of the text starts with a new Bible book (e.g., "2 Corinthians")
+        const isNextBibleBook = (startIndex) => {
+            const textAfterCurrentPosition = lowerCaseText.substring(startIndex).trim()
+
+            // Check if the next part of the text matches any full Bible book name
             for (let j = 0; j < lowercaseBibleFullNames.length; j++) {
-                const potentialBook = text.substring(index).trim()
-                const book = lowercaseBibleFullNames[j]
-                if (potentialBook.startsWith(book)) {
+                if (textAfterCurrentPosition.startsWith(lowercaseBibleFullNames[j])) {
                     return true // Found another Bible book
                 }
             }
+
+            for (let j = 0; j < lowercaseBibleAbbreviations.length; j++) {
+                if (textAfterCurrentPosition.startsWith(lowercaseBibleAbbreviations[j])) {
+                    return true // Found another Bible book abbreviation
+                }
+            }
+
             return false
         }
 
@@ -90,8 +98,8 @@ class CodexParser {
                     // Ensure abbreviation is not part of a larger word (check boundaries)
                     if (lowerCaseText.startsWith(abbreviationWithDot, i)) {
                         if (
-                            isBoundaryOrNonAlphabetic(i - 1) &&
-                            isBoundaryOrNonAlphabetic(i + abbreviationWithDot.length)
+                            isBoundaryOrNonAlphabetic(i - 1, lowerCaseText) &&
+                            isBoundaryOrNonAlphabetic(i + abbreviationWithDot.length, lowerCaseText)
                         ) {
                             foundBook = abbreviations[k] // Store the abbreviation without the dot
                             foundIndex = i // Record the index where the abbreviation is found
@@ -99,7 +107,10 @@ class CodexParser {
                             break // Exit once found
                         }
                     } else if (lowerCaseText.startsWith(abbreviation, i)) {
-                        if (isBoundaryOrNonAlphabetic(i - 1) && isBoundaryOrNonAlphabetic(i + abbreviation.length)) {
+                        if (
+                            isBoundaryOrNonAlphabetic(i - 1, lowerCaseText) &&
+                            isBoundaryOrNonAlphabetic(i + abbreviation.length, lowerCaseText)
+                        ) {
                             if (abbreviation.length > matchedLength) {
                                 foundBook = abbreviations[k] // Store the abbreviation without the dot
                                 foundIndex = i // Record the index where the abbreviation is found
@@ -114,13 +125,20 @@ class CodexParser {
             if (foundBook !== null) {
                 i += matchedLength // Skip ahead by the length of the found book
                 let chapterVerse = ""
+
                 while (i < text.length && isValidChapterVerseChar(text[i])) {
+                    // Look ahead to see if the next characters form a new Bible book
+                    if (isNextBibleBook(i)) {
+                        // Stop adding to chapterVerse if a new Bible book is found
+                        break
+                    }
+
                     chapterVerse += text[i]
                     i++
                 }
 
                 // Trim any period from the end of the reference
-                chapterVerse = chapterVerse.trim().replace(/\.$/, "")
+                chapterVerse = chapterVerse.trim().replace(/[.,:;!?]+$/, "")
 
                 // Replace any periods within the reference with colons for easier parsing
                 const formattedReference = chapterVerse.replace(/\./g, ":")
@@ -131,11 +149,6 @@ class CodexParser {
                         reference: formattedReference, // Store the formatted reference
                         index: foundIndex,
                     })
-
-                    // Check if the next part of the text is another Bible book (e.g., "2 Corinthians")
-                    if (isNextBibleBook(lowerCaseText, i)) {
-                        continue // Move to the next book without merging the references
-                    }
                 } else {
                     this.found.push({
                         book: foundBook,
