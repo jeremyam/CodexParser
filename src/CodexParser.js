@@ -28,6 +28,7 @@ class CodexParser {
     scan(text) {
         const fullNames = [...this.bible.old, ...this.bible.new] // Full Bible book names
         const abbreviations = Object.keys(this.abbreviations) // Abbreviations for Bible books
+        const numberedBooks = ["1", "2", "3"] // Books that have numbered prefixes
 
         this.found = []
 
@@ -46,6 +47,18 @@ class CodexParser {
         // Function to check if a character at a given index is non-alphabetic or at the boundary of the text
         const isBoundaryOrNonAlphabetic = (index) => {
             return index < 0 || index >= lowerCaseText.length || /[^a-z]/i.test(lowerCaseText[index])
+        }
+
+        // Check if the upcoming characters form a new Bible book like "2 Corinthians"
+        const isNextBibleBook = (text, index) => {
+            for (let j = 0; j < lowercaseBibleFullNames.length; j++) {
+                const potentialBook = text.substring(index).trim()
+                const book = lowercaseBibleFullNames[j]
+                if (potentialBook.startsWith(book)) {
+                    return true // Found another Bible book
+                }
+            }
+            return false
         }
 
         // Loop through the text and check for full names and abbreviations
@@ -118,6 +131,11 @@ class CodexParser {
                         reference: formattedReference, // Store the formatted reference
                         index: foundIndex,
                     })
+
+                    // Check if the next part of the text is another Bible book (e.g., "2 Corinthians")
+                    if (isNextBibleBook(lowerCaseText, i)) {
+                        continue // Move to the next book without merging the references
+                    }
                 } else {
                     this.found.push({
                         book: foundBook,
