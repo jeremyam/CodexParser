@@ -18,6 +18,8 @@ const versified = {
     "Song of Songs": require("./versifications/song"),
     Isaiah: require("./versifications/isaiah"),
     Jeremiah: require("./versifications/jeremiah"),
+    Ezekiel: require("./versifications/ezekiel"),
+    Daniel: require("./versifications/daniel"),
 }
 
 module.exports = versified
