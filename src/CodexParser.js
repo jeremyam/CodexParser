@@ -226,14 +226,17 @@ class CodexParser {
                 if (part.includes("-")) {
                     // Handle ranges (e.g., "27:27-29" or "39-41")
 
-                    //TODO: Need to implement multi-chapter + comma verses and verse ranges.
                     let [start, end] = part.split("-")
+                    dump(start)
+                    dump(end)
                     // Handle the starting part
                     let [startChapter, startVerse] = start.includes(separator)
                         ? start.split(separator)
                         : [parsedPassage.chapter, start] // Default to same chapter if no chapter is provided
 
                     parsedPassage.chapter = Number(startChapter) // Set the chapter
+                    //TODO: Need to implement multi-chapter + comma verses and verse ranges, here we need to add verses from the startVerse to the end of the startChapter.
+                    parsedPassage.verse.push(startVerse.trim())
 
                     // Handle same-chapter ranges (e.g., "27:27-29") and multi-chapter ranges (e.g., "Ex 2:1-3:4")
                     if (end.includes(separator)) {
