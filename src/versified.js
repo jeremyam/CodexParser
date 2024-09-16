@@ -1,5 +1,3 @@
-const { Jonah } = require("./abbr")
-
 const versified = {
     Genesis: require("./versifications/genesis"),
     Exodus: require("./versifications/exodus"),
