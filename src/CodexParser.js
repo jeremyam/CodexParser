@@ -2,7 +2,6 @@ const versified = require("./versified")
 const bible = require("./bible")
 const { bookRegex, chapterRegex, verseRegex, scripturesRegex, EzraAbbrv } = require("./regex")
 const abbrevations = require("./abbr")
-const util = require("util")
 const dump = require("./functions").dump
 const dd = require("./functions").dd
 const chapter_verses = require("./chapterVerseCombine")
