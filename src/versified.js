@@ -1,3 +1,5 @@
+const { Jonah } = require("./abbr")
+
 const versified = {
     Genesis: require("./versifications/genesis"),
     Exodus: require("./versifications/exodus"),
@@ -20,6 +22,13 @@ const versified = {
     Jeremiah: require("./versifications/jeremiah"),
     Ezekiel: require("./versifications/ezekiel"),
     Daniel: require("./versifications/daniel"),
+    Hosea: require("./versifications/hosea"),
+    Joel: require("./versifications/joel"),
+    Jonah: require("./versifications/jonah"),
+    Micah: require("./versifications/micah"),
+    Nahum: require("./versifications/nahum"),
+    Zechariah: require("./versifications/zechariah"),
+    Malachi: require("./versifications/malachi"),
 }
 
 module.exports = versified
