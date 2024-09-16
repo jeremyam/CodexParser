@@ -1,6 +1,6 @@
 const versified = require("./versified")
 const bible = require("./bible")
-const { bookRegex, chapterRegex, verseRegex, scripturesRegex, EzraAbbrv } = require("./regex")
+const { bookRegex, chapterRegex, verseRegex, scripturesRegex } = require("./regex")
 const abbrevations = require("./abbr")
 const dump = require("./functions").dump
 const dd = require("./functions").dd
@@ -16,7 +16,6 @@ class CodexParser {
         this.verseRegex = verseRegex
         this.scripturesRegex = scripturesRegex
         this.abbreviations = abbrevations
-        this.EzraAbbrv = EzraAbbrv
         this.versificationDifferences = versified
         this.singleChapterBook = [
             {
@@ -55,7 +54,6 @@ class CodexParser {
      * @return {CodexParser} This instance, for method chaining.
      */
     scan(text) {
-        text = text.replace(this.EzraAbbrv, "Ezr")
         const fullNames = [...this.bible.old, ...this.bible.new] // Full Bible book names
         const abbreviations = Object.keys(this.abbreviations) // Abbreviations for Bible books
 
