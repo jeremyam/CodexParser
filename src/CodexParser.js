@@ -210,7 +210,6 @@ class CodexParser {
                 type: null, // Set type based on reference
                 testament: this.bible.old.find((bible) => bible === book) ? "old" : "new",
                 index: passage.index,
-                passages: [],
             }
 
             // Split reference by commas to handle multiple ranges or verses (e.g., "Ge 27:27-29,39-41")
@@ -226,6 +225,8 @@ class CodexParser {
 
                 if (part.includes("-")) {
                     // Handle ranges (e.g., "27:27-29" or "39-41")
+
+                    //TODO: Need to implement multi-chapter + comma verses and verse ranges.
                     let [start, end] = part.split("-")
                     // Handle the starting part
                     let [startChapter, startVerse] = start.includes(separator)
