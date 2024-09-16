@@ -224,16 +224,21 @@ class CodexParser {
                     // Handle ranges (e.g., "27:27-29" or "39-41")
 
                     let [start, end] = part.split("-")
-                    dump(start)
-                    dump(end)
                     // Handle the starting part
                     let [startChapter, startVerse] = start.includes(separator)
                         ? start.split(separator)
                         : [parsedPassage.chapter, start] // Default to same chapter if no chapter is provided
 
                     parsedPassage.chapter = Number(startChapter) // Set the chapter
-                    //TODO: Need to implement multi-chapter + comma verses and verse ranges, here we need to add verses from the startVerse to the end of the startChapter.
-                    parsedPassage.verse.push(startVerse.trim())
+                    // Checks to see if we are in a multi chapter verse range, if so, include only relevant verses from the this.chapterVerse to
+                    // the end of the chapter.
+                    if (start.includes(separator) && end.includes(separator)) {
+                        parsedPassage.verse = this.chapterVerses[book][startChapter].slice(
+                            this.chapterVerses[book][startChapter].indexOf(Number(startVerse))
+                        )
+                    } else {
+                        parsedPassage.verse.push(startVerse.trim())
+                    }
 
                     // Handle same-chapter ranges (e.g., "27:27-29") and multi-chapter ranges (e.g., "Ex 2:1-3:4")
                     if (end.includes(separator)) {
@@ -270,15 +275,6 @@ class CodexParser {
                             parsedPassage.verse.push(`${startVerse}-${end}`)
                         }
                     }
-
-                    // Add each verse in the range to the passages array (for same-chapter ranges)
-                    for (let i = Number(startVerse); i <= Number(end); i++) {
-                        parsedPassage.passages.push({
-                            book: book,
-                            chapter: parsedPassage.chapter,
-                            verse: i,
-                        })
-                    }
                 } else {
                     // Handle individual chapter:verse references (e.g., "27:27")
 
@@ -306,13 +302,6 @@ class CodexParser {
                             parsedPassage.verse = this.chapterVerses[book][parsedPassage.chapter]
                         }
                     }
-
-                    // Add the single verse to the passages array
-                    parsedPassage.passages.push({
-                        book: book,
-                        chapter: parsedPassage.chapter,
-                        verse: Number(versePart),
-                    })
                 }
                 parsedPassage.passages = this.populate(parsedPassage)
             })
