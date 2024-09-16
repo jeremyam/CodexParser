@@ -203,7 +203,7 @@ class CodexParser {
                 hashed: book.toLowerCase().replace(/\s+/, "_") + "." + passage.reference.replace(/[:\.]/g, "."), // Handle both : and .
                 book: book,
                 chapter: null,
-                verse: [], // Verse stored as an array
+                verses: [], // Verse stored as an array
                 type: null, // Set type based on reference
                 testament: this.bible.old.find((bible) => bible === book) ? "old" : "new",
                 index: passage.index,
@@ -233,14 +233,16 @@ class CodexParser {
                     // Checks to see if we are in a multi chapter verse range, if so, include only relevant verses from the this.chapterVerse to
                     // the end of the chapter.
                     if (start.includes(separator) && end.includes(separator)) {
-                        parsedPassage.verse = this.chapterVerses[book][startChapter].slice(
+                        parsedPassage.verses = this.chapterVerses[book][startChapter].slice(
                             this.chapterVerses[book][startChapter].indexOf(Number(startVerse))
                         )
                     } else {
-                        parsedPassage.verse.push(startVerse.trim())
+                        parsedPassage.verses.push(startVerse.trim())
                     }
 
                     // Handle same-chapter ranges (e.g., "27:27-29") and multi-chapter ranges (e.g., "Ex 2:1-3:4")
+                    //TODO:  Need to check for a multi chapter verse range and if fill out the verses before the verse of
+                    // The second chapter.
                     if (end.includes(separator)) {
                         let [endChapter, endVerse] = end.split(separator)
                         if (Number(endChapter) !== Number(startChapter)) {
@@ -248,12 +250,17 @@ class CodexParser {
                             parsedPassage.to = {
                                 book: book,
                                 chapter: Number(endChapter), // End chapter
-                                verse: [endVerse], // End verse
+                            }
+                            if (endVerse > 1) {
+                                parsedPassage.to.verses = this.chapterVerses[book][Number(endChapter)].slice(
+                                    0,
+                                    this.chapterVerses[book][Number(endChapter)].indexOf(Number(endVerse)) + 1
+                                )
                             }
                             parsedPassage.type = "chapter_verse_range" // Set type to chapter range
                         } else {
                             // Same-chapter range, just add to the verse array
-                            parsedPassage.verse.push(`${startVerse}-${endVerse}`)
+                            parsedPassage.verses.push(`${startVerse}-${endVerse}`)
                         }
                     } else {
                         // Single-chapter range (e.g., "27:27-29" or "39-41")
@@ -261,18 +268,18 @@ class CodexParser {
                             if (!startChapter) {
                                 // Then we have a chapter range with no verses
                                 parsedPassage.chapter = start
-                                parsedPassage.verse = this.chapterVerses[book][start]
+                                parsedPassage.verses = this.chapterVerses[book][start]
                                 parsedPassage.to = {
                                     book: book,
                                     chapter: Number(end),
                                     verse: this.chapterVerses[book][end],
                                 }
                             } else {
-                                parsedPassage.verse.push(`${startVerse}-${end}`)
+                                parsedPassage.verses.push(`${startVerse}-${end}`)
                             }
                         } else {
                             parsedPassage.chapter = 1
-                            parsedPassage.verse.push(`${startVerse}-${end}`)
+                            parsedPassage.verses.push(`${startVerse}-${end}`)
                         }
                     }
                 } else {
@@ -284,10 +291,10 @@ class CodexParser {
                     if (singleChapterBook) {
                         if (!chapterPart) {
                             parsedPassage.chapter = 1
-                            parsedPassage.verse.push(versePart) // Add single verse to array
+                            parsedPassage.verses.push(versePart) // Add single verse to array
                         } else {
                             parsedPassage.chapter = Number(chapterPart)
-                            parsedPassage.verse.push(versePart) // Add single verse to array
+                            parsedPassage.verses.push(versePart) // Add single verse to array
                         }
                     } else {
                         // Need to check if chapterPart is undefined
@@ -296,10 +303,10 @@ class CodexParser {
 
                         if (chapterPart) {
                             parsedPassage.chapter = Number(chapterPart)
-                            parsedPassage.verse.push(versePart) // Add single verse to array
+                            parsedPassage.verses.push(versePart) // Add single verse to array
                         } else {
                             parsedPassage.chapter = Number(versePart)
-                            parsedPassage.verse = this.chapterVerses[book][parsedPassage.chapter]
+                            parsedPassage.verses = this.chapterVerses[book][parsedPassage.chapter]
                         }
                     }
                 }
@@ -353,11 +360,11 @@ class CodexParser {
         }
 
         // Process main passage
-        processVerses(parsedPassage.chapter, parsedPassage.verse, parsedPassage.book)
+        processVerses(parsedPassage.chapter, parsedPassage.verses, parsedPassage.book)
 
         // Process 'to' object if it exists (for cross-chapter ranges)
         if (parsedPassage.to) {
-            processVerses(parsedPassage.to.chapter, parsedPassage.to.verse, parsedPassage.to.book)
+            processVerses(parsedPassage.to.chapter, parsedPassage.to.verses, parsedPassage.to.book)
         }
 
         return passages
