@@ -96,6 +96,12 @@ class CodexParser {
             return false
         }
 
+        // Function to detect suffixes like "LXX" or "MT"
+        const detectSuffix = (startIndex) => {
+            const suffixMatch = text.substring(startIndex).match(/\b(LXX|MT)\b/i)
+            return suffixMatch ? suffixMatch[0].toUpperCase() : null
+        }
+
         // Loop through the text and check for full names and abbreviations
         while (i < lowerCaseText.length) {
             let foundBook = null
@@ -170,17 +176,25 @@ class CodexParser {
                 // Replace any periods within the reference with colons for easier parsing
                 const formattedReference = chapterVerse.replace(/\./g, ":")
 
+                // Detect if a suffix (LXX or MT) exists after the chapter/verse
+                const suffix = detectSuffix(i)
+                if (suffix) {
+                    i += suffix.length // Move past the suffix
+                }
+
                 if (formattedReference.length > 0) {
                     this.found.push({
                         book: foundBook,
-                        reference: formattedReference, // Store the formatted reference
+                        reference: formattedReference, // Store only the chapter/verse
                         index: foundIndex,
+                        version: suffix || null, // Store the version (LXX, MT) if found, otherwise null
                     })
                 } else {
                     this.found.push({
                         book: foundBook,
                         reference: null,
                         index: foundIndex,
+                        version: suffix || null, // Store the version (LXX, MT) if found, otherwise null
                     })
                 }
             } else {
@@ -207,6 +221,7 @@ class CodexParser {
                 type: null, // Set type based on reference
                 testament: this.bible.old.find((bible) => bible === book) ? "old" : "new",
                 index: passage.index,
+                version: this._handleVersion(passage.version),
             }
 
             // Split reference by commas to handle multiple ranges or verses (e.g., "Ge 27:27-29,39-41")
@@ -443,6 +458,27 @@ class CodexParser {
                     chapter_exists: false,
                     content: "Possible invalid chapter: " + reference,
                 },
+            }
+        }
+        return true
+    }
+    _handleVersion(version) {
+        if (!version) {
+            return null
+        }
+        if (version.toLowerCase() === "lxx") {
+            return {
+                name: "Septuagint",
+                value: "LXX",
+                abbreviation: "lxx",
+            }
+        }
+
+        if (version.toLowerCase() === "mt") {
+            return {
+                name: "Masoretic Text",
+                value: "MT",
+                abbreviation: "mt",
             }
         }
     }
