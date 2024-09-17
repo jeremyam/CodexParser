@@ -223,7 +223,7 @@ class CodexParser {
                 i++
             }
         }
-        
+
         return this // Return this instance for method chaining
     }
 
@@ -471,6 +471,7 @@ class CodexParser {
     }
 
     _isValid(passage, reference) {
+        const singleChapterBook = this.singleChapterBook.find((bible) => bible[passage.book])
         if (!passage.verses) {
             return {
                 error: true,
@@ -481,14 +482,27 @@ class CodexParser {
                 },
             }
         }
-        if (!this.chapterVerses[passage.book][passage.chapter]) {
-            return {
-                error: true,
-                code: 102,
-                message: {
-                    chapter_exists: false,
-                    content: `Chapter ${passage.chapter} does not exist in ${passage.book}`,
-                },
+        if (!singleChapterBook) {
+            if (!this.chapterVerses[passage.book][passage.chapter]) {
+                return {
+                    error: true,
+                    code: 102,
+                    message: {
+                        chapter_exists: false,
+                        content: `Chapter ${passage.chapter} does not exist in ${passage.book}`,
+                    },
+                }
+            }
+        } else {
+            if (!singleChapterBook[passage.book][passage.chapter]) {
+                return {
+                    error: true,
+                    code: 103,
+                    message: {
+                        chapter_exists: false,
+                        content: `Chapter ${passage.chapter} does not exist in ${passage.book}`,
+                    },
+                }
             }
         }
         return true
