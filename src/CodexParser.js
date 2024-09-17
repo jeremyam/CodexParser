@@ -236,13 +236,9 @@ class CodexParser {
                         parsedPassage.verses = this.chapterVerses[book][startChapter].slice(
                             this.chapterVerses[book][startChapter].indexOf(Number(startVerse))
                         )
-                    } else {
-                        parsedPassage.verses.push(startVerse.trim())
                     }
 
                     // Handle same-chapter ranges (e.g., "27:27-29") and multi-chapter ranges (e.g., "Ex 2:1-3:4")
-                    //TODO:  Need to check for a multi chapter verse range and if fill out the verses before the verse of
-                    // The second chapter.
                     if (end.includes(separator)) {
                         let [endChapter, endVerse] = end.split(separator)
                         if (Number(endChapter) !== Number(startChapter)) {
@@ -275,6 +271,7 @@ class CodexParser {
                                     verses: this.chapterVerses[book][end],
                                 }
                             } else {
+                                //
                                 parsedPassage.verses.push(`${startVerse}-${end}`)
                             }
                         } else {
