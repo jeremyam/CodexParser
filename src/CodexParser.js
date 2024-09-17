@@ -338,7 +338,14 @@ class CodexParser {
                             parsedPassage.verses.push(versePart) // Add single verse to array
                         } else {
                             parsedPassage.chapter = Number(versePart)
-                            parsedPassage.verses = this.chapterVerses[book][parsedPassage.chapter]
+                            parsedPassage.verses = [
+                                this.chapterVerses[book][parsedPassage.chapter][0] +
+                                    "-" +
+                                    this.chapterVerses[book][parsedPassage.chapter][
+                                        this.chapterVerses[book][parsedPassage.chapter].length - 1
+                                    ],
+                            ]
+                            parsedPassage.type = "single_chapter"
                         }
                     }
                 }
