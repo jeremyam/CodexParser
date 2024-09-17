@@ -223,7 +223,7 @@ class CodexParser {
                 i++
             }
         }
-        dd(this.found)
+        
         return this // Return this instance for method chaining
     }
 
@@ -491,7 +491,6 @@ class CodexParser {
                 },
             }
         }
-        dd(passage.verses)
         return true
     }
     _handleVersion(version) {
