@@ -272,7 +272,7 @@ class CodexParser {
                                 parsedPassage.to = {
                                     book: book,
                                     chapter: Number(end),
-                                    verse: this.chapterVerses[book][end],
+                                    verses: this.chapterVerses[book][end],
                                 }
                             } else {
                                 parsedPassage.verses.push(`${startVerse}-${end}`)
