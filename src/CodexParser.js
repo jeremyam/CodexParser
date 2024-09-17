@@ -165,7 +165,7 @@ class CodexParser {
                 }
 
                 // Trim any period from the end of the reference
-                chapterVerse = chapterVerse.trim().replace(/[.,:;!?]+$/, "")
+                chapterVerse = chapterVerse.trim().replace(/[^a-zA-Z0-9]+$/, "")
 
                 // Replace any periods within the reference with colons for easier parsing
                 const formattedReference = chapterVerse.replace(/\./g, ":")
