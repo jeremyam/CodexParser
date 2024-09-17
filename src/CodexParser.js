@@ -134,20 +134,30 @@ class CodexParser {
                             isBoundaryOrNonAlphabetic(i - 1, lowerCaseText) &&
                             isBoundaryOrNonAlphabetic(i + abbreviationWithDot.length, lowerCaseText)
                         ) {
-                            foundBook = abbreviations[k] // Store the abbreviation without the dot
-                            foundIndex = i // Record the index where the abbreviation is found
-                            matchedLength = abbreviationWithDot.length // Update the length of the match to include the dot
-                            break // Exit once found
+                            // Look ahead to check if a number or space + number follows the abbreviation
+                            const afterAbbreviation = lowerCaseText.substring(i + abbreviationWithDot.length).trim()
+                            if (/^\d+/.test(afterAbbreviation)) {
+                                // Check if there is a number (chapter/verse)
+                                foundBook = abbreviations[k] // Store the abbreviation without the dot
+                                foundIndex = i // Record the index where the abbreviation is found
+                                matchedLength = abbreviationWithDot.length // Update the length of the match to include the dot
+                                break // Exit once found
+                            }
                         }
                     } else if (lowerCaseText.startsWith(abbreviation, i)) {
                         if (
                             isBoundaryOrNonAlphabetic(i - 1, lowerCaseText) &&
                             isBoundaryOrNonAlphabetic(i + abbreviation.length, lowerCaseText)
                         ) {
-                            if (abbreviation.length > matchedLength) {
-                                foundBook = abbreviations[k] // Store the abbreviation without the dot
-                                foundIndex = i // Record the index where the abbreviation is found
-                                matchedLength = abbreviation.length // Update the length of the match
+                            // Look ahead to check if a number or space + number follows the abbreviation
+                            const afterAbbreviation = lowerCaseText.substring(i + abbreviation.length).trim()
+                            if (/^\d+/.test(afterAbbreviation)) {
+                                // Check if there is a number (chapter/verse)
+                                if (abbreviation.length > matchedLength) {
+                                    foundBook = abbreviations[k] // Store the abbreviation without the dot
+                                    foundIndex = i // Record the index where the abbreviation is found
+                                    matchedLength = abbreviation.length // Update the length of the match
+                                }
                             }
                         }
                     }
@@ -178,9 +188,6 @@ class CodexParser {
 
                 // Detect if a suffix (LXX or MT) exists after the chapter/verse
                 const suffix = detectSuffix(i)
-                if (suffix) {
-                    i += suffix.length // Move past the suffix
-                }
 
                 if (formattedReference.length > 0) {
                     this.found.push({
@@ -210,7 +217,6 @@ class CodexParser {
 
         this.passages = this.found.map((passage) => {
             const book = this.bookify(passage.book)
-
             // Initialize the parsed passage object
             const parsedPassage = {
                 original: passage.book + " " + passage.reference,
