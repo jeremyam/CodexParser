@@ -310,6 +310,8 @@ class CodexParser {
                 parsedPassage.passages = this.populate(parsedPassage)
             })
 
+            parsedPassage.valid = this._isValid(parsedPassage, passage.reference)
+
             return parsedPassage
         })
         this.versification()
@@ -344,6 +346,9 @@ class CodexParser {
 
         // Helper function to process a parsed passage's verses
         const processVerses = (chapter, verses, book) => {
+            if (!verses) {
+                return
+            }
             verses.forEach((verse) => {
                 if (isNaN(verse)) {
                     const [start, end] = verse.split("-").map(Number) // Handle ranges
@@ -426,6 +431,19 @@ class CodexParser {
             passage: full,
             cv: chapter + colon + verses,
             hash,
+        }
+    }
+
+    _isValid(passage, reference) {
+        if (!passage.verses) {
+            return {
+                error: true,
+                code: 101,
+                message: {
+                    chapter_exists: false,
+                    content: "Possible invalid chapter: " + reference,
+                },
+            }
         }
     }
 }
