@@ -235,7 +235,6 @@ class CodexParser {
             // Initialize the parsed passage object
             const parsedPassage = {
                 original: passage.book + " " + passage.reference,
-                hashed: book.toLowerCase().replace(/\s+/, "_") + "." + passage.reference.replace(/[:\.]/g, "."), // Handle both : and .
                 book: book,
                 chapter: null,
                 verses: [], // Verse stored as an array
@@ -344,6 +343,7 @@ class CodexParser {
                     }
                 }
                 parsedPassage.passages = this.populate(parsedPassage)
+                parsedPassage.scripture = this.scripturize(parsedPassage)
             })
 
             parsedPassage.valid = this._isValid(parsedPassage, passage.reference)
