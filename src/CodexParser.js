@@ -168,47 +168,60 @@ class CodexParser {
             if (foundBook !== null) {
                 i += matchedLength // Skip ahead by the length of the found book
                 let chapterVerse = ""
+                const references = []
 
+                // Loop to find all chapter and verse references in the current book
                 while (i < text.length && isValidChapterVerseChar(text[i])) {
                     // Look ahead to see if the next characters form a new Bible book
                     if (isNextBibleBook(i)) {
-                        // Stop adding to chapterVerse if a new Bible book is found
-                        break
+                        break // Stop adding to chapterVerse if a new Bible book is found
+                    }
+
+                    // If we hit a semicolon, it means a new reference starts
+                    if (text[i] === ";" || text[i] === " ") {
+                        const formattedReference = chapterVerse
+                            .trim()
+                            .replace(/\./g, ":")
+                            .replace(/[^a-zA-Z0-9]+$/, "")
+                        if (formattedReference.length > 0) {
+                            references.push(formattedReference) // Add the current reference to the list
+                        }
+                        chapterVerse = "" // Reset for the next reference
+                        i++
+                        continue
                     }
 
                     chapterVerse += text[i]
                     i++
                 }
 
-                // Trim any period from the end of the reference
-                chapterVerse = chapterVerse.trim().replace(/[^a-zA-Z0-9]+$/, "")
-
-                // Replace any periods within the reference with colons for easier parsing
-                const formattedReference = chapterVerse.replace(/\./g, ":")
+                // Process the last found chapter and verse (if any)
+                if (chapterVerse.trim().length > 0) {
+                    const formattedReference = chapterVerse
+                        .trim()
+                        .replace(/\./g, ":")
+                        .replace(/[^a-zA-Z0-9]+$/, "")
+                    if (formattedReference.length > 0) {
+                        references.push(formattedReference)
+                    }
+                }
 
                 // Detect if a suffix (LXX or MT) exists after the chapter/verse
                 const suffix = detectSuffix(i)
 
-                if (formattedReference.length > 0) {
+                // Add each reference as a separate object
+                references.forEach((ref) => {
                     this.found.push({
                         book: foundBook,
-                        reference: formattedReference, // Store only the chapter/verse
+                        reference: ref,
                         index: foundIndex,
-                        version: suffix || null, // Store the version (LXX, MT) if found, otherwise null
+                        version: suffix || null,
                     })
-                } else {
-                    this.found.push({
-                        book: foundBook,
-                        reference: null,
-                        index: foundIndex,
-                        version: suffix || null, // Store the version (LXX, MT) if found, otherwise null
-                    })
-                }
+                })
             } else {
                 i++
             }
         }
-
         return this // Return this instance for method chaining
     }
 
