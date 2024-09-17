@@ -28,7 +28,6 @@
     "webpack-cli": "^5.1.4"
   },
   "dependencies": {
-    "bible-passage-reference-parser": "^2.0.1",
     "unidecode": "^1.1.0"
   }
 }
