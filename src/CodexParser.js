@@ -137,7 +137,6 @@ class CodexParser {
                             // Look ahead to check if a number or space + number follows the abbreviation
                             const afterAbbreviation = lowerCaseText.substring(i + abbreviationWithDot.length).trim()
                             if (/^\d+/.test(afterAbbreviation)) {
-                                // Check if there is a number (chapter/verse)
                                 foundBook = abbreviations[k] // Store the abbreviation without the dot
                                 foundIndex = i // Record the index where the abbreviation is found
                                 matchedLength = abbreviationWithDot.length // Update the length of the match to include the dot
@@ -152,7 +151,6 @@ class CodexParser {
                             // Look ahead to check if a number or space + number follows the abbreviation
                             const afterAbbreviation = lowerCaseText.substring(i + abbreviation.length).trim()
                             if (/^\d+/.test(afterAbbreviation)) {
-                                // Check if there is a number (chapter/verse)
                                 if (abbreviation.length > matchedLength) {
                                     foundBook = abbreviations[k] // Store the abbreviation without the dot
                                     foundIndex = i // Record the index where the abbreviation is found
@@ -170,6 +168,11 @@ class CodexParser {
                 let chapterVerse = ""
                 const references = []
 
+                // Function to decide if we should split the reference (based on finding a colon with space or semicolon)
+                const shouldSplitReference = (nextChar) => {
+                    return nextChar === ":" && text[i - 1] === " " // Split if a space is found with a colon
+                }
+
                 // Loop to find all chapter and verse references in the current book
                 while (i < text.length && isValidChapterVerseChar(text[i])) {
                     // Look ahead to see if the next characters form a new Bible book
@@ -177,8 +180,8 @@ class CodexParser {
                         break // Stop adding to chapterVerse if a new Bible book is found
                     }
 
-                    // If we hit a semicolon, it means a new reference starts
-                    if (text[i] === ";" || text[i] === " ") {
+                    // If we hit a semicolon or space with a new reference, process the current reference
+                    if (text[i] === ";" || shouldSplitReference(text[i + 1])) {
                         const formattedReference = chapterVerse
                             .trim()
                             .replace(/\./g, ":")
@@ -479,7 +482,7 @@ class CodexParser {
                 },
             }
         }
-        if(!this.chapterVerses[passage.book][passage.chapter]) {
+        if (!this.chapterVerses[passage.book][passage.chapter]) {
             return {
                 error: true,
                 code: 102,
@@ -489,6 +492,7 @@ class CodexParser {
                 },
             }
         }
+
         return true
     }
     _handleVersion(version) {
