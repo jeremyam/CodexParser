@@ -479,6 +479,16 @@ class CodexParser {
                 },
             }
         }
+        if(!this.chapterVerses[passage.book][passage.chapter]) {
+            return {
+                error: true,
+                code: 102,
+                message: {
+                    chapter_exists: false,
+                    content: `Chapter ${passage.chapter} does not exist in ${passage.book}`,
+                },
+            }
+        }
         return true
     }
     _handleVersion(version) {
