@@ -1,0 +1,24 @@
+module.exports = {
+    1: Array.from({ length: 53 }, (_, i) => i + 1), // 1 Kings 1 has 53 verses
+    2: Array.from({ length: 46 }, (_, i) => i + 1), // 1 Kings 2 has 46 verses
+    3: Array.from({ length: 28 }, (_, i) => i + 1), // 1 Kings 3 has 28 verses
+    4: Array.from({ length: 34 }, (_, i) => i + 1), // 1 Kings 4 has 34 verses
+    5: Array.from({ length: 18 }, (_, i) => i + 1), // 1 Kings 5 has 18 verses
+    6: Array.from({ length: 38 }, (_, i) => i + 1), // 1 Kings 6 has 38 verses
+    7: Array.from({ length: 51 }, (_, i) => i + 1), // 1 Kings 7 has 51 verses
+    8: Array.from({ length: 66 }, (_, i) => i + 1), // 1 Kings 8 has 66 verses
+    9: Array.from({ length: 28 }, (_, i) => i + 1), // 1 Kings 9 has 28 verses
+    10: Array.from({ length: 29 }, (_, i) => i + 1), // 1 Kings 10 has 29 verses
+    11: Array.from({ length: 43 }, (_, i) => i + 1), // 1 Kings 11 has 43 verses
+    12: Array.from({ length: 33 }, (_, i) => i + 1), // 1 Kings 12 has 33 verses
+    13: Array.from({ length: 34 }, (_, i) => i + 1), // 1 Kings 13 has 34 verses
+    14: Array.from({ length: 31 }, (_, i) => i + 1), // 1 Kings 14 has 31 verses
+    15: Array.from({ length: 34 }, (_, i) => i + 1), // 1 Kings 15 has 34 verses
+    16: Array.from({ length: 34 }, (_, i) => i + 1), // 1 Kings 16 has 34 verses
+    17: Array.from({ length: 24 }, (_, i) => i + 1), // 1 Kings 17 has 24 verses
+    18: Array.from({ length: 46 }, (_, i) => i + 1), // 1 Kings 18 has 46 verses
+    19: Array.from({ length: 21 }, (_, i) => i + 1), // 1 Kings 19 has 21 verses
+    20: Array.from({ length: 43 }, (_, i) => i + 1), // 1 Kings 20 has 43 verses
+    21: Array.from({ length: 29 }, (_, i) => i + 1), // 1 Kings 21 has 29 verses
+    22: Array.from({ length: 53 }, (_, i) => i + 1), // 1 Kings 22 has 53 verses
+}

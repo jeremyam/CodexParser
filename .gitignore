@@ -23,6 +23,8 @@ dist/
 target/
 dist/
 
+tests/
+
 # JetBrains IDE
 .idea/
 

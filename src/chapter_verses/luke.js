@@ -1,0 +1,26 @@
+module.exports = {
+    1: Array.from({ length: 80 }, (_, i) => i + 1), // Luke 1 has 80 verses
+    2: Array.from({ length: 52 }, (_, i) => i + 1), // Luke 2 has 52 verses
+    3: Array.from({ length: 38 }, (_, i) => i + 1), // Luke 3 has 38 verses
+    4: Array.from({ length: 44 }, (_, i) => i + 1), // Luke 4 has 44 verses
+    5: Array.from({ length: 39 }, (_, i) => i + 1), // Luke 5 has 39 verses
+    6: Array.from({ length: 49 }, (_, i) => i + 1), // Luke 6 has 49 verses
+    7: Array.from({ length: 50 }, (_, i) => i + 1), // Luke 7 has 50 verses
+    8: Array.from({ length: 56 }, (_, i) => i + 1), // Luke 8 has 56 verses
+    9: Array.from({ length: 62 }, (_, i) => i + 1), // Luke 9 has 62 verses
+    10: Array.from({ length: 42 }, (_, i) => i + 1), // Luke 10 has 42 verses
+    11: Array.from({ length: 54 }, (_, i) => i + 1), // Luke 11 has 54 verses
+    12: Array.from({ length: 59 }, (_, i) => i + 1), // Luke 12 has 59 verses
+    13: Array.from({ length: 35 }, (_, i) => i + 1), // Luke 13 has 35 verses
+    14: Array.from({ length: 35 }, (_, i) => i + 1), // Luke 14 has 35 verses
+    15: Array.from({ length: 32 }, (_, i) => i + 1), // Luke 15 has 32 verses
+    16: Array.from({ length: 31 }, (_, i) => i + 1), // Luke 16 has 31 verses
+    17: Array.from({ length: 37 }, (_, i) => i + 1), // Luke 17 has 37 verses
+    18: Array.from({ length: 43 }, (_, i) => i + 1), // Luke 18 has 43 verses
+    19: Array.from({ length: 48 }, (_, i) => i + 1), // Luke 19 has 48 verses
+    20: Array.from({ length: 47 }, (_, i) => i + 1), // Luke 20 has 47 verses
+    21: Array.from({ length: 38 }, (_, i) => i + 1), // Luke 21 has 38 verses
+    22: Array.from({ length: 71 }, (_, i) => i + 1), // Luke 22 has 71 verses
+    23: Array.from({ length: 56 }, (_, i) => i + 1), // Luke 23 has 56 verses
+    24: Array.from({ length: 53 }, (_, i) => i + 1), // Luke 24 has 53 verses
+}

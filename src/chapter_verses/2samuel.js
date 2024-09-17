@@ -1,0 +1,26 @@
+module.exports = {
+    1: Array.from({ length: 27 }, (_, i) => i + 1), // 2 Samuel 1 has 27 verses
+    2: Array.from({ length: 32 }, (_, i) => i + 1), // 2 Samuel 2 has 32 verses
+    3: Array.from({ length: 39 }, (_, i) => i + 1), // 2 Samuel 3 has 39 verses
+    4: Array.from({ length: 12 }, (_, i) => i + 1), // 2 Samuel 4 has 12 verses
+    5: Array.from({ length: 25 }, (_, i) => i + 1), // 2 Samuel 5 has 25 verses
+    6: Array.from({ length: 23 }, (_, i) => i + 1), // 2 Samuel 6 has 23 verses
+    7: Array.from({ length: 29 }, (_, i) => i + 1), // 2 Samuel 7 has 29 verses
+    8: Array.from({ length: 18 }, (_, i) => i + 1), // 2 Samuel 8 has 18 verses
+    9: Array.from({ length: 13 }, (_, i) => i + 1), // 2 Samuel 9 has 13 verses
+    10: Array.from({ length: 19 }, (_, i) => i + 1), // 2 Samuel 10 has 19 verses
+    11: Array.from({ length: 27 }, (_, i) => i + 1), // 2 Samuel 11 has 27 verses
+    12: Array.from({ length: 31 }, (_, i) => i + 1), // 2 Samuel 12 has 31 verses
+    13: Array.from({ length: 39 }, (_, i) => i + 1), // 2 Samuel 13 has 39 verses
+    14: Array.from({ length: 33 }, (_, i) => i + 1), // 2 Samuel 14 has 33 verses
+    15: Array.from({ length: 37 }, (_, i) => i + 1), // 2 Samuel 15 has 37 verses
+    16: Array.from({ length: 23 }, (_, i) => i + 1), // 2 Samuel 16 has 23 verses
+    17: Array.from({ length: 29 }, (_, i) => i + 1), // 2 Samuel 17 has 29 verses
+    18: Array.from({ length: 33 }, (_, i) => i + 1), // 2 Samuel 18 has 33 verses
+    19: Array.from({ length: 43 }, (_, i) => i + 1), // 2 Samuel 19 has 43 verses
+    20: Array.from({ length: 26 }, (_, i) => i + 1), // 2 Samuel 20 has 26 verses
+    21: Array.from({ length: 22 }, (_, i) => i + 1), // 2 Samuel 21 has 22 verses
+    22: Array.from({ length: 51 }, (_, i) => i + 1), // 2 Samuel 22 has 51 verses
+    23: Array.from({ length: 39 }, (_, i) => i + 1), // 2 Samuel 23 has 39 verses
+    24: Array.from({ length: 25 }, (_, i) => i + 1), // 2 Samuel 24 has 25 verses
+}

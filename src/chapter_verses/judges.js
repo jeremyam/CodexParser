@@ -1,0 +1,23 @@
+module.exports = {
+    1: Array.from({ length: 36 }, (_, i) => i + 1), // Judges 1 has 36 verses
+    2: Array.from({ length: 23 }, (_, i) => i + 1), // Judges 2 has 23 verses
+    3: Array.from({ length: 31 }, (_, i) => i + 1), // Judges 3 has 31 verses
+    4: Array.from({ length: 24 }, (_, i) => i + 1), // Judges 4 has 24 verses
+    5: Array.from({ length: 31 }, (_, i) => i + 1), // Judges 5 has 31 verses
+    6: Array.from({ length: 40 }, (_, i) => i + 1), // Judges 6 has 40 verses
+    7: Array.from({ length: 25 }, (_, i) => i + 1), // Judges 7 has 25 verses
+    8: Array.from({ length: 35 }, (_, i) => i + 1), // Judges 8 has 35 verses
+    9: Array.from({ length: 57 }, (_, i) => i + 1), // Judges 9 has 57 verses
+    10: Array.from({ length: 18 }, (_, i) => i + 1), // Judges 10 has 18 verses
+    11: Array.from({ length: 40 }, (_, i) => i + 1), // Judges 11 has 40 verses
+    12: Array.from({ length: 15 }, (_, i) => i + 1), // Judges 12 has 15 verses
+    13: Array.from({ length: 25 }, (_, i) => i + 1), // Judges 13 has 25 verses
+    14: Array.from({ length: 20 }, (_, i) => i + 1), // Judges 14 has 20 verses
+    15: Array.from({ length: 20 }, (_, i) => i + 1), // Judges 15 has 20 verses
+    16: Array.from({ length: 31 }, (_, i) => i + 1), // Judges 16 has 31 verses
+    17: Array.from({ length: 13 }, (_, i) => i + 1), // Judges 17 has 13 verses
+    18: Array.from({ length: 31 }, (_, i) => i + 1), // Judges 18 has 31 verses
+    19: Array.from({ length: 30 }, (_, i) => i + 1), // Judges 19 has 30 verses
+    20: Array.from({ length: 48 }, (_, i) => i + 1), // Judges 20 has 48 verses
+    21: Array.from({ length: 25 }, (_, i) => i + 1), // Judges 21 has 25 verses
+}

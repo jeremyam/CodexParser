@@ -1,0 +1,27 @@
+module.exports = {
+    1: Array.from({ length: 18 }, (_, i) => i + 1), // 2 Kings 1 has 18 verses
+    2: Array.from({ length: 25 }, (_, i) => i + 1), // 2 Kings 2 has 25 verses
+    3: Array.from({ length: 27 }, (_, i) => i + 1), // 2 Kings 3 has 27 verses
+    4: Array.from({ length: 44 }, (_, i) => i + 1), // 2 Kings 4 has 44 verses
+    5: Array.from({ length: 27 }, (_, i) => i + 1), // 2 Kings 5 has 27 verses
+    6: Array.from({ length: 33 }, (_, i) => i + 1), // 2 Kings 6 has 33 verses
+    7: Array.from({ length: 20 }, (_, i) => i + 1), // 2 Kings 7 has 20 verses
+    8: Array.from({ length: 29 }, (_, i) => i + 1), // 2 Kings 8 has 29 verses
+    9: Array.from({ length: 37 }, (_, i) => i + 1), // 2 Kings 9 has 37 verses
+    10: Array.from({ length: 36 }, (_, i) => i + 1), // 2 Kings 10 has 36 verses
+    11: Array.from({ length: 21 }, (_, i) => i + 1), // 2 Kings 11 has 21 verses
+    12: Array.from({ length: 21 }, (_, i) => i + 1), // 2 Kings 12 has 21 verses
+    13: Array.from({ length: 25 }, (_, i) => i + 1), // 2 Kings 13 has 25 verses
+    14: Array.from({ length: 29 }, (_, i) => i + 1), // 2 Kings 14 has 29 verses
+    15: Array.from({ length: 38 }, (_, i) => i + 1), // 2 Kings 15 has 38 verses
+    16: Array.from({ length: 20 }, (_, i) => i + 1), // 2 Kings 16 has 20 verses
+    17: Array.from({ length: 41 }, (_, i) => i + 1), // 2 Kings 17 has 41 verses
+    18: Array.from({ length: 37 }, (_, i) => i + 1), // 2 Kings 18 has 37 verses
+    19: Array.from({ length: 37 }, (_, i) => i + 1), // 2 Kings 19 has 37 verses
+    20: Array.from({ length: 21 }, (_, i) => i + 1), // 2 Kings 20 has 21 verses
+    21: Array.from({ length: 26 }, (_, i) => i + 1), // 2 Kings 21 has 26 verses
+    22: Array.from({ length: 20 }, (_, i) => i + 1), // 2 Kings 22 has 20 verses
+    23: Array.from({ length: 37 }, (_, i) => i + 1), // 2 Kings 23 has 37 verses
+    24: Array.from({ length: 20 }, (_, i) => i + 1), // 2 Kings 24 has 20 verses
+    25: Array.from({ length: 30 }, (_, i) => i + 1), // 2 Kings 25 has 30 verses
+}
