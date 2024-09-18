@@ -338,14 +338,18 @@ class CodexParser {
                             parsedPassage.verses.push(versePart) // Add single verse to array
                         } else {
                             parsedPassage.chapter = Number(versePart)
-                            parsedPassage.verses = [
-                                this.chapterVerses[book][parsedPassage.chapter][0] +
-                                    "-" +
-                                    this.chapterVerses[book][parsedPassage.chapter][
-                                        this.chapterVerses[book][parsedPassage.chapter].length - 1
-                                    ],
-                            ]
-                            parsedPassage.type = "single_chapter"
+                            if (!this.chapterVerses[book][parsedPassage.chapter]) {
+                                parsedPassage.valid = this._isValid(parsedPassage, passage.reference)
+                            } else {
+                                parsedPassage.verses = [
+                                    this.chapterVerses[book][parsedPassage.chapter][0] +
+                                        "-" +
+                                        this.chapterVerses[book][parsedPassage.chapter][
+                                            this.chapterVerses[book][parsedPassage.chapter].length - 1
+                                        ],
+                                ]
+                                parsedPassage.type = "single_chapter"
+                            }
                         }
                     }
                 }
@@ -353,7 +357,9 @@ class CodexParser {
                 parsedPassage.scripture = this.scripturize(parsedPassage)
             })
 
-            parsedPassage.valid = this._isValid(parsedPassage, passage.reference)
+            if (parsedPassage.valid) {
+                parsedPassage.valid = this._isValid(parsedPassage, passage.reference)
+            }
 
             return parsedPassage
         })
