@@ -357,9 +357,7 @@ class CodexParser {
                 parsedPassage.scripture = this.scripturize(parsedPassage)
             })
 
-            if (parsedPassage.valid) {
-                parsedPassage.valid = this._isValid(parsedPassage, passage.reference)
-            }
+            parsedPassage.valid = this._isValid(parsedPassage, passage.reference)
 
             return parsedPassage
         })
