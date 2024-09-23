@@ -504,6 +504,98 @@ class CodexParser {
         }
     }
 
+    combine(passages) {
+        const newObject = { ...passages[0] }
+
+        for (let i = 1; i < passages.length; i++) {
+            // Combine passages, but check for duplicates
+            passages[i].passages.forEach((passage) => {
+                // Add passage only if it's not already in newObject.passages
+                const isDuplicate = newObject.passages.some(
+                    (p) => p.book === passage.book && p.chapter === passage.chapter && p.verse === passage.verse
+                )
+                if (!isDuplicate) {
+                    newObject.passages = newObject.passages.concat(passage)
+                }
+            })
+            const verses = passages[i].verses
+            for (let j = 0; j < verses.length; j++) {
+                const verse = verses[j]
+                newObject.verses = newObject.verses.concat(verse)
+            }
+        }
+
+        // Remove lone numbers that are part of a range
+        newObject.verses = newObject.verses.filter((v, i, arr) => {
+            if (!v.includes("-")) {
+                const num = parseInt(v, 10)
+                return !arr.some((item) => {
+                    if (item.includes("-")) {
+                        const [start, end] = item.split("-").map(Number)
+                        return num >= start && num <= end
+                    }
+                    return false
+                })
+            }
+            return true // Keep ranges
+        })
+
+        // Convert to a Set to remove duplicates
+        newObject.verses = [...new Set(newObject.verses)]
+
+        // Helper function to merge overlapping or adjacent ranges
+        const mergeRanges = (verses) => {
+            const rangeObjects = verses.map((v) => {
+                if (v.includes("-")) {
+                    const [start, end] = v.split("-").map(Number)
+                    return { start, end }
+                } else {
+                    const num = Number(v)
+                    return { start: num, end: num }
+                }
+            })
+
+            // Sort the ranges by starting number
+            rangeObjects.sort((a, b) => a.start - b.start)
+
+            const merged = []
+            let currentRange = rangeObjects[0]
+
+            for (let i = 1; i < rangeObjects.length; i++) {
+                const nextRange = rangeObjects[i]
+
+                if (currentRange.end >= nextRange.start - 1) {
+                    // Overlapping or adjacent, merge the ranges
+                    currentRange.end = Math.max(currentRange.end, nextRange.end)
+                } else {
+                    // No overlap, push the current range and start a new one
+                    merged.push(currentRange)
+                    currentRange = nextRange
+                }
+            }
+
+            // Push the last range
+            merged.push(currentRange)
+
+            // Convert merged ranges back to strings
+            return merged.map(({ start, end }) => (start === end ? `${start}` : `${start}-${end}`))
+        }
+
+        // Merge and sort the ranges
+        newObject.verses = mergeRanges(newObject.verses)
+
+        // Build the original and scripture properties
+        newObject.original = newObject.book + " " + newObject.chapter + ":" + newObject.verses.join(",")
+        newObject.scripture = {
+            passage: newObject.book + " " + newObject.chapter + ":" + newObject.verses.join(","),
+            cv: newObject.chapter + ":" + newObject.verses.join(","),
+            hash: newObject.book + "_" + newObject.chapter + "." + newObject.verses.join("."),
+        }
+        newObject.scripture.hash = newObject.scripture.hash.toLowerCase()
+
+        return newObject
+    }
+
     _isValid(passage, reference) {
         const singleChapterBook = this.singleChapterBook.find((bible) => bible[passage.book])
         if (!passage.verses) {
