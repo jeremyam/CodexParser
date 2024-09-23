@@ -508,11 +508,15 @@ class CodexParser {
      * Combine multiple passages into one. The method checks for duplicates, merges overlapping or adjacent ranges,
      * and builds the original and scripture properties.
      * **This method will always combine based on English versification. LXX and MT versifications will be reflected in the combined passage.passages.versification.**
-     *
+     * This method will fail if the passages are not to the same book and chapter.
      * @param {array} passages - An array of passage objects to combine.
      * @return {object} The combined passage object.
      */
     combine(passages) {
+        const noDuplicates = [...new Set(passages.map((p) => p.book + " " + p.chapter))]
+        if (noDuplicates.length > 1) {
+            throw new Error("Passages are not from the same book and chapter.")
+        }
         const newPassages = []
         passages.forEach((passageSet) => {
             passageSet.passages.forEach((passage) => {
@@ -523,8 +527,8 @@ class CodexParser {
                 }
             })
         })
-        const noDuplicates = [...new Set(newPassages)]
-        const parsed = this.parse(noDuplicates.join(" // ")).getPassages()
+        const noDuplicates2 = [...new Set(newPassages)]
+        const parsed = this.parse(noDuplicates2.join(" // ")).getPassages()
         return this.join(parsed)
     }
 
