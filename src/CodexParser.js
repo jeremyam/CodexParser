@@ -504,7 +504,38 @@ class CodexParser {
         }
     }
 
+    /**
+     * Combine multiple passages into one. The method checks for duplicates, merges overlapping or adjacent ranges,
+     * and builds the original and scripture properties.
+     * **This method will always combine based on English versification. LXX and MT versifications will be reflected in the combined passage.passages.versification.**
+     *
+     * @param {array} passages - An array of passage objects to combine.
+     * @return {object} The combined passage object.
+     */
     combine(passages) {
+        const newPassages = []
+        passages.forEach((passageSet) => {
+            passageSet.passages.forEach((passage) => {
+                if (passage.versification) {
+                    newPassages.push(passage.book + " " + passage.versification.eng)
+                } else {
+                    newPassages.push(passage.book + " " + passage.chapter + ":" + passage.verse)
+                }
+            })
+        })
+        const noDuplicates = [...new Set(newPassages)]
+        const parsed = this.parse(noDuplicates.join(" // ")).getPassages()
+        return this.join(parsed)
+    }
+
+    /**
+     * Combine multiple passages into one. The method checks for duplicates, merges overlapping or adjacent ranges,
+     * and builds the original and scripture properties.
+     *
+     * @param {array} passages - An array of passage objects to combine.
+     * @return {object} The combined passage object.
+     */
+    join(passages) {
         const newObject = { ...passages[0] }
 
         for (let i = 1; i < passages.length; i++) {
