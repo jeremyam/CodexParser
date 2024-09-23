@@ -232,6 +232,7 @@ class CodexParser {
 
         this.passages = this.found.map((passage) => {
             const book = this.bookify(passage.book)
+            const testament = this.bible.old.find((bible) => bible === book) ? "old" : "new"
             // Initialize the parsed passage object
             const parsedPassage = {
                 original: passage.book + " " + passage.reference,
@@ -239,9 +240,9 @@ class CodexParser {
                 chapter: null,
                 verses: [], // Verse stored as an array
                 type: null, // Set type based on reference
-                testament: this.bible.old.find((bible) => bible === book) ? "old" : "new",
+                testament: testament,
                 index: passage.index,
-                version: this._handleVersion(passage.version),
+                version: this._handleVersion(passage.version, testament),
             }
 
             // Split reference by commas to handle multiple ranges or verses (e.g., "Ge 27:27-29,39-41")
@@ -668,11 +669,11 @@ class CodexParser {
         }
         return true
     }
-    _handleVersion(version) {
+    _handleVersion(version, testament) {
         if (!version) {
             return null
         }
-        if (version.toLowerCase() === "lxx") {
+        if (version.toLowerCase() === "lxx" && testament.toLowerCase() === "old") {
             return {
                 name: "Septuagint",
                 value: "LXX",
@@ -680,7 +681,7 @@ class CodexParser {
             }
         }
 
-        if (version.toLowerCase() === "mt") {
+        if (version.toLowerCase() === "mt" && testament.toLowerCase() === "old") {
             return {
                 name: "Masoretic Text",
                 value: "MT",
