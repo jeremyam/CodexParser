@@ -366,18 +366,41 @@ class CodexParser {
     }
 
     versification() {
-        for (let i = 0; i < this.passages.length; i++) {
-            const passage = this.passages[i]
+        this.passages.forEach((passage) => {
             const hasVersification = this.versificationDifferences[passage.book]
-            for (let j = 0; j < passage.passages.length; j++) {
-                const subPassage = passage.passages[j]
+
+            passage.passages.forEach((subPassage) => {
+                // Apply general versification differences
                 if (hasVersification) {
-                    if (this.versificationDifferences[passage.book][subPassage.chapter + ":" + subPassage.verse])
-                        subPassage.versification =
-                            this.versificationDifferences[passage.book][subPassage.chapter + ":" + subPassage.verse]
+                    const key = `${subPassage.chapter}:${subPassage.verse}`
+                    if (this.versificationDifferences[passage.book][key]) {
+                        subPassage.versification = this.versificationDifferences[passage.book][key]
+                    }
                 }
-            }
-        }
+
+                // Handle specific version adjustments for "lxx" or "mt"
+                if (passage.version) {
+                    const versionAbbreviation = passage.version.abbreviation
+                    const versionType =
+                        versionAbbreviation === "lxx" ? "lxx" : versionAbbreviation === "mt" ? "mt" : null
+
+                    if (versionType) {
+                        const versionReference = `${subPassage.chapter}:${subPassage.verse}`
+
+                        // Look for matching versification based on the version type (lxx or mt)
+                        for (const versification in this.versificationDifferences[passage.book]) {
+                            if (
+                                this.versificationDifferences[passage.book][versification][versionType] ===
+                                versionReference
+                            ) {
+                                subPassage.versification = this.versificationDifferences[passage.book][versification]
+                                break // Break once a match is found
+                            }
+                        }
+                    }
+                }
+            })
+        })
     }
 
     /**
