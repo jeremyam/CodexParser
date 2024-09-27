@@ -486,21 +486,49 @@ class CodexParser {
      * @return {object} The object with the human-readable name, chapter and verses and a hash.
      */
     scripturize(passage) {
-        const { book, chapter, verses, to } = passage
-        const colon = verses.length !== 0 ? ":" : ""
-        const parts = [book, chapter, colon, verses]
-        if (to) {
-            parts.push("-", to.chapter, ":", to.verses)
+        const { book, chapter, passages } = passage
+
+        // Extract verses from the passages array
+        const verses = passages.map((p) => p.verse)
+        let formattedVerses = ""
+
+        if (verses.length === 1) {
+            // If there is only one verse
+            formattedVerses = verses[0].toString()
+        } else if (verses.length === 2 && verses[1] === verses[0] + 1) {
+            // If there are exactly two verses and they are consecutive, use a comma
+            formattedVerses = `${verses[0]},${verses[1]}`
+        } else {
+            // For more than two verses, or non-consecutive verses
+            let ranges = []
+            let tempRange = [verses[0]]
+
+            for (let i = 1; i < verses.length; i++) {
+                if (verses[i] === verses[i - 1] + 1) {
+                    // If the verse is consecutive, add to tempRange
+                    tempRange.push(verses[i])
+                } else {
+                    // If not consecutive, finalize tempRange
+                    ranges.push(tempRange)
+                    tempRange = [verses[i]]
+                }
+            }
+            ranges.push(tempRange) // Push the last range
+
+            // Format ranges: convert consecutive numbers to ranges, non-consecutive remain separate
+            formattedVerses = ranges
+                .map((range) => (range.length > 1 ? `${range[0]}-${range[range.length - 1]}` : range[0]))
+                .join(",")
         }
-        const full = parts
-            .join(" ")
-            .replace(/\s+:\s+/g, ":")
-            .replace(/\s[-–—]\s/, "-")
-            .trim()
+
+        // Format the final passage
+        const colon = formattedVerses ? ":" : ""
+        const full = `${book} ${chapter}${colon}${formattedVerses}`.trim()
         const hash = full.toLowerCase().replace(/ /g, "_").replace(/:/g, ".").replace(/-/g, ".").replace(/,/g, ".")
+
         return {
             passage: full,
-            cv: chapter + colon + verses,
+            cv: `${chapter}${colon}${formattedVerses}`,
             hash,
         }
     }
