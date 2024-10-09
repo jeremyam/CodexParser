@@ -542,10 +542,12 @@ class CodexParser {
      * @return {object} The combined passage object.
      */
     combine(passages) {
-        const noDuplicates = [...new Set(passages.map((p) => p.book + " " + p.chapter))]
+        // Only check if passages are from the same book
+        const noDuplicates = [...new Set(passages.map((p) => p.book))]
         if (noDuplicates.length > 1) {
-            throw new Error("Passages are not from the same book and chapter.")
+            throw new Error("Passages are not from the same book.")
         }
+
         const newPassages = []
         passages.forEach((passageSet) => {
             passageSet.passages.forEach((passage) => {
@@ -556,6 +558,7 @@ class CodexParser {
                 }
             })
         })
+
         const noDuplicates2 = [...new Set(newPassages)]
         const parsed = this.parse(noDuplicates2.join(" // ")).getPassages()
         return this.join(parsed)
