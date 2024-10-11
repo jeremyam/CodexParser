@@ -223,7 +223,7 @@ class CodexParser {
                 i++
             }
         }
-        dump(this.found)
+
         return this // Return this instance for method chaining
     }
 
