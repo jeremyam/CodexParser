@@ -231,6 +231,8 @@ class CodexParser {
         this.scan(reference) // Call scan to populate this.found
 
         this.passages = this.found.map((passage) => {
+            passage.reference =
+                passage.reference.match(/[:]/g)?.length > 1 ? passage.reference.replace(/[:]/, "") : passage.reference
             const book = this.bookify(passage.book)
             const testament = this.bible.old.find((bible) => bible === book) ? "old" : "new"
             // Initialize the parsed passage object
@@ -615,6 +617,14 @@ class CodexParser {
                     uniquePassages.add(passageKey) // Mark it as added
                 }
             })
+        })
+
+        // Sort the newObject.passages array by chapter first, then by verse
+        newObject.passages.sort((a, b) => {
+            if (a.chapter !== b.chapter) {
+                return a.chapter - b.chapter // Sort by chapter
+            }
+            return a.verse - b.verse // Sort by verse within the same chapter
         })
 
         // Prepare to build the final result
