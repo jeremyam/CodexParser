@@ -663,6 +663,45 @@ class CodexParser {
         return newObject
     }
 
+    getToc(version = "ESV") {
+        // Initialize the table of contents (toc)
+        const toc = {}
+
+        // Add Old Testament books and their chapters/verses to toc
+        this.bible.old.forEach((book) => {
+            if (this.chapterVerses[book]) {
+                toc[book] = this.chapterVerses[book]
+            }
+        })
+
+        // Add New Testament books and their chapters/verses to toc
+        this.bible.new.forEach((book) => {
+            if (this.chapterVerses[book]) {
+                toc[book] = this.chapterVerses[book]
+            }
+        })
+
+        // Merge in single-chapter books if not already in toc
+        this.singleChapterBook.forEach((item) => {
+            Object.keys(item).forEach((book) => {
+                if (!toc[book]) {
+                    toc[book] = item[book]
+                }
+            })
+        })
+
+        // Sort the keys of toc by canonical order
+        const orderedToc = {}
+        const canonicalOrder = [...this.bible.old, ...this.bible.new]
+        canonicalOrder.forEach((book) => {
+            if (toc[book]) {
+                orderedToc[book] = toc[book]
+            }
+        })
+
+        return orderedToc
+    }
+
     _isValid(passage, reference) {
         const singleChapterBook = this.singleChapterBook.find((bible) => bible[passage.book])
         if (!passage.verses) {
