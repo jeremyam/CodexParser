@@ -231,6 +231,8 @@ class CodexParser {
         this.scan(reference) // Call scan to populate this.found
 
         this.passages = this.found.map((passage) => {
+            passage.reference =
+                passage.reference.match(/[:]/g)?.length > 1 ? passage.reference.replace(/[:]/, "") : passage.reference
             const book = this.bookify(passage.book)
             const testament = this.bible.old.find((bible) => bible === book) ? "old" : "new"
             // Initialize the parsed passage object
@@ -476,7 +478,20 @@ class CodexParser {
      * @return {array} The passages stored in the object.
      */
     getPassages() {
-        return this.passages
+        // Return the array of passages and add a custom first() method to it
+        const passagesArray = [...this.passages] // Clone the array to avoid mutation
+
+        // Add first() method directly to the array
+        passagesArray.first = function () {
+            return this.length > 0 ? this[0] : null
+        }
+
+        return passagesArray
+    }
+
+    // New first() method that can be chained after getPassages()
+    first() {
+        return this.passages.length > 0 ? this.passages[0] : null
     }
 
     /**
@@ -572,95 +587,120 @@ class CodexParser {
      * @return {object} The combined passage object.
      */
     join(passages) {
-        const newObject = { ...passages[0] }
+        const newObject = { ...passages[0] } // Start with the first passage
 
-        for (let i = 1; i < passages.length; i++) {
-            // Combine passages, but check for duplicates
-            passages[i].passages.forEach((passage) => {
-                // Add passage only if it's not already in newObject.passages
-                const isDuplicate = newObject.passages.some(
-                    (p) => p.book === passage.book && p.chapter === passage.chapter && p.verse === passage.verse
-                )
-                if (!isDuplicate) {
-                    newObject.passages = newObject.passages.concat(passage)
-                }
-            })
-            const verses = passages[i].verses
-            for (let j = 0; j < verses.length; j++) {
-                const verse = verses[j]
-                newObject.verses = newObject.verses.concat(verse)
-            }
-        }
+        const chapters = {} // Store verses by chapters
+        const uniquePassages = new Set() // Track unique passages to prevent duplicates
 
-        // Remove lone numbers that are part of a range
-        newObject.verses = newObject.verses.filter((v, i, arr) => {
-            if (!v.includes("-")) {
-                const num = parseInt(v, 10)
-                return !arr.some((item) => {
-                    if (item.includes("-")) {
-                        const [start, end] = item.split("-").map(Number)
-                        return num >= start && num <= end
-                    }
-                    return false
-                })
-            }
-            return true // Keep ranges
+        // Add initial passages to the unique set to avoid duplication
+        newObject.passages.forEach((p) => {
+            const passageKey = `${p.book}-${p.chapter}-${p.verse}`
+            uniquePassages.add(passageKey)
         })
 
-        // Convert to a Set to remove duplicates
-        newObject.verses = [...new Set(newObject.verses)]
-
-        // Helper function to merge overlapping or adjacent ranges
-        const mergeRanges = (verses) => {
-            const rangeObjects = verses.map((v) => {
-                if (v.includes("-")) {
-                    const [start, end] = v.split("-").map(Number)
-                    return { start, end }
-                } else {
-                    const num = Number(v)
-                    return { start: num, end: num }
-                }
-            })
-
-            // Sort the ranges by starting number
-            rangeObjects.sort((a, b) => a.start - b.start)
-
-            const merged = []
-            let currentRange = rangeObjects[0]
-
-            for (let i = 1; i < rangeObjects.length; i++) {
-                const nextRange = rangeObjects[i]
-
-                if (currentRange.end >= nextRange.start - 1) {
-                    // Overlapping or adjacent, merge the ranges
-                    currentRange.end = Math.max(currentRange.end, nextRange.end)
-                } else {
-                    // No overlap, push the current range and start a new one
-                    merged.push(currentRange)
-                    currentRange = nextRange
-                }
+        // Iterate through all the passages and group verses by chapter
+        passages.forEach((passage) => {
+            if (!chapters[passage.chapter]) {
+                chapters[passage.chapter] = new Set() // Use Set to avoid duplicates
             }
 
-            // Push the last range
-            merged.push(currentRange)
+            // Add verses to their corresponding chapter
+            passage.passages.forEach((p) => {
+                chapters[p.chapter].add(p.verse)
 
-            // Convert merged ranges back to strings
-            return merged.map(({ start, end }) => (start === end ? `${start}` : `${start}-${end}`))
+                // Create a unique key for each passage (book-chapter-verse)
+                const passageKey = `${p.book}-${p.chapter}-${p.verse}`
+
+                // Add to the passages array if it hasn't been added yet
+                if (!uniquePassages.has(passageKey)) {
+                    newObject.passages.push(p) // Add the passage
+                    uniquePassages.add(passageKey) // Mark it as added
+                }
+            })
+        })
+
+        // Sort the newObject.passages array by chapter first, then by verse
+        newObject.passages.sort((a, b) => {
+            if (a.chapter !== b.chapter) {
+                return a.chapter - b.chapter // Sort by chapter
+            }
+            return a.verse - b.verse // Sort by verse within the same chapter
+        })
+
+        // Prepare to build the final result
+        const chapterStrings = []
+        let firstChapter = null
+        let lastChapter = null
+
+        for (const chapter in chapters) {
+            const verses = Array.from(chapters[chapter]).sort((a, b) => a - b)
+            const mergedVerses = this.mergeRanges(verses) // Merge adjacent verses into ranges
+            chapterStrings.push(`${chapter}:${mergedVerses.join(",")}`)
+
+            // Track the first and last chapters for the 'to' key
+            if (!firstChapter) firstChapter = Number(chapter) // Ensure chapter is a number
+            lastChapter = Number(chapter) // Always update to the current chapter as a number
+
+            // Update the newObject.verses with the merged ranges for the current chapter
+            if (Number(chapter) === firstChapter) {
+                newObject.verses = mergedVerses
+            }
         }
 
-        // Merge and sort the ranges
-        newObject.verses = mergeRanges(newObject.verses)
+        // Build the final combined object with `to` key for multi-chapter passages
+        newObject.original = `${newObject.book} ${firstChapter}:${newObject.verses.join(",")}`
 
-        // Build the original and scripture properties
-        newObject.original = newObject.book + " " + newObject.chapter + ":" + newObject.verses.join(",")
+        if (firstChapter !== lastChapter) {
+            newObject.to = {
+                book: newObject.book,
+                chapter: lastChapter,
+                verses: this.mergeRanges(Array.from(chapters[lastChapter])), // Ensure merged range
+            }
+        }
+
+        // Build the scripture string with combined chapters (without spaces after commas)
+        const chapterString = chapterStrings.join(",") // No space after comma
         newObject.scripture = {
-            passage: newObject.book + " " + newObject.chapter + ":" + newObject.verses.join(","),
-            cv: newObject.chapter + ":" + newObject.verses.join(","),
-            hash: newObject.book + "_" + newObject.chapter + "." + newObject.verses.join("."),
+            passage: `${newObject.book} ${chapterString}`,
+            cv: chapterString,
+            hash: `${newObject.book.toLowerCase()}_${chapterString.replace(/:/g, ".").replace(/,/g, ".")}`,
         }
-        newObject.scripture.hash = newObject.scripture.hash.toLowerCase()
 
         return newObject
+    }
+    mergeRanges(verses) {
+        const sortedVerses = [...new Set(verses)].sort((a, b) => a - b)
+        const merged = []
+        let start = sortedVerses[0]
+        let end = sortedVerses[0]
+
+        for (let i = 1; i < sortedVerses.length; i++) {
+            if (sortedVerses[i] === end + 1) {
+                end = sortedVerses[i]
+            } else {
+                // Push the current range if it's more than 2 consecutive numbers, otherwise separate by commas
+                if (start === end) {
+                    merged.push(`${start}`)
+                } else if (end === start + 1) {
+                    merged.push(`${start},${end}`)
+                } else {
+                    merged.push(`${start}-${end}`)
+                }
+                start = sortedVerses[i]
+                end = sortedVerses[i]
+            }
+        }
+
+        // Push the final range or pair
+        if (start === end) {
+            merged.push(`${start}`)
+        } else if (end === start + 1) {
+            merged.push(`${start},${end}`)
+        } else {
+            merged.push(`${start}-${end}`)
+        }
+
+        return merged
     }
 
     getToc(version = "ESV") {
