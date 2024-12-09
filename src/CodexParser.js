@@ -46,6 +46,7 @@ class CodexParser {
         ]
         this.chapterVerses = chapter_verses
         this.error = false
+        this.version = "eng"
     }
 
     /**
@@ -226,7 +227,7 @@ class CodexParser {
 
         return this // Return this instance for method chaining
     }
-    
+
     //TODO: set the version and adjust the versifications
 
     /**
@@ -286,7 +287,6 @@ class CodexParser {
                             this.chapterVerses[book][startChapter].indexOf(Number(startVerse))
                         )
                     }
-
                     // Handle same-chapter ranges (e.g., "27:27-29") and multi-chapter ranges (e.g., "Ex 2:1-3:4")
                     if (end.includes(separator)) {
                         let [endChapter, endVerse] = end.split(separator)
@@ -330,7 +330,6 @@ class CodexParser {
                     }
                 } else {
                     // Handle individual chapter:verse references (e.g., "27:27")
-
                     let [chapterPart, versePart] = part.includes(separator)
                         ? part.split(separator)
                         : [parsedPassage.chapter, part]
@@ -346,7 +345,6 @@ class CodexParser {
                         // Need to check if chapterPart is undefined
                         // If it's undefined, then versePart actually is the chapter and we need to populate the
                         // verses from this.chapterVerses
-
                         if (chapterPart) {
                             parsedPassage.chapter = Number(chapterPart)
                             parsedPassage.verses.push(versePart) // Add single verse to array
@@ -355,6 +353,8 @@ class CodexParser {
                             if (!this.chapterVerses[book][parsedPassage.chapter]) {
                                 parsedPassage.valid = this._isValid(parsedPassage, passage.reference)
                             } else {
+                                // Need to set the version of the passage here, i.e. LXX, MT, English
+                                this._setVersion(parsedPassage)
                                 parsedPassage.verses = [
                                     this.chapterVerses[book][parsedPassage.chapter][0] +
                                         "-" +
@@ -377,6 +377,30 @@ class CodexParser {
         })
         this.versification()
         return this // Return this instance
+    }
+
+    _searchVersificationDifferences(passage) {
+        const { book, chapter, version } = passage
+
+        // Loop through each key-value pair in the dictionary
+        for (const [key, value] of Object.entries(this.versificationDifferences[book])) {
+            // Check if the key starts with the desired chapter
+            if (value[version.abbreviation].startsWith(`${chapter}:`)) {
+                // Ensure the version exists in the value object
+                if (value[version.abbreviation]) {
+                    // Extract the verse number from the value
+                    const verse = value[version.abbreviation].split(":")[1]
+                    this.chapterVerses[book][chapter].push(Number(verse))
+                }
+            }
+        }
+        this.chapterVerses[book][chapter] = Array.from(this.chapterVerses[book][chapter])
+        return this.chapterVerses // Return the array of verses
+    }
+
+    _setVersion(passage) {
+        this.version = passage.version.abbreviation
+        this._searchVersificationDifferences(passage)
     }
 
     versification() {
