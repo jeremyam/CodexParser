@@ -226,11 +226,22 @@ class CodexParser {
 
         return this // Return this instance for method chaining
     }
+    
+    //TODO: set the version and adjust the versifications
 
+    /**
+     * Parses a given reference and returns an object with the parsed passage,
+     * including book, chapter, verse, type, testament, index, and version.
+     *
+     * @param {string} reference - The reference to parse.
+     * @returns {object} An object with the parsed passage.
+     */
     parse(reference) {
-        this.scan(reference) // Call scan to populate this.found
+        // Call scan to populate this.found
+        this.scan(reference)
 
         this.passages = this.found.map((passage) => {
+            // Clean up spaces and remove any dots from the reference
             passage.reference =
                 passage.reference.match(/[:]/g)?.length > 1 ? passage.reference.replace(/[:]/, "") : passage.reference
             const book = this.bookify(passage.book)
@@ -416,9 +427,10 @@ class CodexParser {
      */
     populate(parsedPassage) {
         const passages = []
-
         // Helper function to process a parsed passage's verses
-        const processVerses = (chapter, verses, book) => {
+        const processVerses = (passage) => {
+            const { book, chapter, verses } = passage
+
             if (!verses) {
                 return
             }
@@ -435,11 +447,11 @@ class CodexParser {
         }
 
         // Process main passage
-        processVerses(parsedPassage.chapter, parsedPassage.verses, parsedPassage.book)
+        processVerses(parsedPassage)
 
         // Process 'to' object if it exists (for cross-chapter ranges)
         if (parsedPassage.to) {
-            processVerses(parsedPassage.to.chapter, parsedPassage.to.verses, parsedPassage.to.book)
+            processVerses(parsedPassage.to)
         }
 
         return passages
