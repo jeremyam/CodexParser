@@ -46,7 +46,7 @@ class CodexParser {
         ]
         this.chapterVerses = chapter_verses
         this.error = false
-        this.version = "eng"
+        this.version = null
     }
 
     /**
@@ -228,6 +228,15 @@ class CodexParser {
         return this // Return this instance for method chaining
     }
 
+    bibleVersion(version) {
+        const lowerVersion = version.toLowerCase()
+        this.version =
+            lowerVersion === "lxx" || lowerVersion === "eng" || lowerVersion === "bhs" || lowerVersion === "mt"
+                ? lowerVersion
+                : null
+        return this
+    }
+
     //TODO: set the version and adjust the versifications
 
     /**
@@ -248,6 +257,7 @@ class CodexParser {
             const book = this.bookify(passage.book)
             const testament = this.bible.old.find((bible) => bible === book) ? "old" : "new"
             // Initialize the parsed passage object
+
             const parsedPassage = {
                 original: passage.book + " " + passage.reference,
                 book: book,
@@ -399,8 +409,11 @@ class CodexParser {
     }
 
     _setVersion(passage) {
-        this.version = passage.version.abbreviation
-        this._searchVersificationDifferences(passage)
+        this.version = passage.version ? passage.version.abbreviation : "eng"
+
+        if (this.version !== "eng") {
+            this._searchVersificationDifferences(passage)
+        }
     }
 
     versification() {
@@ -816,8 +829,11 @@ class CodexParser {
         return true
     }
     _handleVersion(version, testament) {
+        if (this.version) {
+            version = this.version
+        }
         if (!version) {
-            return null
+            version = "eng"
         }
         if (version.toLowerCase() === "lxx" && testament.toLowerCase() === "old") {
             return {
