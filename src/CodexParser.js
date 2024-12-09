@@ -602,6 +602,7 @@ class CodexParser {
      * and builds the original and scripture properties.
      * **This method will always combine based on English versification. LXX and MT versifications will be reflected in the combined passage.passages.versification.**
      * This method will fail if the passages are not to the same book and chapter.
+     * TODO: Add support for MT and LXX
      * @param {array} passages - An array of passage objects to combine.
      * @return {object} The combined passage object.
      */
