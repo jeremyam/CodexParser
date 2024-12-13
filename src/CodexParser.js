@@ -638,7 +638,7 @@ class CodexParser {
         passages.forEach((passageSet) => {
             passageSet.passages.forEach((passage) => {
                 if (passage.versification) {
-                    newPassages.push(passage.book + " " + passage.versification.eng)
+                    newPassages.push(passage.book + " " + passage.versification[this.version])
                 } else {
                     newPassages.push(passage.book + " " + passage.chapter + ":" + passage.verse)
                 }
