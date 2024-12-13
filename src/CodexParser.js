@@ -76,7 +76,6 @@ class CodexParser {
         let i = 0
 
         // Helper function to check if a character is valid for chapter or verse notation.
-        // A valid character is any non-alphabetic character.
         const isValidChapterVerseChar = (char) => /[^A-Za-z]/.test(char)
 
         // Helper function to determine if the next sequence in the text matches a Bible book name or abbreviation.
@@ -95,6 +94,12 @@ class CodexParser {
 
             // If no match is found, return false.
             return false
+        }
+
+        // Helper function to detect suffixes like "LXX" or "MT" in the text after a given index.
+        const detectSuffix = (startIndex) => {
+            const suffixMatch = text.substring(startIndex).match(/\b(LXX|MT)\b/i)
+            return suffixMatch ? suffixMatch[0].toUpperCase() : null
         }
 
         // Main loop: Iterate through the input text to search for Bible references.
@@ -168,40 +173,17 @@ class CodexParser {
                     if (formattedReference) references.push(formattedReference) // Add the formatted reference to the list.
                 }
 
+                // Detect any suffix (e.g., "LXX" or "MT") after the chapter/verse reference.
+                const suffix = detectSuffix(i)
+
                 // Process each extracted reference to classify its type and store it in the `found` array.
                 references.forEach((ref) => {
-                    let type // Determine the type of reference.
-
-                    // Determine the type of reference based on its structure.
-                    if (ref.includes(":")) {
-                        if (ref.includes("-")) {
-                            const [start, end] = ref.split("-")
-                            const startParts = start.split(":")
-                            const endParts = end.split(":")
-
-                            // If the range spans multiple chapters.
-                            if (startParts.length > 1 && endParts.length > 1 && startParts[0] !== endParts[0]) {
-                                type = "multi_chapter_verse_range" // Example: "8:23-9:1".
-                            } else {
-                                type = "chapter_verse_range" // Example: "8:23-25".
-                            }
-                        } else if (ref.includes(",")) {
-                            type = "comma_separated_verses" // Example: "8:23,24".
-                        } else {
-                            type = "chapter_verse" // Example: "8:23".
-                        }
-                    } else if (ref.includes("-")) {
-                        type = "chapter_range" // Example: "8-9".
-                    } else {
-                        type = "single_chapter" // Example: "8".
-                    }
-
-                    // Add the processed reference to the `found` array.
                     this.found.push({
                         book: foundBook, // The matched book name.
                         reference: ref.replace(/^:/, "").trim().replace(/\s+/gim, ""), // Format the reference.
                         index: foundIndex, // The starting index of the match in the original text.
-                        type: type, // The determined type of the reference.
+                        type: ref.includes(":") ? "chapter_verse" : "single_chapter", // Determine the type of reference.
+                        version: suffix || null, // Add detected suffix (e.g., "LXX" or "MT").
                     })
                 })
             } else {
@@ -232,7 +214,7 @@ class CodexParser {
      */
     parse(reference) {
         this.scan(reference)
-        dd(this.found)
+
         this.passages = this.found.map((passage) => {
             const book = this.bookify(passage.book)
             const testament = this.bible.old.includes(book) ? "old" : "new"
