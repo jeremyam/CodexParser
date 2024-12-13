@@ -249,52 +249,66 @@ class CodexParser {
             }
 
             const parts = passage.reference.split(",")
+            const isSingleChapter = this.singleChapterBook.some((singleChapterBook) => singleChapterBook[book])
 
             parts.forEach((part) => {
                 part = part.trim()
                 const separator = part.includes(":") ? ":" : "."
 
                 if (part.includes("-")) {
-                    if (part.includes(":")) {
-                        let [start, end] = part.split("-")
-                        const [startChapter, startVerse] = start.includes(separator)
-                            ? start.split(separator).map(Number)
-                            : [parsedPassage.chapter, Number(start)]
-                        const [endChapter, endVerse] = end.includes(separator)
-                            ? end.split(separator).map(Number)
-                            : [startChapter, Number(end)]
+                    if (!isSingleChapter) {
+                        if (part.includes(":")) {
+                            let [start, end] = part.split("-")
+                            const [startChapter, startVerse] = start.includes(separator)
+                                ? start.split(separator).map(Number)
+                                : [parsedPassage.chapter, Number(start)]
+                            const [endChapter, endVerse] = end.includes(separator)
+                                ? end.split(separator).map(Number)
+                                : [startChapter, Number(end)]
 
-                        parsedPassage.chapter = startChapter
+                            parsedPassage.chapter = startChapter
 
-                        if (startChapter !== endChapter) {
+                            if (startChapter !== endChapter) {
+                                parsedPassage.to = {
+                                    book,
+                                    chapter: endChapter,
+                                    verses: [endVerse],
+                                }
+                                parsedPassage.verses.push(startVerse)
+                            } else {
+                                parsedPassage.verses.push(...this._generateRange(startVerse, endVerse))
+                            }
+                        } else {
+                            const [start, end] = part.split("-")
+                            parsedPassage.chapter = Number(start)
                             parsedPassage.to = {
                                 book,
-                                chapter: endChapter,
-                                verses: [endVerse],
+                                chapter: Number(end),
+                                verses: [],
                             }
-                            parsedPassage.verses.push(startVerse)
-                        } else {
-                            parsedPassage.verses.push(...this._generateRange(startVerse, endVerse))
                         }
                     } else {
-                        const [start, end] = part.split("-")
-                        parsedPassage.chapter = Number(start)
-                        parsedPassage.to = {
-                            book,
-                            chapter: Number(end),
-                            verses: [],
-                        }
+                        part = part.replace(/\d+:/gim, "")
+                        const [singleChapterStartVerse, singleChapterEndVerse] = part.split("-")
+                        parsedPassage.chapter = 1
+                        parsedPassage.verses = [`${singleChapterStartVerse}-${singleChapterEndVerse}`]
+                        parsedPassage.type = "single_chapter_book_verse_range"
                     }
                 } else if (part.includes(separator)) {
                     const [chapterPart, versePart] = part.split(separator).map(Number)
                     parsedPassage.chapter = chapterPart
                     if (versePart) parsedPassage.verses.push(versePart)
                 } else {
-                    const number = Number(part)
-                    if (!parsedPassage.verses.length) {
-                        parsedPassage.chapter = number
+                    if (!isSingleChapter) {
+                        const number = Number(part)
+                        if (!parsedPassage.verses.length) {
+                            parsedPassage.chapter = number
+                        }
+                        parsedPassage.verses.push(Number(part))
+                    } else {
+                        parsedPassage.chapter = 1
+                        parsedPassage.verses.push(Number(part))
                     }
-                    parsedPassage.verses.push(Number(part))
                 }
             })
 
