@@ -55,139 +55,135 @@ class CodexParser {
      * @return {CodexParser} This instance, for method chaining.
      */
     scan(text) {
-        const fullNames = [...this.bible.old, ...this.bible.new] // Full Bible book names
-        const abbreviations = Object.keys(this.abbreviations) // Abbreviations for Bible books
+        // Combine Old and New Testament book names into a single array
+        const fullNames = [...this.bible.old, ...this.bible.new]
+        // Retrieve all abbreviation keys from the abbreviations object
+        const abbreviations = Object.keys(this.abbreviations)
 
+        // Initialize the `found` array to store the results
         this.found = []
 
-        // Convert the Bible book names and text to lowercase for case-insensitive matching
+        // Convert Bible book names, abbreviations, and input text to lowercase for case-insensitive matching
         const lowercaseBibleFullNames = fullNames.map((book) => book.toLowerCase())
         const lowercaseBibleAbbreviations = abbreviations.map((abbr) => abbr.toLowerCase())
         const lowerCaseText = text.toLowerCase()
 
-        let i = 0
+        let i = 0 // Index pointer to iterate through the input text
 
-        // Function to determine if a character is a valid part of a chapter or verse reference (non-word characters)
-        const isValidChapterVerseChar = (char) => {
-            return /[^A-Za-z]/.test(char) // Allow any non-word characters
-        }
+        /**
+         * Helper function to check if a character is part of a chapter or verse reference.
+         * Non-word characters (anything not A-Z or a-z) are considered valid.
+         */
+        const isValidChapterVerseChar = (char) => /[^A-Za-z]/.test(char)
 
-        // Function to check if a character at a given index is non-alphabetic or at the boundary of the text
+        /**
+         * Helper function to determine if a character at a given index in the text
+         * is a non-alphabetic character or at the boundary of the text.
+         */
         const isBoundaryOrNonAlphabetic = (index, text) => {
             return index < 0 || index >= text.length || /[^a-z]/i.test(text[index])
         }
 
-        // Function to check if the next part of the text starts with a new Bible book (e.g., "2 Corinthians")
+        /**
+         * Helper function to determine if the text starting at a given index contains
+         * the name of a new Bible book.
+         */
         const isNextBibleBook = (startIndex) => {
             const textAfterCurrentPosition = lowerCaseText.substring(startIndex).trim()
 
-            // Check if the next part of the text matches any full Bible book name
-            for (let j = 0; j < lowercaseBibleFullNames.length; j++) {
-                if (textAfterCurrentPosition.startsWith(lowercaseBibleFullNames[j])) {
-                    return true // Found another Bible book
-                }
+            // Check for full Bible book names
+            for (const book of lowercaseBibleFullNames) {
+                if (textAfterCurrentPosition.startsWith(book)) return true
             }
 
-            for (let j = 0; j < lowercaseBibleAbbreviations.length; j++) {
-                if (textAfterCurrentPosition.startsWith(lowercaseBibleAbbreviations[j])) {
-                    return true // Found another Bible book abbreviation
-                }
+            // Check for Bible book abbreviations
+            for (const abbr of lowercaseBibleAbbreviations) {
+                if (textAfterCurrentPosition.startsWith(abbr)) return true
             }
 
-            return false
+            return false // No match found
         }
 
-        // Function to detect suffixes like "LXX" or "MT"
+        /**
+         * Helper function to detect suffixes like "LXX" or "MT" in the text after a given index.
+         * These suffixes are case-insensitive and indicate the version of the Bible reference.
+         */
         const detectSuffix = (startIndex) => {
             const suffixMatch = text.substring(startIndex).match(/\b(LXX|MT)\b/i)
             return suffixMatch ? suffixMatch[0].toUpperCase() : null
         }
 
-        // Loop through the text and check for full names and abbreviations
+        // Iterate through the input text to detect and process Bible references
         while (i < lowerCaseText.length) {
-            let foundBook = null
-            let foundIndex = -1
-            let matchedLength = 0
+            let foundBook = null // Placeholder for the detected book name
+            let foundIndex = -1 // Index in the text where the book name starts
+            let matchedLength = 0 // Length of the matched book name or abbreviation
 
-            // Check full names first, to prioritize longer matches
+            // Search for full Bible book names in the text
             for (let j = 0; j < lowercaseBibleFullNames.length; j++) {
                 const book = lowercaseBibleFullNames[j]
-
-                // Check if the text starting at position `i` matches the Bible book
-                if (lowerCaseText.startsWith(book, i)) {
-                    if (book.length > matchedLength) {
-                        foundBook = fullNames[j] // Store the original full name
-                        foundIndex = i // Record the index where the book is found
-                        matchedLength = book.length // Update the length of the match
-                    }
+                if (lowerCaseText.startsWith(book, i) && book.length > matchedLength) {
+                    foundBook = fullNames[j] // Store the original book name (case-sensitive)
+                    foundIndex = i
+                    matchedLength = book.length // Update the match length
                 }
             }
 
-            // If no full book name was found, check for abbreviations
+            // If no full book name is found, search for abbreviations
             if (!foundBook) {
                 for (let k = 0; k < lowercaseBibleAbbreviations.length; k++) {
                     const abbreviation = lowercaseBibleAbbreviations[k]
                     const abbreviationWithDot = abbreviation + "."
 
-                    // Ensure abbreviation is not part of a larger word (check boundaries)
+                    // Check for abbreviation with a dot (e.g., "1 Cor.")
                     if (lowerCaseText.startsWith(abbreviationWithDot, i)) {
                         if (
                             isBoundaryOrNonAlphabetic(i - 1, lowerCaseText) &&
                             isBoundaryOrNonAlphabetic(i + abbreviationWithDot.length, lowerCaseText)
                         ) {
-                            // Look ahead to check if a number or space + number follows the abbreviation
                             const afterAbbreviation = lowerCaseText.substring(i + abbreviationWithDot.length).trim()
                             if (/^\d+/.test(afterAbbreviation)) {
-                                // Check if there is a number (chapter/verse)
-                                foundBook = abbreviations[k] // Store the abbreviation without the dot
-                                foundIndex = i // Record the index where the abbreviation is found
-                                matchedLength = abbreviationWithDot.length // Update the length of the match to include the dot
-                                break // Exit once found
+                                foundBook = abbreviations[k]
+                                foundIndex = i
+                                matchedLength = abbreviationWithDot.length
+                                break
                             }
                         }
-                    } else if (lowerCaseText.startsWith(abbreviation, i)) {
+                    }
+                    // Check for abbreviation without a dot (e.g., "1 Cor")
+                    else if (lowerCaseText.startsWith(abbreviation, i)) {
                         if (
                             isBoundaryOrNonAlphabetic(i - 1, lowerCaseText) &&
                             isBoundaryOrNonAlphabetic(i + abbreviation.length, lowerCaseText)
                         ) {
-                            // Look ahead to check if a number or space + number follows the abbreviation
                             const afterAbbreviation = lowerCaseText.substring(i + abbreviation.length).trim()
                             if (/^\d+/.test(afterAbbreviation)) {
-                                // Check if there is a number (chapter/verse)
-                                if (abbreviation.length > matchedLength) {
-                                    foundBook = abbreviations[k] // Store the abbreviation without the dot
-                                    foundIndex = i // Record the index where the abbreviation is found
-                                    matchedLength = abbreviation.length // Update the length of the match
-                                }
+                                foundBook = abbreviations[k]
+                                foundIndex = i
+                                matchedLength = abbreviation.length
                             }
                         }
                     }
                 }
             }
 
-            // If a book or abbreviation was found, look for chapter and verse patterns after the book
-            if (foundBook !== null) {
-                i += matchedLength // Skip ahead by the length of the found book
-                let chapterVerse = ""
-                const references = []
+            // If a Bible book is found, search for chapter and verse references
+            if (foundBook) {
+                i += matchedLength // Move the index pointer forward by the length of the book name
+                let chapterVerse = "" // Placeholder for chapter and verse data
+                const references = [] // Array to store multiple chapter/verse references for the same book
 
-                // Loop to find all chapter and verse references in the current book
+                // Extract chapter and verse references
                 while (i < text.length && isValidChapterVerseChar(text[i])) {
-                    // Look ahead to see if the next characters form a new Bible book
-                    if (isNextBibleBook(i)) {
-                        break // Stop adding to chapterVerse if a new Bible book is found
-                    }
+                    if (isNextBibleBook(i)) break // Stop if a new Bible book is detected
 
-                    // If we hit a semicolon, it means a new reference starts
-                    //  || text[i] === " "
+                    // Handle semicolon-separated references (indicates a new reference)
                     if (text[i] === ";") {
                         const formattedReference = chapterVerse
                             .trim()
                             .replace(/\./g, ":")
                             .replace(/[^a-zA-Z0-9]+$/, "")
-                        if (formattedReference.length > 0) {
-                            references.push(formattedReference) // Add the current reference to the list
-                        }
+                        if (formattedReference) references.push(formattedReference)
                         chapterVerse = "" // Reset for the next reference
                         i++
                         continue
@@ -197,21 +193,19 @@ class CodexParser {
                     i++
                 }
 
-                // Process the last found chapter and verse (if any)
+                // Process the last detected chapter/verse reference
                 if (chapterVerse.trim().length > 0) {
                     const formattedReference = chapterVerse
                         .trim()
                         .replace(/\./g, ":")
                         .replace(/[^a-zA-Z0-9]+$/, "")
-                    if (formattedReference.length > 0) {
-                        references.push(formattedReference)
-                    }
+                    if (formattedReference) references.push(formattedReference)
                 }
 
-                // Detect if a suffix (LXX or MT) exists after the chapter/verse
+                // Detect any suffix (e.g., "LXX" or "MT") after the chapter/verse reference
                 const suffix = detectSuffix(i)
 
-                // Add each reference as a separate object
+                // Add each reference as a separate object to the `found` array
                 references.forEach((ref) => {
                     this.found.push({
                         book: foundBook,
@@ -221,11 +215,11 @@ class CodexParser {
                     })
                 })
             } else {
-                i++
+                i++ // Move to the next character if no book is found
             }
         }
 
-        return this // Return this instance for method chaining
+        return this // Return the current instance for method chaining
     }
 
     bibleVersion(version) {
