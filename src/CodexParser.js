@@ -315,7 +315,6 @@ class CodexParser {
             parsedPassage.passages = this.populate(parsedPassage)
             parsedPassage.scripture = this.scripturize(parsedPassage)
             parsedPassage.valid = this._isValid(parsedPassage, passage.reference)
-            this._setVersion(parsedPassage)
             return parsedPassage
         })
         this.versification()
@@ -414,6 +413,7 @@ class CodexParser {
     populate(parsedPassage) {
         const passages = []
         const { book, chapter, verses, type } = parsedPassage
+        this._setVersion(parsedPassage)
         if (type === "single_chapter") {
             // Handle single chapter references
             if (this.chapterVerses[book] && this.chapterVerses[book][chapter]) {
