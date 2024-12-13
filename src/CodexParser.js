@@ -50,176 +50,168 @@ class CodexParser {
     }
 
     /**
-     * Scans the given text for Bible references, and stores all found references in the `found` property of the instance.
-     * @param {string} text The text to scan for Bible references.
-     * @return {CodexParser} This instance, for method chaining.
+     * Scans the given text for Bible references and stores all found references in the `found` property of the instance.
+     *
+     * @param {string} text - The text to scan for Bible references.
+     * @return {CodexParser} - Returns the instance itself, enabling method chaining.
      */
     scan(text) {
-        // Combine Old and New Testament book names into a single array
-        const fullNames = [...this.bible.old, ...this.bible.new]
-        // Retrieve all abbreviation keys from the abbreviations object
-        const abbreviations = Object.keys(this.abbreviations)
-
-        // Initialize the `found` array to store the results
+        // Initialize the `found` property as an empty array to store matched references.
         this.found = []
 
-        // Convert Bible book names, abbreviations, and input text to lowercase for case-insensitive matching
+        // Retrieve the full names of Bible books (both Old and New Testament).
+        const fullNames = [...this.bible.old, ...this.bible.new]
+
+        // Retrieve the abbreviations for Bible books from the `abbreviations` object.
+        const abbreviations = Object.keys(this.abbreviations)
+
+        // Convert all Bible book names and abbreviations to lowercase for case-insensitive matching.
         const lowercaseBibleFullNames = fullNames.map((book) => book.toLowerCase())
         const lowercaseBibleAbbreviations = abbreviations.map((abbr) => abbr.toLowerCase())
+
+        // Convert the input text to lowercase for consistent comparison.
         const lowerCaseText = text.toLowerCase()
 
-        let i = 0 // Index pointer to iterate through the input text
+        // Initialize an index pointer `i` to iterate through the text.
+        let i = 0
 
-        /**
-         * Helper function to check if a character is part of a chapter or verse reference.
-         * Non-word characters (anything not A-Z or a-z) are considered valid.
-         */
+        // Helper function to check if a character is valid for chapter or verse notation.
+        // A valid character is any non-alphabetic character.
         const isValidChapterVerseChar = (char) => /[^A-Za-z]/.test(char)
 
-        /**
-         * Helper function to determine if a character at a given index in the text
-         * is a non-alphabetic character or at the boundary of the text.
-         */
-        const isBoundaryOrNonAlphabetic = (index, text) => {
-            return index < 0 || index >= text.length || /[^a-z]/i.test(text[index])
-        }
-
-        /**
-         * Helper function to determine if the text starting at a given index contains
-         * the name of a new Bible book.
-         */
+        // Helper function to determine if the next sequence in the text matches a Bible book name or abbreviation.
         const isNextBibleBook = (startIndex) => {
             const textAfterCurrentPosition = lowerCaseText.substring(startIndex).trim()
 
-            // Check for full Bible book names
+            // Check if the upcoming text starts with any full Bible book name.
             for (const book of lowercaseBibleFullNames) {
                 if (textAfterCurrentPosition.startsWith(book)) return true
             }
 
-            // Check for Bible book abbreviations
+            // Check if the upcoming text starts with any Bible book abbreviation.
             for (const abbr of lowercaseBibleAbbreviations) {
                 if (textAfterCurrentPosition.startsWith(abbr)) return true
             }
 
-            return false // No match found
+            // If no match is found, return false.
+            return false
         }
 
-        /**
-         * Helper function to detect suffixes like "LXX" or "MT" in the text after a given index.
-         * These suffixes are case-insensitive and indicate the version of the Bible reference.
-         */
-        const detectSuffix = (startIndex) => {
-            const suffixMatch = text.substring(startIndex).match(/\b(LXX|MT)\b/i)
-            return suffixMatch ? suffixMatch[0].toUpperCase() : null
-        }
-
-        // Iterate through the input text to detect and process Bible references
+        // Main loop: Iterate through the input text to search for Bible references.
         while (i < lowerCaseText.length) {
-            let foundBook = null // Placeholder for the detected book name
-            let foundIndex = -1 // Index in the text where the book name starts
-            let matchedLength = 0 // Length of the matched book name or abbreviation
+            let foundBook = null // Stores the matched Bible book name.
+            let foundIndex = -1 // Tracks the index where the match starts.
+            let matchedLength = 0 // Tracks the length of the matched book name.
 
-            // Search for full Bible book names in the text
+            // Check for matches against full Bible book names.
             for (let j = 0; j < lowercaseBibleFullNames.length; j++) {
                 const book = lowercaseBibleFullNames[j]
+
+                // If the text at the current index matches a book name and is longer than any previously matched name.
                 if (lowerCaseText.startsWith(book, i) && book.length > matchedLength) {
-                    foundBook = fullNames[j] // Store the original book name (case-sensitive)
-                    foundIndex = i
-                    matchedLength = book.length // Update the match length
+                    foundBook = fullNames[j] // Store the original case-sensitive book name.
+                    foundIndex = i // Update the starting index of the match.
+                    matchedLength = book.length // Update the length of the match.
                 }
             }
 
-            // If no full book name is found, search for abbreviations
+            // If no match was found against full names, try matching against abbreviations.
             if (!foundBook) {
                 for (let k = 0; k < lowercaseBibleAbbreviations.length; k++) {
                     const abbreviation = lowercaseBibleAbbreviations[k]
-                    const abbreviationWithDot = abbreviation + "."
 
-                    // Check for abbreviation with a dot (e.g., "1 Cor.")
-                    if (lowerCaseText.startsWith(abbreviationWithDot, i)) {
-                        if (
-                            isBoundaryOrNonAlphabetic(i - 1, lowerCaseText) &&
-                            isBoundaryOrNonAlphabetic(i + abbreviationWithDot.length, lowerCaseText)
-                        ) {
-                            const afterAbbreviation = lowerCaseText.substring(i + abbreviationWithDot.length).trim()
-                            if (/^\d+/.test(afterAbbreviation)) {
-                                foundBook = abbreviations[k]
-                                foundIndex = i
-                                matchedLength = abbreviationWithDot.length
-                                break
-                            }
-                        }
-                    }
-                    // Check for abbreviation without a dot (e.g., "1 Cor")
-                    else if (lowerCaseText.startsWith(abbreviation, i)) {
-                        if (
-                            isBoundaryOrNonAlphabetic(i - 1, lowerCaseText) &&
-                            isBoundaryOrNonAlphabetic(i + abbreviation.length, lowerCaseText)
-                        ) {
-                            const afterAbbreviation = lowerCaseText.substring(i + abbreviation.length).trim()
-                            if (/^\d+/.test(afterAbbreviation)) {
-                                foundBook = abbreviations[k]
-                                foundIndex = i
-                                matchedLength = abbreviation.length
-                            }
-                        }
+                    // If the text at the current index matches an abbreviation.
+                    if (lowerCaseText.startsWith(abbreviation, i)) {
+                        foundBook = abbreviations[k] // Store the original abbreviation.
+                        foundIndex = i // Update the starting index of the match.
+                        matchedLength = abbreviation.length // Update the length of the match.
                     }
                 }
             }
 
-            // If a Bible book is found, search for chapter and verse references
+            // If a Bible book is found.
             if (foundBook) {
-                i += matchedLength // Move the index pointer forward by the length of the book name
-                let chapterVerse = "" // Placeholder for chapter and verse data
-                const references = [] // Array to store multiple chapter/verse references for the same book
+                i += matchedLength // Move the pointer past the matched book name.
+                let chapterVerse = "" // Initialize a variable to accumulate chapter and verse information.
+                const references = [] // Array to store individual chapter and verse references.
 
-                // Extract chapter and verse references
+                // Secondary loop: Extract chapter and verse information after the book name.
                 while (i < text.length && isValidChapterVerseChar(text[i])) {
-                    if (isNextBibleBook(i)) break // Stop if a new Bible book is detected
+                    // Break if another Bible book starts at the current position.
+                    if (isNextBibleBook(i)) break
 
-                    // Handle semicolon-separated references (indicates a new reference)
+                    // Handle semicolon-delimited references (e.g., "John 3:16; 4:5").
                     if (text[i] === ";") {
                         const formattedReference = chapterVerse
                             .trim()
-                            .replace(/\./g, ":")
-                            .replace(/[^a-zA-Z0-9]+$/, "")
-                        if (formattedReference) references.push(formattedReference)
-                        chapterVerse = "" // Reset for the next reference
-                        i++
+                            .replace(/\.+/g, ":") // Replace dots (.) with colons (:).
+                            .replace(/[^a-zA-Z0-9:]+$/, "") // Remove trailing invalid characters.
+
+                        if (formattedReference) references.push(formattedReference) // Add the formatted reference to the list.
+                        chapterVerse = "" // Reset the chapterVerse accumulator.
+                        i++ // Move past the semicolon.
                         continue
                     }
 
+                    // Accumulate valid characters for the chapterVerse.
                     chapterVerse += text[i]
                     i++
                 }
 
-                // Process the last detected chapter/verse reference
+                // Handle any remaining chapterVerse after the loop ends.
                 if (chapterVerse.trim().length > 0) {
                     const formattedReference = chapterVerse
                         .trim()
-                        .replace(/\./g, ":")
-                        .replace(/[^a-zA-Z0-9]+$/, "")
-                    if (formattedReference) references.push(formattedReference)
+                        .replace(/\.+/g, ":") // Replace dots (.) with colons (:).
+                        .replace(/[^a-zA-Z0-9:]+$/, "") // Remove trailing invalid characters.
+
+                    if (formattedReference) references.push(formattedReference) // Add the formatted reference to the list.
                 }
 
-                // Detect any suffix (e.g., "LXX" or "MT") after the chapter/verse reference
-                const suffix = detectSuffix(i)
-
-                // Add each reference as a separate object to the `found` array
+                // Process each extracted reference to classify its type and store it in the `found` array.
                 references.forEach((ref) => {
+                    let type // Determine the type of reference.
+
+                    // Determine the type of reference based on its structure.
+                    if (ref.includes(":")) {
+                        if (ref.includes("-")) {
+                            const [start, end] = ref.split("-")
+                            const startParts = start.split(":")
+                            const endParts = end.split(":")
+
+                            // If the range spans multiple chapters.
+                            if (startParts.length > 1 && endParts.length > 1 && startParts[0] !== endParts[0]) {
+                                type = "multi_chapter_verse_range" // Example: "8:23-9:1".
+                            } else {
+                                type = "chapter_verse_range" // Example: "8:23-25".
+                            }
+                        } else if (ref.includes(",")) {
+                            type = "comma_separated_verses" // Example: "8:23,24".
+                        } else {
+                            type = "chapter_verse" // Example: "8:23".
+                        }
+                    } else if (ref.includes("-")) {
+                        type = "chapter_range" // Example: "8-9".
+                    } else {
+                        type = "single_chapter" // Example: "8".
+                    }
+
+                    // Add the processed reference to the `found` array.
                     this.found.push({
-                        book: foundBook,
-                        reference: ref,
-                        index: foundIndex,
-                        version: suffix || null,
+                        book: foundBook, // The matched book name.
+                        reference: ref.replace(/^:/, "").trim().replace(/\s+/gim, ""), // Format the reference.
+                        index: foundIndex, // The starting index of the match in the original text.
+                        type: type, // The determined type of the reference.
                     })
                 })
             } else {
-                i++ // Move to the next character if no book is found
+                // If no book is found, move the pointer forward by one character.
+                i++
             }
         }
 
-        return this // Return the current instance for method chaining
+        // Return the current instance for method chaining.
+        return this
     }
 
     bibleVersion(version) {
@@ -231,8 +223,6 @@ class CodexParser {
         return this
     }
 
-    //TODO: set the version and adjust the versifications
-
     /**
      * Parses a given reference and returns an object with the parsed passage,
      * including book, chapter, verse, type, testament, index, and version.
@@ -241,146 +231,92 @@ class CodexParser {
      * @returns {object} An object with the parsed passage.
      */
     parse(reference) {
-        // Call scan to populate this.found
         this.scan(reference)
 
         this.passages = this.found.map((passage) => {
-            // Clean up spaces and remove any dots from the reference
-            passage.reference =
-                passage.reference.match(/[:]/g)?.length > 1 ? passage.reference.replace(/[:]/, "") : passage.reference
             const book = this.bookify(passage.book)
-            const testament = this.bible.old.find((bible) => bible === book) ? "old" : "new"
-            // Initialize the parsed passage object
+            const testament = this.bible.old.includes(book) ? "old" : "new"
 
             const parsedPassage = {
-                original: passage.book + " " + passage.reference,
-                book: book,
+                original: `${passage.book} ${passage.reference}`,
+                book,
                 chapter: null,
-                verses: [], // Verse stored as an array
-                type: null, // Set type based on reference
-                testament: testament,
+                verses: [],
+                type: passage.type,
+                testament,
                 index: passage.index,
                 version: this._handleVersion(passage.version, testament),
             }
 
-            // Split reference by commas to handle multiple ranges or verses (e.g., "Ge 27:27-29,39-41")
-            let parts = passage.reference.split(",")
-
-            // Check for single chapter books
-            const singleChapterBook = this.singleChapterBook.find((bible) => bible[book])
+            const parts = passage.reference.split(",")
 
             parts.forEach((part) => {
-                part = part.trim() // Clean up spaces
-                // Detect whether it uses ":" or "." for chapter:verse separation
+                part = part.trim()
                 const separator = part.includes(":") ? ":" : "."
 
                 if (part.includes("-")) {
-                    // Handle ranges (e.g., "27:27-29" or "39-41")
+                    if (part.includes(":")) {
+                        let [start, end] = part.split("-")
+                        const [startChapter, startVerse] = start.includes(separator)
+                            ? start.split(separator).map(Number)
+                            : [parsedPassage.chapter, Number(start)]
+                        const [endChapter, endVerse] = end.includes(separator)
+                            ? end.split(separator).map(Number)
+                            : [startChapter, Number(end)]
 
-                    let [start, end] = part.split("-")
-                    // Handle the starting part
-                    let [startChapter, startVerse] = start.includes(separator)
-                        ? start.split(separator)
-                        : [parsedPassage.chapter, start] // Default to same chapter if no chapter is provided
+                        parsedPassage.chapter = startChapter
 
-                    parsedPassage.chapter = Number(startChapter) // Set the chapter
-                    // Checks to see if we are in a multi chapter verse range, if so, include only relevant verses from the this.chapterVerse to
-                    // the end of the chapter.
-                    if (start.includes(separator) && end.includes(separator)) {
-                        parsedPassage.verses = this.chapterVerses[book][startChapter].slice(
-                            this.chapterVerses[book][startChapter].indexOf(Number(startVerse))
-                        )
-                    }
-                    // Handle same-chapter ranges (e.g., "27:27-29") and multi-chapter ranges (e.g., "Ex 2:1-3:4")
-                    if (end.includes(separator)) {
-                        let [endChapter, endVerse] = end.split(separator)
-                        if (Number(endChapter) !== Number(startChapter)) {
-                            // Cross-chapter range, set 'to' property
+                        if (startChapter !== endChapter) {
                             parsedPassage.to = {
-                                book: book,
-                                chapter: Number(endChapter), // End chapter
+                                book,
+                                chapter: endChapter,
+                                verses: [endVerse],
                             }
-                            if (endVerse > 1) {
-                                parsedPassage.to.verses = this.chapterVerses[book][Number(endChapter)].slice(
-                                    0,
-                                    this.chapterVerses[book][Number(endChapter)].indexOf(Number(endVerse)) + 1
-                                )
-                            }
-                            parsedPassage.type = "chapter_verse_range" // Set type to chapter range
+                            parsedPassage.verses.push(startVerse)
                         } else {
-                            // Same-chapter range, just add to the verse array
-                            parsedPassage.verses.push(`${startVerse}-${endVerse}`)
+                            parsedPassage.verses.push(...this._generateRange(startVerse, endVerse))
                         }
                     } else {
-                        // Single-chapter range (e.g., "27:27-29" or "39-41")
-                        if (!singleChapterBook) {
-                            if (!startChapter) {
-                                // Then we have a chapter range with no verses
-                                parsedPassage.chapter = start
-                                parsedPassage.verses = this.chapterVerses[book][start]
-                                parsedPassage.to = {
-                                    book: book,
-                                    chapter: Number(end),
-                                    verses: this.chapterVerses[book][end],
-                                }
-                            } else {
-                                //
-                                parsedPassage.verses.push(`${startVerse}-${end}`)
-                            }
-                        } else {
-                            parsedPassage.chapter = 1
-                            parsedPassage.verses.push(`${startVerse}-${end}`)
+                        const [start, end] = part.split("-")
+                        parsedPassage.chapter = Number(start)
+                        parsedPassage.to = {
+                            book,
+                            chapter: Number(end),
+                            verses: [],
                         }
                     }
+                } else if (part.includes(separator)) {
+                    const [chapterPart, versePart] = part.split(separator).map(Number)
+                    parsedPassage.chapter = chapterPart
+                    if (versePart) parsedPassage.verses.push(versePart)
                 } else {
-                    // Handle individual chapter:verse references (e.g., "27:27")
-                    let [chapterPart, versePart] = part.includes(separator)
-                        ? part.split(separator)
-                        : [parsedPassage.chapter, part]
-                    if (singleChapterBook) {
-                        if (!chapterPart) {
-                            parsedPassage.chapter = 1
-                            parsedPassage.verses.push(versePart) // Add single verse to array
-                        } else {
-                            parsedPassage.chapter = Number(chapterPart)
-                            parsedPassage.verses.push(versePart) // Add single verse to array
-                        }
-                    } else {
-                        // Need to check if chapterPart is undefined
-                        // If it's undefined, then versePart actually is the chapter and we need to populate the
-                        // verses from this.chapterVerses
-                        if (chapterPart) {
-                            parsedPassage.chapter = Number(chapterPart)
-                            parsedPassage.verses.push(versePart) // Add single verse to array
-                        } else {
-                            parsedPassage.chapter = Number(versePart)
-                            if (!this.chapterVerses[book][parsedPassage.chapter]) {
-                                parsedPassage.valid = this._isValid(parsedPassage, passage.reference)
-                            } else {
-                                // Need to set the version of the passage here, i.e. LXX, MT, English
-                                this._setVersion(parsedPassage)
-                                parsedPassage.verses = [
-                                    this.chapterVerses[book][parsedPassage.chapter][0] +
-                                        "-" +
-                                        this.chapterVerses[book][parsedPassage.chapter][
-                                            this.chapterVerses[book][parsedPassage.chapter].length - 1
-                                        ],
-                                ]
-                                parsedPassage.type = "single_chapter"
-                            }
-                        }
+                    const number = Number(part)
+                    if (!parsedPassage.verses.length) {
+                        parsedPassage.chapter = number
                     }
+                    parsedPassage.verses.push(Number(part))
                 }
-                parsedPassage.passages = this.populate(parsedPassage)
-                parsedPassage.scripture = this.scripturize(parsedPassage)
             })
 
+            parsedPassage.passages = this.populate(parsedPassage)
+            parsedPassage.scripture = this.scripturize(parsedPassage)
             parsedPassage.valid = this._isValid(parsedPassage, passage.reference)
 
             return parsedPassage
         })
+
         this.versification()
-        return this // Return this instance
+        return this
+    }
+    /**
+     * Generates an array of numbers representing a range from start to end, inclusive.
+     */
+    _generateRange(start, end) {
+        const range = []
+        for (let i = start; i <= end; i++) {
+            range.push(i)
+        }
+        return range
     }
 
     _searchVersificationDifferences(passage) {
@@ -456,33 +392,84 @@ class CodexParser {
      * @param {Array} verses - Array of verse numbers to add to the set of passages
      * @return {Array} Array of passage objects
      */
+    /**
+     * Populate all verses from a parsed passage, including all verses in ranges or chapters.
+     *
+     * @param {Object} parsedPassage - The parsed passage object containing book, chapter, and verses information.
+     * @return {Array} An array of passage objects with individual verses.
+     */
     populate(parsedPassage) {
         const passages = []
-        // Helper function to process a parsed passage's verses
-        const processVerses = (passage) => {
-            const { book, chapter, verses } = passage
-
-            if (!verses) {
-                return
-            }
-            verses.forEach((verse) => {
-                if (isNaN(verse)) {
-                    const [start, end] = verse.split("-").map(Number) // Handle ranges
-                    for (let i = start; i <= end; i++) {
-                        passages.push({ book, chapter: Number(chapter), verse: i })
-                    }
-                } else {
+        const { book, chapter, verses, type } = parsedPassage
+        if (type === "single_chapter") {
+            // Handle single chapter references
+            if (this.chapterVerses[book] && this.chapterVerses[book][chapter]) {
+                this.chapterVerses[book][chapter].forEach((verse) => {
                     passages.push({ book, chapter: Number(chapter), verse: Number(verse) })
+                })
+            }
+        } else if (type === "comma_separated_verses") {
+            // Handle only the explicitly mentioned verses
+            if (verses && this.chapterVerses[book] && this.chapterVerses[book][chapter]) {
+                verses.forEach((verse) => {
+                    passages.push({ book, chapter: Number(chapter), verse: Number(verse) })
+                })
+            }
+        } else if (type === "chapter_range") {
+            const { to } = parsedPassage
+
+            for (let i = chapter; i <= to.chapter; i++) {
+                const verses = this.chapterVerses[book][i]
+                for (let j = verses[0]; j < verses.length; j++) {
+                    passages.push({
+                        book,
+                        chapter: i,
+                        verse: j,
+                    })
                 }
-            })
-        }
+            }
+        } else if (type === "multi_chapter_verse_range") {
+            const { to } = parsedPassage
 
-        // Process main passage
-        processVerses(parsedPassage)
+            // Create an array of reference objects for the start and end of the range
+            const refs = [
+                {
+                    chapter: Number(parsedPassage.chapter),
+                    verse: Number(parsedPassage.verses[0]),
+                },
+                {
+                    chapter: Number(to.chapter),
+                    verse: Number(to.verses[to.verses.length - 1]),
+                },
+            ]
 
-        // Process 'to' object if it exists (for cross-chapter ranges)
-        if (parsedPassage.to) {
-            processVerses(parsedPassage.to)
+            // Iterate over the range of chapters and verses
+            for (let i = refs[0].chapter; i <= refs[1].chapter; i++) {
+                const startVerse = i === refs[0].chapter ? refs[0].verse : 1
+                const endVerse = i === refs[1].chapter ? refs[1].verse : this.chapterVerses[book][i].length
+
+                for (let j = startVerse; j <= endVerse; j++) {
+                    passages.push({
+                        book,
+                        chapter: i,
+                        verse: j,
+                    })
+                }
+            }
+        } else if (type === "chapter_verse" || type === "chapter_verse_range") {
+            // Handle chapter:verse or chapter:verse-range references
+            if (verses && this.chapterVerses[book] && this.chapterVerses[book][chapter]) {
+                verses.forEach((verse) => {
+                    if (typeof verse === "string" && verse.includes("-")) {
+                        const [start, end] = verse.split("-").map(Number)
+                        for (let i = start; i <= end; i++) {
+                            passages.push({ book, chapter: Number(chapter), verse: i })
+                        }
+                    } else {
+                        passages.push({ book, chapter: Number(chapter), verse: Number(verse) })
+                    }
+                })
+            }
         }
 
         return passages
