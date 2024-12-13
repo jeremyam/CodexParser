@@ -232,7 +232,7 @@ class CodexParser {
      */
     parse(reference) {
         this.scan(reference)
-
+        dd(this.found)
         this.passages = this.found.map((passage) => {
             const book = this.bookify(passage.book)
             const testament = this.bible.old.includes(book) ? "old" : "new"
