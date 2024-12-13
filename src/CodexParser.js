@@ -248,7 +248,6 @@ class CodexParser {
                 index: passage.index,
                 version: this._handleVersion(passage.version, testament),
             }
-
             const parts = passage.reference.split(",")
             const isSingleChapter = this.singleChapterBook.some((singleChapterBook) => singleChapterBook[book])
 
@@ -316,10 +315,9 @@ class CodexParser {
             parsedPassage.passages = this.populate(parsedPassage)
             parsedPassage.scripture = this.scripturize(parsedPassage)
             parsedPassage.valid = this._isValid(parsedPassage, passage.reference)
-
+            this._setVersion(parsedPassage)
             return parsedPassage
         })
-
         this.versification()
         return this
     }
@@ -457,16 +455,30 @@ class CodexParser {
                 },
             ]
 
-            // Iterate over the range of chapters and verses
-            for (let i = refs[0].chapter; i <= refs[1].chapter; i++) {
-                const startVerse = i === refs[0].chapter ? refs[0].verse : 1
-                const endVerse = i === refs[1].chapter ? refs[1].verse : this.chapterVerses[book][i].length
+            const startChapter = refs[0].chapter
+            const startVerse = refs[0].verse
+            const endChapter = refs[refs.length - 1].chapter
+            const endVerse = refs[refs.length - 1].verse
 
-                for (let j = startVerse; j <= endVerse; j++) {
+            // Loop through the range of chapters
+            for (let chapter = startChapter; chapter <= endChapter; chapter++) {
+                // Determine the starting verse for the current chapter
+                const chapterStartVerse = chapter === startChapter ? startVerse : 1
+                // Determine the ending verse for the current chapter
+                const chapterEndVerse = chapter === endChapter ? endVerse : this.chapterVerses[book][chapter].length
+
+                // Get the array of verses for the current chapter
+                const verses = this.chapterVerses[book][chapter].slice(chapterStartVerse - 1, chapterEndVerse)
+
+                // Loop through the verses in the current chapter
+                for (let j = 0; j < verses.length; j++) {
+                    const currentVerse = chapterStartVerse + j
+
+                    // Add the verse to the passages array
                     passages.push({
                         book,
-                        chapter: i,
-                        verse: j,
+                        chapter,
+                        verse: currentVerse,
                     })
                 }
             }
@@ -545,49 +557,63 @@ class CodexParser {
      * @return {object} The object with the human-readable name, chapter and verses and a hash.
      */
     scripturize(passage) {
-        const { book, chapter, passages } = passage
+        const { book, chapter, passages, to } = passage
 
         // Extract verses from the passages array
-        const verses = passages.map((p) => p.verse)
+        const verses = passages.map((p) => ({ chapter: p.chapter, verse: p.verse }))
         let formattedVerses = ""
 
-        if (verses.length === 1) {
-            // If there is only one verse
-            formattedVerses = verses[0].toString()
-        } else if (verses.length === 2 && verses[1] === verses[0] + 1) {
-            // If there are exactly two verses and they are consecutive, use a comma
-            formattedVerses = `${verses[0]},${verses[1]}`
+        if (to && to.chapter && to.chapter !== chapter) {
+            // Handle multi-chapter range
+            const startChapter = chapter
+            const startVerses = verses.filter((v) => v.chapter === startChapter).map((v) => v.verse)
+
+            const endChapter = to.chapter
+            const endVerses = verses.filter((v) => v.chapter === endChapter).map((v) => v.verse)
+
+            const startFormatted =
+                startVerses.length > 1 ? `${startVerses[0]}-${startVerses[startVerses.length - 1]}` : startVerses[0]
+
+            const endFormatted =
+                endVerses.length > 1 ? `${endVerses[0]}-${endVerses[endVerses.length - 1]}` : endVerses[0]
+
+            formattedVerses = `${startChapter}:${startFormatted}-${endChapter}:${endFormatted}`
         } else {
-            // For more than two verses, or non-consecutive verses
-            let ranges = []
-            let tempRange = [verses[0]]
+            // Handle single-chapter range
+            const startVerses = verses.map((v) => v.verse)
 
-            for (let i = 1; i < verses.length; i++) {
-                if (verses[i] === verses[i - 1] + 1) {
-                    // If the verse is consecutive, add to tempRange
-                    tempRange.push(verses[i])
-                } else {
-                    // If not consecutive, finalize tempRange
-                    ranges.push(tempRange)
-                    tempRange = [verses[i]]
+            if (startVerses.length === 1) {
+                formattedVerses = startVerses[0].toString()
+            } else {
+                // Group consecutive verses into ranges
+                let ranges = []
+                let tempRange = [startVerses[0]]
+
+                for (let i = 1; i < startVerses.length; i++) {
+                    if (startVerses[i] === startVerses[i - 1] + 1) {
+                        tempRange.push(startVerses[i])
+                    } else {
+                        ranges.push(tempRange)
+                        tempRange = [startVerses[i]]
+                    }
                 }
-            }
-            ranges.push(tempRange) // Push the last range
+                ranges.push(tempRange)
 
-            // Format ranges: convert consecutive numbers to ranges, non-consecutive remain separate
-            formattedVerses = ranges
-                .map((range) => (range.length > 1 ? `${range[0]}-${range[range.length - 1]}` : range[0]))
-                .join(",")
+                formattedVerses = ranges
+                    .map((range) => (range.length > 1 ? `${range[0]}-${range[range.length - 1]}` : range[0]))
+                    .join(",")
+            }
+
+            formattedVerses = `${chapter}:${formattedVerses}`
         }
 
         // Format the final passage
-        const colon = formattedVerses ? ":" : ""
-        const full = `${book} ${chapter}${colon}${formattedVerses}`.trim()
+        const full = `${book} ${formattedVerses}`.trim()
         const hash = full.toLowerCase().replace(/ /g, "_").replace(/:/g, ".").replace(/-/g, ".").replace(/,/g, ".")
 
         return {
             passage: full,
-            cv: `${chapter}${colon}${formattedVerses}`,
+            cv: formattedVerses,
             hash,
         }
     }
