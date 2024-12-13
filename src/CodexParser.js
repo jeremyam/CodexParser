@@ -56,144 +56,163 @@ class CodexParser {
      * @return {CodexParser} - Returns the instance itself, enabling method chaining.
      */
     scan(text) {
-        // Initialize the `found` property as an empty array to store matched references.
-        this.found = []
-
-        // Retrieve the full names of Bible books (both Old and New Testament).
+        // Combine Old and New Testament book names into a single array
         const fullNames = [...this.bible.old, ...this.bible.new]
 
-        // Retrieve the abbreviations for Bible books from the `abbreviations` object.
+        // Retrieve all abbreviation keys from the abbreviations object
         const abbreviations = Object.keys(this.abbreviations)
 
-        // Convert all Bible book names and abbreviations to lowercase for case-insensitive matching.
+        // Initialize the `found` array to store the results
+        this.found = []
+
+        // Convert Bible book names, abbreviations, and input text to lowercase for case-insensitive matching
         const lowercaseBibleFullNames = fullNames.map((book) => book.toLowerCase())
         const lowercaseBibleAbbreviations = abbreviations.map((abbr) => abbr.toLowerCase())
-
-        // Convert the input text to lowercase for consistent comparison.
         const lowerCaseText = text.toLowerCase()
 
-        // Initialize an index pointer `i` to iterate through the text.
-        let i = 0
+        let i = 0 // Index pointer to iterate through the input text
 
-        // Helper function to check if a character is valid for chapter or verse notation.
+        /**
+         * Helper function to check if a character is part of a chapter or verse reference.
+         * Non-word characters (anything not A-Z or a-z) are considered valid.
+         */
         const isValidChapterVerseChar = (char) => /[^A-Za-z]/.test(char)
 
-        // Helper function to determine if the next sequence in the text matches a Bible book name or abbreviation.
+        /**
+         * Helper function to determine if the text starting at a given index contains
+         * the name of a new Bible book.
+         */
         const isNextBibleBook = (startIndex) => {
             const textAfterCurrentPosition = lowerCaseText.substring(startIndex).trim()
 
-            // Check if the upcoming text starts with any full Bible book name.
+            // Check for full Bible book names
             for (const book of lowercaseBibleFullNames) {
                 if (textAfterCurrentPosition.startsWith(book)) return true
             }
 
-            // Check if the upcoming text starts with any Bible book abbreviation.
+            // Check for Bible book abbreviations
             for (const abbr of lowercaseBibleAbbreviations) {
                 if (textAfterCurrentPosition.startsWith(abbr)) return true
             }
 
-            // If no match is found, return false.
-            return false
+            return false // No match found
         }
 
-        // Helper function to detect suffixes like "LXX" or "MT" in the text after a given index.
+        /**
+         * Helper function to detect suffixes like "LXX" or "MT" in the text after a given index.
+         * These suffixes are case-insensitive and indicate the version of the Bible reference.
+         */
         const detectSuffix = (startIndex) => {
             const suffixMatch = text.substring(startIndex).match(/\b(LXX|MT)\b/i)
             return suffixMatch ? suffixMatch[0].toUpperCase() : null
         }
 
-        // Main loop: Iterate through the input text to search for Bible references.
+        // Iterate through the input text to detect and process Bible references
         while (i < lowerCaseText.length) {
-            let foundBook = null // Stores the matched Bible book name.
-            let foundIndex = -1 // Tracks the index where the match starts.
-            let matchedLength = 0 // Tracks the length of the matched book name.
+            let foundBook = null // Placeholder for the detected book name
+            let foundIndex = -1 // Index in the text where the book name starts
+            let matchedLength = 0 // Length of the matched book name or abbreviation
 
-            // Check for matches against full Bible book names.
+            // Search for full Bible book names in the text
             for (let j = 0; j < lowercaseBibleFullNames.length; j++) {
                 const book = lowercaseBibleFullNames[j]
-
-                // If the text at the current index matches a book name and is longer than any previously matched name.
                 if (lowerCaseText.startsWith(book, i) && book.length > matchedLength) {
-                    foundBook = fullNames[j] // Store the original case-sensitive book name.
-                    foundIndex = i // Update the starting index of the match.
-                    matchedLength = book.length // Update the length of the match.
+                    foundBook = fullNames[j] // Store the original book name (case-sensitive)
+                    foundIndex = i
+                    matchedLength = book.length // Update the match length
                 }
             }
 
-            // If no match was found against full names, try matching against abbreviations.
+            // If no full book name is found, search for abbreviations
             if (!foundBook) {
                 for (let k = 0; k < lowercaseBibleAbbreviations.length; k++) {
                     const abbreviation = lowercaseBibleAbbreviations[k]
-
-                    // If the text at the current index matches an abbreviation.
                     if (lowerCaseText.startsWith(abbreviation, i)) {
-                        foundBook = abbreviations[k] // Store the original abbreviation.
-                        foundIndex = i // Update the starting index of the match.
-                        matchedLength = abbreviation.length // Update the length of the match.
+                        foundBook = abbreviations[k]
+                        foundIndex = i
+                        matchedLength = abbreviation.length
                     }
                 }
             }
 
-            // If a Bible book is found.
+            // If a Bible book is found
             if (foundBook) {
-                i += matchedLength // Move the pointer past the matched book name.
-                let chapterVerse = "" // Initialize a variable to accumulate chapter and verse information.
-                const references = [] // Array to store individual chapter and verse references.
+                i += matchedLength // Move the index pointer forward by the length of the book name
+                let chapterVerse = "" // Placeholder for chapter and verse data
+                const references = [] // Array to store multiple chapter/verse references for the same book
 
-                // Secondary loop: Extract chapter and verse information after the book name.
+                // Extract chapter and verse references
                 while (i < text.length && isValidChapterVerseChar(text[i])) {
-                    // Break if another Bible book starts at the current position.
-                    if (isNextBibleBook(i)) break
+                    if (isNextBibleBook(i)) break // Stop if a new Bible book is detected
 
-                    // Handle semicolon-delimited references (e.g., "John 3:16; 4:5").
+                    // Handle semicolon-separated references (indicates a new reference)
                     if (text[i] === ";") {
                         const formattedReference = chapterVerse
                             .trim()
-                            .replace(/\.+/g, ":") // Replace dots (.) with colons (:).
-                            .replace(/[^a-zA-Z0-9:]+$/, "") // Remove trailing invalid characters.
-
-                        if (formattedReference) references.push(formattedReference) // Add the formatted reference to the list.
-                        chapterVerse = "" // Reset the chapterVerse accumulator.
-                        i++ // Move past the semicolon.
+                            .replace(/\./g, ":")
+                            .replace(/[^a-zA-Z0-9]+$/, "")
+                        if (formattedReference) references.push(formattedReference)
+                        chapterVerse = "" // Reset for the next reference
+                        i++
                         continue
                     }
 
-                    // Accumulate valid characters for the chapterVerse.
                     chapterVerse += text[i]
                     i++
                 }
 
-                // Handle any remaining chapterVerse after the loop ends.
+                // Process the last detected chapter/verse reference
                 if (chapterVerse.trim().length > 0) {
                     const formattedReference = chapterVerse
                         .trim()
-                        .replace(/\.+/g, ":") // Replace dots (.) with colons (:).
-                        .replace(/[^a-zA-Z0-9:]+$/, "") // Remove trailing invalid characters.
-
-                    if (formattedReference) references.push(formattedReference) // Add the formatted reference to the list.
+                        .replace(/\./g, ":")
+                        .replace(/[^a-zA-Z0-9]+$/, "")
+                    if (formattedReference) references.push(formattedReference)
                 }
 
-                // Detect any suffix (e.g., "LXX" or "MT") after the chapter/verse reference.
+                // Detect any suffix (e.g., "LXX" or "MT") after the chapter/verse reference
                 const suffix = detectSuffix(i)
 
-                // Process each extracted reference to classify its type and store it in the `found` array.
+                // Add each reference as a separate object to the `found` array with type recognition
                 references.forEach((ref) => {
+                    let type
+
+                    if (ref.includes(":")) {
+                        if (ref.includes("-")) {
+                            const [start, end] = ref.split("-")
+                            const startParts = start.split(":")
+                            const endParts = end.split(":")
+
+                            if (startParts.length > 1 && endParts.length > 1 && startParts[0] !== endParts[0]) {
+                                type = "multi_chapter_verse_range" // Example: "8:23-9:1"
+                            } else {
+                                type = "chapter_verse_range" // Example: "8:23-25"
+                            }
+                        } else if (ref.includes(",")) {
+                            type = "comma_separated_verses" // Example: "8:23,24"
+                        } else {
+                            type = "chapter_verse" // Example: "8:23"
+                        }
+                    } else if (ref.includes("-")) {
+                        type = "chapter_range" // Example: "8-9"
+                    } else {
+                        type = "single_chapter" // Example: "8"
+                    }
+
                     this.found.push({
-                        book: foundBook, // The matched book name.
-                        reference: ref.replace(/^:/, "").trim().replace(/\s+/gim, ""), // Format the reference.
-                        index: foundIndex, // The starting index of the match in the original text.
-                        type: ref.includes(":") ? "chapter_verse" : "single_chapter", // Determine the type of reference.
-                        version: suffix || null, // Add detected suffix (e.g., "LXX" or "MT").
+                        book: foundBook,
+                        reference: ref,
+                        index: foundIndex,
+                        version: suffix || null,
+                        type,
                     })
                 })
             } else {
-                // If no book is found, move the pointer forward by one character.
-                i++
+                i++ // Move to the next character if no book is found
             }
         }
 
-        // Return the current instance for method chaining.
-        return this
+        return this // Return the current instance for method chaining
     }
 
     bibleVersion(version) {
@@ -426,7 +445,6 @@ class CodexParser {
             }
         } else if (type === "multi_chapter_verse_range") {
             const { to } = parsedPassage
-
             // Create an array of reference objects for the start and end of the range
             const refs = [
                 {
