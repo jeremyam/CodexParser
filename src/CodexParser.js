@@ -153,9 +153,8 @@ class CodexParser {
                             const [start, end] = ref.split("-")
                             const startParts = start.split(":")
                             const endParts = end.split(":")
-
                             type =
-                                startParts.length > 1 && endParts.length > 1 && startParts[0] !== endParts[0]
+                                startParts[0].trim() !== endParts[0].trim()
                                     ? "multi_chapter_verse_range"
                                     : "chapter_verse_range"
                         } else if (ref.includes(",")) {
@@ -202,85 +201,143 @@ class CodexParser {
      * @returns {object} An object with the parsed passage.
      */
     parse(reference) {
-        this.scan(reference)
+        this.scan(reference) // Call scan to populate this.found
 
         this.passages = this.found.map((passage) => {
             const book = this.bookify(passage.book)
-            const testament = this.bible.old.includes(book) ? "old" : "new"
-
-            const isSingleChapterBook = this.singleChapterBook.includes(book)
-
+            const testament = this.bible.old.find((bible) => bible === book) ? "old" : "new"
+            // Initialize the parsed passage object
             const parsedPassage = {
-                original: `${passage.book} ${passage.reference}`,
-                book,
-                chapter: isSingleChapterBook ? 1 : null, // Set chapter to 1 for single-chapter books
-                verses: [],
-                type: passage.type,
-                testament,
+                original: passage.book + " " + passage.reference,
+                book: book,
+                chapter: null,
+                verses: [], // Verse stored as an array
+                type: null, // Set type based on reference
+                testament: testament,
                 index: passage.index,
                 version: this._handleVersion(passage.version, testament),
-                to: null,
             }
 
-            const splitReference = passage.reference.split(/(\d+:|\d+-\d+)/).filter((v) => v.trim())
-            let currentChapter = isSingleChapterBook ? 1 : null // Default chapter for single-chapter books
+            // Split reference by commas to handle multiple ranges or verses (e.g., "Ge 27:27-29,39-41")
+            let parts = passage.reference.split(",")
 
-            splitReference.forEach((part, i) => {
-                part = part.trim()
+            // Check for single chapter books
+            const singleChapterBook = this.singleChapterBook.find((bible) => bible[book])
 
-                if (isSingleChapterBook) {
-                    // For single-chapter books, treat all numbers as verses
-                    if (/^\d+$/.test(part)) {
-                        parsedPassage.verses.push(Number(part))
-                    } else if (part.includes("-")) {
-                        // Handle ranges like "5-7"
-                        const [start, end] = part.split("-").map(Number)
-                        parsedPassage.verses.push(...this._generateRange(start, end))
+            parts.forEach((part) => {
+                part = part.trim() // Clean up spaces
+                // Detect whether it uses ":" or "." for chapter:verse separation
+                const separator = part.includes(":") ? ":" : "."
+
+                if (part.includes("-")) {
+                    // Handle ranges (e.g., "27:27-29" or "39-41")
+
+                    let [start, end] = part.split("-")
+                    // Handle the starting part
+                    let [startChapter, startVerse] = start.includes(separator)
+                        ? start.split(separator)
+                        : [parsedPassage.chapter, start] // Default to same chapter if no chapter is provided
+
+                    parsedPassage.chapter = Number(startChapter) // Set the chapter
+                    // Checks to see if we are in a multi chapter verse range, if so, include only relevant verses from the this.chapterVerse to
+                    // the end of the chapter.
+                    if (start.includes(separator) && end.includes(separator)) {
+                        parsedPassage.verses = this.chapterVerses[book][startChapter].slice(
+                            this.chapterVerses[book][startChapter].indexOf(Number(startVerse))
+                        )
                     }
-                } else {
-                    // Regular books logic
-                    if (part.includes(":")) {
-                        // Chapter context detected
-                        currentChapter = Number(part.replace(":", ""))
-                        parsedPassage.chapter = currentChapter
-                    } else if (part.includes("-")) {
-                        // Range handling (verses or multi-chapter)
-                        const [start, end] = part.split("-").map(Number)
 
-                        if (splitReference[i + 1] && splitReference[i + 1].includes(":")) {
-                            // Multi-chapter range detected
+                    // Handle same-chapter ranges (e.g., "27:27-29") and multi-chapter ranges (e.g., "Ex 2:1-3:4")
+                    if (end.includes(separator)) {
+                        let [endChapter, endVerse] = end.split(separator)
+                        if (Number(endChapter) !== Number(startChapter)) {
+                            // Cross-chapter range, set 'to' property
                             parsedPassage.to = {
-                                book,
-                                chapter: Number(splitReference[i + 1].replace(":", "")),
-                                verses: [end],
+                                book: book,
+                                chapter: Number(endChapter), // End chapter
+                            }
+                            if (endVerse > 1) {
+                                parsedPassage.to.verses = this.chapterVerses[book][Number(endChapter)].slice(
+                                    0,
+                                    this.chapterVerses[book][Number(endChapter)].indexOf(Number(endVerse)) + 1
+                                )
+                            }
+                            parsedPassage.type =
+                                endChapter !== startChapter ? "multi_chapter_verse_range" : "chapter_verse_range" // Set type to chapter range
+                        } else {
+                            // Same-chapter range, just add to the verse array
+                            parsedPassage.verses.push(`${startVerse}-${endVerse}`)
+                        }
+                    } else {
+                        // Single-chapter range (e.g., "27:27-29" or "39-41")
+                        if (!singleChapterBook) {
+                            if (!startChapter) {
+                                // Then we have a chapter range with no verses
+                                parsedPassage.chapter = start
+                                parsedPassage.verses = this.chapterVerses[book][start]
+                                parsedPassage.to = {
+                                    book: book,
+                                    chapter: Number(end),
+                                    verses: this.chapterVerses[book][end],
+                                }
+                            } else {
+                                //
+                                parsedPassage.verses.push(`${startVerse}-${end}`)
                             }
                         } else {
-                            // Single-chapter range
-                            parsedPassage.verses.push(...this._generateRange(start, end))
+                            parsedPassage.chapter = 1
+                            parsedPassage.verses.push(`${startVerse}-${end}`)
                         }
-                    } else if (/^\d+$/.test(part)) {
-                        // Single verse or standalone chapter
-                        if (currentChapter !== null) {
-                            parsedPassage.verses.push(Number(part))
+                    }
+                } else {
+                    // Handle individual chapter:verse references (e.g., "27:27")
+
+                    let [chapterPart, versePart] = part.includes(separator)
+                        ? part.split(separator)
+                        : [parsedPassage.chapter, part]
+                    if (singleChapterBook) {
+                        if (!chapterPart) {
+                            parsedPassage.chapter = 1
+                            parsedPassage.verses.push(versePart) // Add single verse to array
+                        } else {
+                            parsedPassage.chapter = Number(chapterPart)
+                            parsedPassage.verses.push(versePart) // Add single verse to array
+                        }
+                    } else {
+                        // Need to check if chapterPart is undefined
+                        // If it's undefined, then versePart actually is the chapter and we need to populate the
+                        // verses from this.chapterVerses
+
+                        if (chapterPart) {
+                            parsedPassage.chapter = Number(chapterPart)
+                            parsedPassage.verses.push(versePart) // Add single verse to array
+                        } else {
+                            parsedPassage.chapter = Number(versePart)
+                            if (!this.chapterVerses[book][parsedPassage.chapter]) {
+                                parsedPassage.valid = this._isValid(parsedPassage, passage.reference)
+                            } else {
+                                parsedPassage.verses = [
+                                    this.chapterVerses[book][parsedPassage.chapter][0] +
+                                        "-" +
+                                        this.chapterVerses[book][parsedPassage.chapter][
+                                            this.chapterVerses[book][parsedPassage.chapter].length - 1
+                                        ],
+                                ]
+                                parsedPassage.type = "single_chapter"
+                            }
                         }
                     }
                 }
+                parsedPassage.passages = this.populate(parsedPassage)
+                parsedPassage.scripture = this.scripturize(parsedPassage)
             })
 
-            // Handle "to" object for chapter-only ranges
-            if (parsedPassage.to && !parsedPassage.to.verses.length) {
-                parsedPassage.to.verses.push(this.chapterVerses[book][parsedPassage.to.chapter].length)
-            }
-
-            parsedPassage.passages = this.populate(parsedPassage)
-            parsedPassage.scripture = this.scripturize(parsedPassage)
             parsedPassage.valid = this._isValid(parsedPassage, passage.reference)
 
             return parsedPassage
         })
-
         this.versification()
-        return this
+        return this // Return this instance
     }
     /**
      * Generates an array of numbers representing a range from start to end, inclusive.
@@ -403,17 +460,20 @@ class CodexParser {
             }
         } else if (type === "multi_chapter_verse_range") {
             // Handle multi-chapter verse ranges (e.g., 3:1-5:6)
+
             const startChapter = chapter
             const startVerse = verses[0]
             const endChapter = to.chapter
-            const endVerse = to.verses[0]
+            const endVerse = to.verses[to.verses.length - 1]
 
             for (let currentChapter = startChapter; currentChapter <= endChapter; currentChapter++) {
                 const chapterVerses = this.chapterVerses[book][currentChapter]
                 if (!chapterVerses) continue
 
+                // Determine start and end verses for each chapter
                 const chapterStartVerse = currentChapter === startChapter ? startVerse : 1
-                const chapterEndVerse = currentChapter === endChapter ? endVerse : chapterVerses.length
+                const chapterEndVerse =
+                    currentChapter === endChapter ? endVerse : chapterVerses[chapterVerses.length - 1]
 
                 for (let verse = chapterStartVerse; verse <= chapterEndVerse; verse++) {
                     passages.push({ book, chapter: currentChapter, verse })
