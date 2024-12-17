@@ -560,25 +560,32 @@ class CodexParser {
      * @return {object} The object with the human-readable name, chapter and verses and a hash.
      */
     scripturize(passage) {
-        // Helper to format a chapter:verse combination
-        const formatChapterVerse = (chapter, verses) => {
+        // Helper to format a single chapter:verse combination
+        const formatChapterVerse = (chapter, verseStart, verseEnd = null) => {
             if (!chapter) return ""
-            if (!verses || verses.length === 0) return `${chapter}`
-            return `${chapter}:${verses[0]}${verses.length > 1 ? `-${verses[verses.length - 1]}` : ""}`
+            if (!verseStart) return `${chapter}`
+            return verseEnd ? `${chapter}:${verseStart}-${verseEnd}` : `${chapter}:${verseStart}`
         }
 
         // Initialize combined passage
         let combined = `${passage.book}`
 
         if (passage.type === "multi_chapter_verse_range") {
-            // Multi-chapter verse range handling
-            combined += ` ${formatChapterVerse(passage.chapter, passage.verses)}`
+            // Multi-chapter verse range handling: first verse of first chapter to last verse of last chapter
             if (passage.to) {
-                combined += `-${formatChapterVerse(passage.to.chapter, passage.to.verses)}`
+                combined += ` ${formatChapterVerse(passage.chapter, passage.verses[0])}` // Start chapter:verse
+                combined += `-${formatChapterVerse(
+                    passage.to.chapter,
+                    passage.to.verses[passage.to.verses.length - 1]
+                )}` // End chapter:last verse
             }
         } else if (passage.type === "chapter_verse_range") {
             // Single-chapter verse range
-            combined += ` ${formatChapterVerse(passage.chapter, passage.verses)}`
+            combined += ` ${formatChapterVerse(
+                passage.chapter,
+                passage.verses[0],
+                passage.verses[passage.verses.length - 1]
+            )}`
         } else if (passage.type === "comma_separated_verses") {
             // Comma-separated verses
             combined += ` ${passage.chapter}:${passage.verses.join(",")}`
@@ -587,14 +594,19 @@ class CodexParser {
             combined += ` ${passage.startChapter}-${passage.endChapter}`
         } else {
             // Single chapter or single verse
-            combined += ` ${formatChapterVerse(passage.chapter, passage.verses)}`
+            combined += ` ${formatChapterVerse(passage.chapter, passage.verses[0])}`
         }
 
-        // Generate chapter:verse for current and to objects
-        const cv = formatChapterVerse(passage.chapter, passage.verses)
+        // Generate chapter:verse for current and "to" objects
+        const cv = passage.to
+            ? `${formatChapterVerse(passage.chapter, passage.verses[0])}-${formatChapterVerse(
+                  passage.to.chapter,
+                  passage.to.verses[passage.to.verses.length - 1]
+              )}`
+            : formatChapterVerse(passage.chapter, passage.verses[0])
 
         // Generate a hash for the passage
-        const hash = `${passage.book.toLowerCase()}_${cv.replace(/:/g, "_")}`
+        const hash = `${passage.book.toLowerCase()}_${cv.replace(/:/g, "_").replace(/-/g, "_")}`
 
         return {
             passage: combined, // Reconstructed passage
