@@ -212,7 +212,7 @@ class CodexParser {
                 book: book,
                 chapter: null,
                 verses: [], // Verse stored as an array
-                type: null, // Set type based on reference
+                type: passage.type, // Set type based on reference
                 testament: testament,
                 index: passage.index,
                 version: this._handleVersion(passage.version, testament),
@@ -625,13 +625,14 @@ class CodexParser {
      * @return {object} The combined passage object.
      */
     combine(passages) {
-        // Only check if passages are from the same book
-        const noDuplicates = [...new Set(passages.map((p) => p.book))]
-        if (noDuplicates.length > 1) {
+        // Only check if passages are from the same book)
+        const sameBook = [...new Set(passages.map((p) => p.book))]
+        if (sameBook.length > 1) {
             throw new Error("Passages are not from the same book.")
         }
 
         const newPassages = []
+
         passages.forEach((passageSet) => {
             passageSet.passages.forEach((passage) => {
                 if (passage.versification) {
@@ -643,7 +644,9 @@ class CodexParser {
         })
 
         const noDuplicates2 = [...new Set(newPassages)]
+
         const parsed = this.parse(noDuplicates2.join(" // ")).getPassages()
+
         return this.join(parsed)
     }
 
@@ -659,7 +662,6 @@ class CodexParser {
 
         const chapters = {} // Store verses by chapters
         const uniquePassages = new Set() // Track unique passages to prevent duplicates
-
         // Add initial passages to the unique set to avoid duplication
         newObject.passages.forEach((p) => {
             const passageKey = `${p.book}-${p.chapter}-${p.verse}`
