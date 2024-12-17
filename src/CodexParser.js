@@ -261,7 +261,10 @@ class CodexParser {
                                     0,
                                     this.chapterVerses[book][Number(endChapter)].indexOf(Number(endVerse)) + 1
                                 )
+                            } else {
+                                parsedPassage.to.verses = [endVerse]
                             }
+
                             parsedPassage.type =
                                 endChapter !== startChapter ? "multi_chapter_verse_range" : "chapter_verse_range" // Set type to chapter range
                         } else {
@@ -460,7 +463,6 @@ class CodexParser {
             }
         } else if (type === "multi_chapter_verse_range") {
             // Handle multi-chapter verse ranges (e.g., 3:1-5:6)
-
             const startChapter = chapter
             const startVerse = verses[0]
             const endChapter = to.chapter
@@ -845,6 +847,22 @@ class CodexParser {
                     message: {
                         chapter_exists: false,
                         content: `Chapter ${passage.chapter} does not exist in ${passage.book}`,
+                    },
+                }
+            }
+        }
+        for (let i = 0; i < passage.verses.length; i++) {
+            let verse = passage.verses[i]
+            const searchForVerse = this.chapterVerses[passage.book][passage.chapter].find(
+                (v) => Number(v) === Number(verse)
+            )
+            if (!searchForVerse) {
+                return {
+                    error: true,
+                    code: 104,
+                    message: {
+                        verse_exists: false,
+                        content: `Verse number ${verse} does not exist in ${passage.book} ${passage.chapter}`,
                     },
                 }
             }
