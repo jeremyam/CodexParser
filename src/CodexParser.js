@@ -590,9 +590,6 @@ class CodexParser {
             combined += ` ${formatChapterVerse(passage.chapter, passage.verses)}`
         }
 
-        // Handle the "passages" array for comprehensive formatting
-        const fullPassages = passage.passages.map((p) => `${p.book} ${p.chapter}:${p.verse}`).join("; ")
-
         // Generate chapter:verse for current and to objects
         const cv = formatChapterVerse(passage.chapter, passage.verses)
 
@@ -601,7 +598,6 @@ class CodexParser {
 
         return {
             passage: combined, // Reconstructed passage
-            full: fullPassages, // Detailed breakdown from the "passages" array
             cv: cv, // Chapter:verse range
             hash: hash, // Unique hash
         }
