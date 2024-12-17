@@ -560,16 +560,50 @@ class CodexParser {
      * @return {object} The object with the human-readable name, chapter and verses and a hash.
      */
     scripturize(passage) {
-        let combined = `${passage.book} ${passage.chapter}:${passage.verses.join()}`
-
-        if (passage.to) {
-            combined = combined + "-" + `${passage.to.chapter}:${passage.to.verses.join()}`
+        // Helper to format a chapter:verse combination
+        const formatChapterVerse = (chapter, verses) => {
+            if (!chapter) return ""
+            if (!verses || verses.length === 0) return `${chapter}`
+            return `${chapter}:${verses[0]}${verses.length > 1 ? `-${verses[verses.length - 1]}` : ""}`
         }
 
+        // Initialize combined passage
+        let combined = `${passage.book}`
+
+        if (passage.type === "multi_chapter_verse_range") {
+            // Multi-chapter verse range handling
+            combined += ` ${formatChapterVerse(passage.chapter, passage.verses)}`
+            if (passage.to) {
+                combined += `-${formatChapterVerse(passage.to.chapter, passage.to.verses)}`
+            }
+        } else if (passage.type === "chapter_verse_range") {
+            // Single-chapter verse range
+            combined += ` ${formatChapterVerse(passage.chapter, passage.verses)}`
+        } else if (passage.type === "comma_separated_verses") {
+            // Comma-separated verses
+            combined += ` ${passage.chapter}:${passage.verses.join(",")}`
+        } else if (passage.type === "chapter_range") {
+            // Chapter range
+            combined += ` ${passage.startChapter}-${passage.endChapter}`
+        } else {
+            // Single chapter or single verse
+            combined += ` ${formatChapterVerse(passage.chapter, passage.verses)}`
+        }
+
+        // Handle the "passages" array for comprehensive formatting
+        const fullPassages = passage.passages.map((p) => `${p.book} ${p.chapter}:${p.verse}`).join("; ")
+
+        // Generate chapter:verse for current and to objects
+        const cv = formatChapterVerse(passage.chapter, passage.verses)
+
+        // Generate a hash for the passage
+        const hash = `${passage.book.toLowerCase()}_${cv.replace(/:/g, "_")}`
+
         return {
-            passage: combined,
-            cv: `${passage.chapter}:${passage.verses.join()}`,
-            hash: `${passage.book.toLowerCase()}_${passage.chapter}:${passage.verses.join()}`,
+            passage: combined, // Reconstructed passage
+            full: fullPassages, // Detailed breakdown from the "passages" array
+            cv: cv, // Chapter:verse range
+            hash: hash, // Unique hash
         }
     }
 
