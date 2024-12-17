@@ -273,7 +273,7 @@ class CodexParser {
                         if (!singleChapterBook) {
                             if (!startChapter) {
                                 // Then we have a chapter range with no verses
-                                parsedPassage.chapter = start
+                                parsedPassage.chapter = Number(start)
                                 parsedPassage.verses = this.chapterVerses[book][start]
                                 parsedPassage.to = {
                                     book: book,
@@ -454,7 +454,7 @@ class CodexParser {
             for (let currentChapter = chapter; currentChapter <= to.chapter; currentChapter++) {
                 if (this.chapterVerses[book] && this.chapterVerses[book][currentChapter]) {
                     this.chapterVerses[book][currentChapter].forEach((verse) => {
-                        passages.push({ book, chapter: currentChapter, verse: Number(verse) })
+                        passages.push({ book, chapter: Number(currentChapter), verse: Number(verse) })
                     })
                 }
             }
@@ -591,7 +591,9 @@ class CodexParser {
             combined += ` ${passage.chapter}:${passage.verses.join(",")}`
         } else if (passage.type === "chapter_range") {
             // Chapter range
-            combined += ` ${passage.startChapter}-${passage.endChapter}`
+            combined += ` ${passage.chapter}:${passage.verses[0]}-${passage.to.chapter}:${
+                passage.to.verses[passage.to.verses.length - 1]
+            }`
         } else {
             // Single chapter or single verse
             combined += ` ${formatChapterVerse(passage.chapter, passage.verses[0])}`
