@@ -256,17 +256,43 @@ class CodexParser {
                                 0,
                                 this.chapterVerses[book][endChapter].indexOf(Number(endVerse)) + 1
                             )
-
                             // Construct ranges for the `to` object
                             parsedPassage.to = {
                                 book: book,
                                 chapter: Number(endChapter),
-                                verses: [`${1}-${endVerse}`, ...endVerses.filter((v) => v > endVerse)],
+                                verses: [endVerse],
                             }
 
                             parsedPassage.type = "multi_chapter_verse_range"
                         } else {
                             parsedPassage.verses.push(`${startVerse}-${endVerse}`)
+                        }
+                    } else {
+                        if (separator !== ":") {
+                            // then this is a chapter_range
+                            let [startChapter, endChapter] = part.split("-")
+                            parsedPassage.chapter = Number(startChapter)
+                            parsedPassage.verses = [
+                                `${this.chapterVerses[book][parsedPassage.chapter][0]}-${
+                                    this.chapterVerses[book][parsedPassage.chapter][
+                                        this.chapterVerses[book][parsedPassage.chapter].length - 1
+                                    ]
+                                }`,
+                            ]
+                            parsedPassage.to = {
+                                book: book,
+                                chapter: Number(endChapter),
+                                verses: [
+                                    `${this.chapterVerses[book][endChapter][0]}-${
+                                        this.chapterVerses[book][endChapter][
+                                            this.chapterVerses[book][endChapter].length - 1
+                                        ]
+                                    }`,
+                                ],
+                            }
+                        } else {
+                            // Handles when verses are present.
+                            parsedPassage.verses = [part.split(separator)[1]]
                         }
                     }
                 } else {
