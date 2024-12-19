@@ -566,60 +566,54 @@ class CodexParser {
      * @return {object} The object with the human-readable name, chapter and verses and a hash.
      */
     scripturize(passage) {
-        // Helper to format a single chapter:verse combination
-        const formatChapterVerse = (chapter, verseStart, verseEnd = null) => {
-            if (!chapter) return ""
-            if (!verseStart) return `${chapter}`
-            return verseEnd ? `${chapter}:${verseStart}-${verseEnd}` : `${chapter}:${verseStart}`
+        // Helper function to format a single chapter:verse combination
+        const formatChapterVerse = (chapter, verses) => {
+            if (!chapter || !verses || verses.length === 0) return ""
+            if (verses.length === 1) {
+                return `${chapter}:${verses[0]}`
+            }
+            return `${chapter}:${verses.join(",")}`
         }
 
-        // Initialize combined passage
+        // Start constructing the passage string
         let combined = `${passage.book}`
 
-        if (passage.type === "multi_chapter_verse_range") {
-            // Multi-chapter verse range handling: first verse of first chapter to last verse of last chapter
-            if (passage.to) {
-                combined += ` ${formatChapterVerse(passage.chapter, passage.verses[0])}` // Start chapter:verse
-                combined += `-${formatChapterVerse(
-                    passage.to.chapter,
-                    passage.to.verses[passage.to.verses.length - 1]
-                )}` // End chapter:last verse
-            }
+        if (passage.type === "multi_chapter_verse_range" && passage.to) {
+            // Multi-chapter verse range
+            combined += ` ${formatChapterVerse(passage.chapter, passage.verses)}-${formatChapterVerse(
+                passage.to.chapter,
+                passage.to.verses
+            )}`
         } else if (passage.type === "chapter_verse_range") {
             // Single-chapter verse range
-            combined += ` ${formatChapterVerse(
-                passage.chapter,
-                passage.verses[0],
-                passage.verses[passage.verses.length - 1]
-            )}`
+            combined += ` ${formatChapterVerse(passage.chapter, passage.verses)}`
         } else if (passage.type === "comma_separated_verses") {
             // Comma-separated verses
-            combined += ` ${passage.chapter}:${passage.verses.join(",")}`
-        } else if (passage.type === "chapter_range") {
+            combined += ` ${formatChapterVerse(passage.chapter, passage.verses)}`
+        } else if (passage.type === "chapter_range" && passage.to) {
             // Chapter range
-            combined += ` ${passage.chapter}:${passage.verses[0]}-${passage.to.chapter}:${
-                passage.to.verses[passage.to.verses.length - 1]
-            }`
+            combined += ` ${passage.chapter}-${passage.to.chapter}`
         } else {
             // Single chapter or single verse
-            combined += ` ${formatChapterVerse(passage.chapter, passage.verses[0])}`
+            combined += ` ${formatChapterVerse(passage.chapter, passage.verses)}`
         }
 
-        // Generate chapter:verse for current and "to" objects
+        // Generate the chapter:verse (cv) string
         const cv = passage.to
-            ? `${formatChapterVerse(passage.chapter, passage.verses[0])}-${formatChapterVerse(
+            ? `${formatChapterVerse(passage.chapter, passage.verses)}-${formatChapterVerse(
                   passage.to.chapter,
-                  passage.to.verses[passage.to.verses.length - 1]
+                  passage.to.verses
               )}`
-            : formatChapterVerse(passage.chapter, passage.verses[0])
+            : formatChapterVerse(passage.chapter, passage.verses)
 
-        // Generate a hash for the passage
-        const hash = `${passage.book.toLowerCase()}_${cv.replace(/:/g, "_").replace(/-/g, "_")}`
+        // Generate the hash
+        const hash = `${passage.book.toLowerCase()}_${cv.replace(/:/g, ".").replace(/-/g, ".")}`
 
+        // Return the final scripture object
         return {
-            passage: combined, // Reconstructed passage
-            cv: cv, // Chapter:verse range
-            hash: hash, // Unique hash
+            passage: combined,
+            cv: cv,
+            hash: hash,
         }
     }
 
@@ -633,28 +627,96 @@ class CodexParser {
      * @return {object} The combined passage object.
      */
     combine(passages) {
-        // Only check if passages are from the same book)
-        const sameBook = [...new Set(passages.map((p) => p.book))]
-        if (sameBook.length > 1) {
-            throw new Error("Passages are not from the same book.")
+        if (!passages || passages.length === 0) {
+            throw new Error("No passages provided to combine.")
         }
 
-        const newPassages = []
+        // Ensure all passages are from the same book
+        const uniqueBooks = [...new Set(passages.map((p) => p.book))]
+        if (uniqueBooks.length > 1) {
+            throw new Error("Passages must be from the same book to combine.")
+        }
 
-        passages.forEach((passageSet) => {
-            passageSet.passages.forEach((passage) => {
-                if (passage.versification) {
-                    newPassages.push(passage.book + " " + passage.versification[this.version])
-                } else {
-                    newPassages.push(passage.book + " " + passage.chapter + ":" + passage.verse)
+        // Initialize combined passage object
+        const combined = {
+            ...passages[0],
+            verses: [],
+            passages: [],
+            to: null,
+            type: null,
+        }
+
+        const chapterVerses = {}
+        let firstChapter = null
+        let lastChapter = null
+
+        // Collect all verses grouped by chapter
+        passages.forEach((passage) => {
+            passage.passages.forEach((p) => {
+                if (!chapterVerses[p.chapter]) {
+                    chapterVerses[p.chapter] = new Set()
                 }
+                chapterVerses[p.chapter].add(p.verse)
+                combined.passages.push(p) // Add individual passage
             })
+
+            // Track first and last chapters
+            const chapters = passage.passages.map((p) => p.chapter)
+            if (!firstChapter || Math.min(...chapters) < firstChapter) {
+                firstChapter = Math.min(...chapters)
+            }
+            if (!lastChapter || Math.max(...chapters) > lastChapter) {
+                lastChapter = Math.max(...chapters)
+            }
         })
 
-        const noDuplicates2 = [...new Set(newPassages)]
+        // Ensure unique and sorted passages
+        combined.passages = Array.from(new Set(combined.passages.map(JSON.stringify))).map(JSON.parse)
 
-        const parsed = this.parse(noDuplicates2.join(" // ")).getPassages()
-        return this.join(parsed)
+        // Process chapter and verse data
+        const sortedChapters = Object.keys(chapterVerses)
+            .map(Number)
+            .sort((a, b) => a - b)
+
+        const originalParts = []
+        sortedChapters.forEach((chapter, index) => {
+            const verses = Array.from(chapterVerses[chapter]).sort((a, b) => a - b)
+            if (chapter === firstChapter) {
+                combined.verses = verses // First chapter's verses
+            }
+            if (chapter === lastChapter) {
+                combined.to = {
+                    book: combined.book,
+                    chapter,
+                    verses,
+                }
+            }
+            originalParts.push(`${chapter}:${verses.join(",")}`)
+        })
+
+        // Ensure `to` is properly set for multi-chapter ranges
+        if (firstChapter !== lastChapter) {
+            const lastChapterVerses = Array.from(chapterVerses[lastChapter]).sort((a, b) => a - b)
+            combined.to = {
+                book: combined.book,
+                chapter: lastChapter,
+                verses: lastChapterVerses,
+            }
+        }
+
+        // Determine the passage type
+        if (firstChapter !== lastChapter) {
+            combined.type = "multi_chapter_verse_range"
+        } else if (combined.verses.length > 1) {
+            combined.type = "chapter_verse_range"
+        } else {
+            combined.type = "chapter_verse"
+        }
+
+        // Build the `original` field
+        combined.original = `${combined.book} ${originalParts.join("-")}`
+
+        return this.parse(combined.original).getPassages().first()
     }
 
     /**
