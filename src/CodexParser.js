@@ -147,16 +147,19 @@ class CodexParser {
 
                 references.forEach((ref) => {
                     let type
-
                     if (ref.includes(":")) {
                         if (ref.includes("-")) {
                             const [start, end] = ref.split("-")
                             const startParts = start.split(":")
                             const endParts = end.split(":")
+
+                            // Determine type based on the chapter (startParts[0] and endParts[0])
                             type =
+                                startParts.length > 1 &&
+                                endParts.length > 1 &&
                                 startParts[0].trim() !== endParts[0].trim()
-                                    ? "multi_chapter_verse_range"
-                                    : "chapter_verse_range"
+                                    ? "multi_chapter_verse_range" // Chapters differ
+                                    : "chapter_verse_range" // Same chapter
                         } else if (ref.includes(",")) {
                             type = "comma_separated_verses"
                         } else {
@@ -242,12 +245,14 @@ class CodexParser {
                     // Checks to see if we are in a multi chapter verse range, if so, include only relevant verses from the this.chapterVerse to
                     // the end of the chapter.
                     if (start.includes(separator) && end.includes(separator)) {
+                        // TODO: Need to update versification and version here.
+                        this._setVersion(book, startChapter, passage.version)
                         parsedPassage.verses = this.chapterVerses[book][startChapter].slice(
                             this.chapterVerses[book][startChapter].indexOf(Number(startVerse))
                         )
                     }
 
-                    // Handle same-chapter ranges (e.g., "27:27-29") and multi-chapter ranges (e.g., "Ex 2:1-3:4")
+                    // Handle chapter ranges (e.g., "27:27-29") and multi-chapter ranges (e.g., "Ex 2:1-3:4")
                     if (end.includes(separator)) {
                         let [endChapter, endVerse] = end.split(separator)
                         if (Number(endChapter) !== Number(startChapter)) {
@@ -256,6 +261,7 @@ class CodexParser {
                                 book: book,
                                 chapter: Number(endChapter), // End chapter
                             }
+
                             if (endVerse > 1) {
                                 parsedPassage.to.verses = this.chapterVerses[book][Number(endChapter)].slice(
                                     0,
@@ -264,7 +270,6 @@ class CodexParser {
                             } else {
                                 parsedPassage.to.verses = [endVerse]
                             }
-
                             parsedPassage.type =
                                 endChapter !== startChapter ? "multi_chapter_verse_range" : "chapter_verse_range" // Set type to chapter range
                         } else {
@@ -353,18 +358,17 @@ class CodexParser {
         return range
     }
 
-    _searchVersificationDifferences(passage) {
-        const { book, chapter, version } = passage
+    _searchVersificationDifferences(book, chapter, version) {
+        version = version.toLowerCase()
         if (!this.chapterVerses[book][chapter]) return
-
         // Loop through each key-value pair in the dictionary
         for (const [key, value] of Object.entries(this.versificationDifferences[book])) {
             // Check if the key starts with the desired chapter
-            if (value[version.abbreviation].startsWith(`${chapter}:`)) {
+            if (value[version].startsWith(`${chapter}:`)) {
                 // Ensure the version exists in the value object
-                if (value[version.abbreviation]) {
+                if (value[version]) {
                     // Extract the verse number from the value
-                    const verse = value[version.abbreviation].split(":")[1]
+                    const verse = value[version].split(":")[1]
                     this.chapterVerses[book][chapter].push(Number(verse))
                 }
             }
@@ -373,11 +377,11 @@ class CodexParser {
         return this.chapterVerses // Return the array of verses
     }
 
-    _setVersion(passage) {
-        this.version = passage.version ? passage.version.abbreviation : "eng"
+    _setVersion(book, chapter, version) {
+        this.version = version ? version : "eng"
 
         if (this.version !== "eng") {
-            this._searchVersificationDifferences(passage)
+            this._searchVersificationDifferences(book, chapter, version)
         }
     }
 
@@ -435,8 +439,8 @@ class CodexParser {
     populate(parsedPassage) {
         const passages = []
         const { book, chapter, verses, type, to } = parsedPassage
-
-        this._setVersion(parsedPassage) // Set version data if needed
+        const version = parsedPassage.version ? parsedPassage.version.abbreviation : "eng"
+        this._setVersion(book, chapter, version) // Set version data if needed
 
         if (type === "single_chapter") {
             // Handle entire chapter references
@@ -650,7 +654,6 @@ class CodexParser {
         const noDuplicates2 = [...new Set(newPassages)]
 
         const parsed = this.parse(noDuplicates2.join(" // ")).getPassages()
-
         return this.join(parsed)
     }
 
@@ -662,86 +665,100 @@ class CodexParser {
      * @return {object} The combined passage object.
      */
     join(passages) {
-        const newObject = { ...passages[0] } // Start with the first passage
+        if (!passages || passages.length === 0) {
+            throw new Error("No passages provided to join.")
+        }
 
-        const chapters = {} // Store verses by chapters
-        const uniquePassages = new Set() // Track unique passages to prevent duplicates
-        // Add initial passages to the unique set to avoid duplication
-        newObject.passages.forEach((p) => {
-            const passageKey = `${p.book}-${p.chapter}-${p.verse}`
-            uniquePassages.add(passageKey)
-        })
+        // Ensure all passages are from the same book
+        const uniqueBooks = [...new Set(passages.map((p) => p.book))]
+        if (uniqueBooks.length > 1) {
+            throw new Error("Passages must be from the same book to join.")
+        }
 
-        // Iterate through all the passages and group verses by chapter
-        passages.forEach((passage) => {
-            if (!chapters[passage.chapter]) {
-                chapters[passage.chapter] = new Set() // Use Set to avoid duplicates
-            }
+        // Start with the base object
+        const combined = {
+            ...passages[0],
+            verses: [],
+            passages: [],
+            to: null,
+            scripture: {},
+            type: null,
+        }
 
-            // Add verses to their corresponding chapter
-            passage.passages.forEach((p) => {
-                chapters[p.chapter].add(p.verse)
-
-                // Create a unique key for each passage (book-chapter-verse)
-                const passageKey = `${p.book}-${p.chapter}-${p.verse}`
-
-                // Add to the passages array if it hasn't been added yet
-                if (!uniquePassages.has(passageKey)) {
-                    newObject.passages.push(p) // Add the passage
-                    uniquePassages.add(passageKey) // Mark it as added
-                }
-            })
-        })
-
-        // Sort the newObject.passages array by chapter first, then by verse
-        newObject.passages.sort((a, b) => {
-            if (a.chapter !== b.chapter) {
-                return a.chapter - b.chapter // Sort by chapter
-            }
-            return a.verse - b.verse // Sort by verse within the same chapter
-        })
-
-        // Prepare to build the final result
-        const chapterStrings = []
+        const chapterVerses = {}
         let firstChapter = null
         let lastChapter = null
 
-        for (const chapter in chapters) {
-            const verses = Array.from(chapters[chapter]).sort((a, b) => a - b)
-            const mergedVerses = this.mergeRanges(verses) // Merge adjacent verses into ranges
+        // Collect all verses and passages, grouped by chapter
+        passages.forEach((passage) => {
+            passage.passages.forEach((p) => {
+                if (!chapterVerses[p.chapter]) {
+                    chapterVerses[p.chapter] = new Set()
+                }
+                chapterVerses[p.chapter].add(p.verse)
+                combined.passages.push(p) // Add individual passage
+            })
+
+            // Track first and last chapters
+            const chapters = passage.passages.map((p) => p.chapter)
+            if (!firstChapter || Math.min(...chapters) < firstChapter) {
+                firstChapter = Math.min(...chapters)
+            }
+            if (!lastChapter || Math.max(...chapters) > lastChapter) {
+                lastChapter = Math.max(...chapters)
+            }
+        })
+
+        // Ensure unique and sorted passages
+        combined.passages = Array.from(new Set(combined.passages.map(JSON.stringify))).map(JSON.parse)
+
+        // Process chapter and verse data
+        const chapterStrings = []
+        const sortedChapters = Object.keys(chapterVerses)
+            .map(Number)
+            .sort((a, b) => a - b)
+
+        sortedChapters.forEach((chapter) => {
+            const verses = Array.from(chapterVerses[chapter]).sort((a, b) => a - b)
+            const mergedVerses = this.mergeRanges(verses)
             chapterStrings.push(`${chapter}:${mergedVerses.join(",")}`)
-
-            // Track the first and last chapters for the 'to' key
-            if (!firstChapter) firstChapter = Number(chapter) // Ensure chapter is a number
-            lastChapter = Number(chapter) // Always update to the current chapter as a number
-
-            // Update the newObject.verses with the merged ranges for the current chapter
-            if (Number(chapter) === firstChapter) {
-                newObject.verses = mergedVerses
+            if (chapter === firstChapter) {
+                combined.verses = mergedVerses // First chapter's verses
             }
-        }
+        })
 
-        // Build the final combined object with `to` key for multi-chapter passages
-        newObject.original = `${newObject.book} ${firstChapter}:${newObject.verses.join(",")}`
-
+        // Handle multi-chapter ranges
         if (firstChapter !== lastChapter) {
-            newObject.to = {
-                book: newObject.book,
+            combined.type = "multi_chapter_verse_range"
+            combined.to = {
+                book: combined.book,
                 chapter: lastChapter,
-                verses: this.mergeRanges(Array.from(chapters[lastChapter])), // Ensure merged range
+                verses: this.mergeRanges(Array.from(chapterVerses[lastChapter])),
             }
+            combined.original = `${combined.book} ${firstChapter}:${combined.verses.join(
+                ","
+            )}-${lastChapter}:${combined.to.verses.join(",")}`
+        } else {
+            // Single-chapter range or comma-separated
+            if (combined.verses.length > 1) {
+                combined.type = "chapter_verse_range"
+            } else {
+                combined.type = "chapter_verse"
+            }
+            combined.original = `${combined.book} ${firstChapter}:${combined.verses.join(",")}`
         }
 
-        // Build the scripture string with combined chapters (without spaces after commas)
-        const chapterString = chapterStrings.join(",") // No space after comma
-        newObject.scripture = {
-            passage: `${newObject.book} ${chapterString}`,
+        // Build the scripture property
+        const chapterString = chapterStrings.join(",")
+        combined.scripture = {
+            passage: `${combined.book} ${chapterString}`,
             cv: chapterString,
-            hash: `${newObject.book.toLowerCase()}_${chapterString.replace(/:/g, ".").replace(/,/g, ".")}`,
+            hash: `${combined.book.toLowerCase()}_${chapterString.replace(/:/g, ".").replace(/,/g, ".")}`,
         }
 
-        return newObject
+        return combined
     }
+
     mergeRanges(verses) {
         const sortedVerses = [...new Set(verses)].sort((a, b) => a - b)
         const merged = []
@@ -752,11 +769,9 @@ class CodexParser {
             if (sortedVerses[i] === end + 1) {
                 end = sortedVerses[i]
             } else {
-                // Push the current range if it's more than 2 consecutive numbers, otherwise separate by commas
+                // Push range or single verse
                 if (start === end) {
                     merged.push(`${start}`)
-                } else if (end === start + 1) {
-                    merged.push(`${start},${end}`)
                 } else {
                     merged.push(`${start}-${end}`)
                 }
@@ -765,11 +780,9 @@ class CodexParser {
             }
         }
 
-        // Push the final range or pair
+        // Push the final range or single verse
         if (start === end) {
             merged.push(`${start}`)
-        } else if (end === start + 1) {
-            merged.push(`${start},${end}`)
         } else {
             merged.push(`${start}-${end}`)
         }
