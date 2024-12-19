@@ -297,13 +297,25 @@ class CodexParser {
                     }
                 } else {
                     // Handle individual chapter:verse references (e.g., "9:5" in "8:22-9:1,5")
+
                     let [chapterPart, versePart] = part.includes(separator)
                         ? part.split(separator)
                         : [parsedPassage.chapter, part]
 
-                    if (singleChapterBook) {
-                        parsedPassage.chapter = 1
-                        parsedPassage.verses.push(versePart) // Add single verse to array
+                    if (separator !== ":") {
+                        if (singleChapterBook) {
+                            parsedPassage.chapter = 1
+                            parsedPassage.verses.push(versePart) // Add single verse to array
+                        } else {
+                            parsedPassage.chapter = Number(part)
+                            parsedPassage.verses = [
+                                `${this.chapterVerses[book][parsedPassage.chapter][0]}-${
+                                    this.chapterVerses[book][parsedPassage.chapter][
+                                        this.chapterVerses[book][parsedPassage.chapter].length - 1
+                                    ]
+                                }`,
+                            ]
+                        }
                     } else {
                         if (chapterPart) {
                             if (partIndex === parts.length - 1 && parsedPassage.to) {
