@@ -637,27 +637,6 @@ class CodexParser {
      */
     combine(passages) {
         if (!passages || passages.length === 0) {
-            throw new Error("No passages provided to combine.")
-        }
-
-        // Ensure all passages are from the same book
-        const uniqueBooks = [...new Set(passages.map((p) => p.book))]
-        if (uniqueBooks.length > 1) {
-            throw new Error("Passages must be from the same book to combine.")
-        }
-
-        return this.join(passages)
-    }
-
-    /**
-     * Combine multiple passages into one. The method checks for duplicates, merges overlapping or adjacent ranges,
-     * and builds the original and scripture properties.
-     *
-     * @param {array} passages - An array of passage objects to combine.
-     * @return {object} The combined passage object.
-     */
-    join(passages) {
-        if (!passages || passages.length === 0) {
             throw new Error("No passages provided to join.")
         }
 
