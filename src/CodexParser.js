@@ -302,7 +302,7 @@ class CodexParser {
                         ? part.split(separator)
                         : [parsedPassage.chapter, part]
 
-                    if (separator !== ":") {
+                    if (separator.trim() !== ":" && !parsedPassage.chapter) {
                         if (singleChapterBook) {
                             parsedPassage.chapter = 1
                             parsedPassage.verses.push(versePart) // Add single verse to array
@@ -438,6 +438,7 @@ class CodexParser {
      */
     populate(parsedPassage) {
         const passages = []
+
         const { book, chapter, verses, type, to } = parsedPassage
         const version = parsedPassage.version ? parsedPassage.version.abbreviation : "eng"
         this._setVersion(book, chapter, version) // Set version data if needed
@@ -451,11 +452,10 @@ class CodexParser {
             }
         } else if (type === "comma_separated_verses") {
             // Handle explicitly mentioned verses (e.g., 3:1,3,6)
-            if (this.chapterVerses[book] && this.chapterVerses[book][chapter]) {
-                verses.forEach((verse) => {
-                    passages.push({ book, chapter: Number(chapter), verse: Number(verse) })
-                })
-            }
+
+            verses.forEach((verse) => {
+                passages.push({ book, chapter: Number(chapter), verse: Number(verse) })
+            })
         } else if (type === "chapter_range") {
             // Handle ranges of chapters (e.g., 3-5)
             for (let currentChapter = chapter; currentChapter <= to.chapter; currentChapter++) {
@@ -726,7 +726,9 @@ class CodexParser {
             cv: chapterString,
             hash: `${combined.book.toLowerCase()}_${chapterString.replace(/:/g, ".").replace(/,/g, ".")}`,
         }
-
+        if (combined.to === null) {
+            delete combined.to
+        }
         return combined
     }
 
