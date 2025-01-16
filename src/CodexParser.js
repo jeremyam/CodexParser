@@ -4,6 +4,7 @@ const { bookRegex, chapterRegex, verseRegex, scripturesRegex } = require("./rege
 const abbrevations = require("./abbr")
 const dump = require("./functions").dump
 const dd = require("./functions").dd
+const sch = require("./functions").sch
 const chapter_verses = require("./chapterVerseCombine")
 
 class CodexParser {
@@ -18,32 +19,13 @@ class CodexParser {
         this.abbreviations = abbrevations
         this.versificationDifferences = versified
         this.singleChapterBook = [
-            {
-                Jude: {
-                    1: Array.from({ length: 25 }, (_, i) => i + 1),
-                }, // Jude has 25 verses
-            },
-            {
-                "2 John": {
-                    1: Array.from({ length: 13 }, (_, i) => i + 1),
-                }, // 2 John has 13 verses
-            },
-            {
-                "3 John": {
-                    1: Array.from({ length: 15 }, (_, i) => i + 1),
-                }, // 3 John has 15 verses
-            },
-            {
-                Obadiah: {
-                    1: Array.from({ length: 21 }, (_, i) => i + 1),
-                }, // Obadiah has 21 verses
-            },
-            {
-                Philemon: {
-                    1: Array.from({ length: 25 }, (_, i) => i + 1),
-                }, // Philemon has 25 verses
-            },
+            sch("Jude", 25),
+            sch("2 John", 13),
+            sch("3 John", 15),
+            sch("Obadiah", 21),
+            sch("Philemon", 25),
         ]
+
         this.chapterVerses = chapter_verses
         this.error = false
         this.version = null

@@ -10,7 +10,18 @@ function dd(message) {
     process.exit(1)
 }
 
+
+function sch(bookName, verseCount) {
+    return {
+        [bookName]: {
+            1: Array.from({ length: verseCount }, (_, i) => i + 1),
+        },
+    }
+}
+
+
 module.exports = {
     dump,
     dd,
+    sch
 }
