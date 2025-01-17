@@ -568,9 +568,10 @@ class CodexParser {
 
         // Start constructing the passage string
         let combined = `${passage.book}`
-
+        
         if (passage.type === "multi_chapter_verse_range" && passage.to) {
             // Multi-chapter verse range
+            
             combined += ` ${formatChapterVerse(passage.chapter, passage.verses)}-${formatChapterVerse(
                 passage.to.chapter,
                 passage.to.verses
@@ -682,6 +683,7 @@ class CodexParser {
 
         // Handle multi-chapter ranges
         if (firstChapter !== lastChapter) {
+            
             combined.type = "multi_chapter_verse_range"
             combined.to = {
                 book: combined.book,
@@ -690,7 +692,7 @@ class CodexParser {
             }
             combined.original = `${combined.book} ${firstChapter}:${combined.verses.join(
                 ","
-            )}-${lastChapter}:${combined.to.verses.join(",")}`
+            )}; ${lastChapter}:${combined.to.verses.join(",")}`
         } else {
             // Single-chapter range or comma-separated
             if (combined.verses.length > 1) {
@@ -702,11 +704,11 @@ class CodexParser {
         }
 
         // Build the scripture property
-        const chapterString = chapterStrings.join(",")
+        const chapterString = chapterStrings.join(";")
         combined.scripture = {
             passage: `${combined.book} ${chapterString}`,
             cv: chapterString,
-            hash: `${combined.book.toLowerCase()}_${chapterString.replace(/:/g, ".").replace(/,/g, ".")}`,
+            hash: `${combined.book.toLowerCase()}_${chapterString.replace(/:/g, ".").replace(/,|;/g, ".")}`,
         }
         if (combined.to === null) {
             delete combined.to
