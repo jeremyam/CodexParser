@@ -343,6 +343,7 @@ class CodexParser {
     _searchVersificationDifferences(book, chapter, version) {
         version = version.toLowerCase()
         if (!this.chapterVerses[book][chapter]) return
+        if (!this.versificationDifferences[book]) return
         // Loop through each key-value pair in the dictionary
         for (const [key, value] of Object.entries(this.versificationDifferences[book])) {
             // Check if the key starts with the desired chapter
@@ -568,10 +569,10 @@ class CodexParser {
 
         // Start constructing the passage string
         let combined = `${passage.book}`
-        
+
         if (passage.type === "multi_chapter_verse_range" && passage.to) {
             // Multi-chapter verse range
-            
+
             combined += ` ${formatChapterVerse(passage.chapter, passage.verses)}-${formatChapterVerse(
                 passage.to.chapter,
                 passage.to.verses
@@ -683,7 +684,6 @@ class CodexParser {
 
         // Handle multi-chapter ranges
         if (firstChapter !== lastChapter) {
-            
             combined.type = "multi_chapter_verse_range"
             combined.to = {
                 book: combined.book,
