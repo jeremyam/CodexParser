@@ -191,6 +191,7 @@ class CodexParser {
         this.passages = this.found.map((passage) => {
             const book = this.bookify(passage.book)
             const testament = this.bible.old.includes(book) ? "old" : "new"
+            const singleChapterBook = this.singleChapterBook.find((b) => Object.keys(b)[0] === book)
             const parsedPassage = {
                 original: passage.book + " " + passage.reference,
                 book: book,
@@ -202,42 +203,50 @@ class CodexParser {
                 version: this._handleVersion(passage.version, testament),
             }
 
-            // Split reference into parts (e.g., "40:3-5,8-9" -> ["40:3-5", "8-9"])
+            // Split reference into parts (e.g., "2 John 1" or "2 John 1:1-3,5")
             const parts = passage.reference.split(",")
 
             parts.forEach((part, partIndex) => {
                 part = part.trim()
 
                 if (part.includes(":")) {
-                    // Explicit chapter:verse (e.g., "40:3-5")
+                    // Explicit chapter:verse (e.g., "1:1-3")
                     const [chapterPart, versePart] = part.split(":")
                     if (partIndex === 0) {
                         parsedPassage.chapter = Number(chapterPart) // Set chapter only on first part
                     }
 
                     if (versePart.includes("-")) {
-                        // Verse range (e.g., "3-5")
-                        parsedPassage.verses.push(versePart)
+                        parsedPassage.verses.push(versePart) // Add range (e.g., "1-3")
                     } else {
-                        parsedPassage.verses.push(Number(versePart))
+                        parsedPassage.verses.push(Number(versePart)) // Add single verse
                     }
+                    parsedPassage.type = versePart.includes("-") ? "chapter_verse_range" : "chapter_verse"
+                } else if (part.includes("-") && !parsedPassage.chapter) {
+                    // Range without chapter (e.g., "1-3" for single-chapter book)
+                    parsedPassage.chapter = 1 // Single-chapter books always use chapter 1
+                    parsedPassage.verses.push(part)
+                    parsedPassage.type = "chapter_verse_range"
+                } else if (singleChapterBook && part === "1" && parts.length === 1 && partIndex === 0) {
+                    // Special case: "2 John 1" means the whole chapter
+                    parsedPassage.chapter = 1
+                    parsedPassage.type = "single_chapter"
+                    const verseCount = singleChapterBook[book][1].length
+                    parsedPassage.verses = [`1-${verseCount}`] // Set full range, e.g., "1-13" for 2 John
                 } else if (part.includes("-")) {
-                    // Verse range without chapter (e.g., "8-9")
-                    if (parsedPassage.chapter === null) {
-                        // Assume chapter 1 for single-chapter books if no chapter yet
-                        const singleChapterBook = this.singleChapterBook.find((b) => b[book])
-                        parsedPassage.chapter = singleChapterBook ? 1 : Number(part.split("-")[0])
-                        parsedPassage.verses.push(part)
-                    } else {
-                        parsedPassage.verses.push(part) // Add as verse range in current chapter
-                    }
+                    // Verse range in current chapter (e.g., "8-9" after "40:3-5")
+                    parsedPassage.verses.push(part)
+                    parsedPassage.type = "chapter_verse_range"
                 } else {
-                    // Single verse without chapter (e.g., "8")
-                    if (parsedPassage.chapter === null) {
-                        const singleChapterBook = this.singleChapterBook.find((b) => b[book])
-                        parsedPassage.chapter = singleChapterBook ? 1 : Number(part)
+                    // Single number (chapter or verse)
+                    if (partIndex === 0 && !parsedPassage.chapter) {
+                        parsedPassage.chapter = Number(part)
+                        if (!singleChapterBook) {
+                            parsedPassage.type = "single_chapter" // Multi-chapter book
+                        }
                     } else {
                         parsedPassage.verses.push(Number(part))
+                        parsedPassage.type = "comma_separated_verses"
                     }
                 }
             })
@@ -260,7 +269,7 @@ class CodexParser {
                     verses: endVerse.includes("-") ? [endVerse] : [Number(endVerse)],
                 }
             } else {
-                delete parsedPassage.to // Ensure no erroneous 'to' property
+                delete parsedPassage.to // Remove erroneous 'to' property
             }
 
             return parsedPassage
@@ -346,20 +355,6 @@ class CodexParser {
     }
 
     /**
-     * Populate a Set of passages from entities.start.v to entities.end.v,
-     * and then add any additional verses from the verses array.
-     *
-     * @param {Object} entities - Entities object from the bible-passage-reference-parser
-     * @param {Array} verses - Array of verse numbers to add to the set of passages
-     * @return {Array} Array of passage objects
-     */
-    /**
-     * Populate all verses from a parsed passage, including all verses in ranges or chapters.
-     *
-     * @param {Object} parsedPassage - The parsed passage object containing book, chapter, and verses information.
-     * @return {Array} An array of passage objects with individual verses.
-     */
-    /**
      * Populate all verses from a parsed passage, including all verses in ranges or chapters.
      *
      * @param {Object} parsedPassage - The parsed passage object containing book, chapter, and verses information.
@@ -371,15 +366,24 @@ class CodexParser {
         const version = parsedPassage.version ? parsedPassage.version.abbreviation : "eng"
         this._setVersion(book, chapter, version) // Set version data if needed
 
+        const singleChapterBook = this.singleChapterBook.find((b) => Object.keys(b)[0] === book)
+
         if (type === "single_chapter") {
-            // Handle entire chapter references (e.g., "Isaiah 40")
-            if (this.chapterVerses[book] && this.chapterVerses[book][chapter]) {
+            // Handle entire chapter references (e.g., "Isaiah 40" or "2 John 1")
+            if (singleChapterBook) {
+                // Single-chapter book: populate all verses from singleChapterBook
+                const verseCount = singleChapterBook[book][1].length
+                for (let verse = 1; verse <= verseCount; verse++) {
+                    passages.push({ book, chapter: 1, verse })
+                }
+            } else if (this.chapterVerses[book] && this.chapterVerses[book][chapter]) {
+                // Multi-chapter book: populate all verses in the chapter
                 this.chapterVerses[book][chapter].forEach((verse) => {
                     passages.push({ book, chapter: Number(chapter), verse: Number(verse) })
                 })
             }
         } else if (type === "comma_separated_verses" || type === "chapter_verse_range") {
-            // Handle comma-separated verses or single-chapter verse ranges (e.g., "Isaiah 40:3-5,8-9" or "Isaiah 40:3-5")
+            // Handle comma-separated verses or single-chapter verse ranges (e.g., "Isaiah 40:3-5,8-9" or "2 John 1:1-3")
             verses.forEach((verse) => {
                 if (typeof verse === "string" && verse.includes("-")) {
                     const [start, end] = verse.split("-").map(Number)
@@ -419,7 +423,7 @@ class CodexParser {
                 }
             }
         } else if (type === "chapter_verse") {
-            // Handle single chapter:verse references (e.g., "Isaiah 40:3")
+            // Handle single chapter:verse references (e.g., "2 John 1:1")
             verses.forEach((verse) => {
                 passages.push({ book, chapter: Number(chapter), verse: Number(verse) })
             })
@@ -727,31 +731,35 @@ class CodexParser {
         return orderedToc
     }
 
+    /**
+     * Validates a parsed passage to ensure the chapter and verses exist.
+     *
+     * @param {Object} passage - The parsed passage object to validate.
+     * @param {string} reference - The original reference string for error messaging.
+     * @return {boolean|Object} True if valid, or an error object if invalid.
+     */
     _isValid(passage, reference) {
-        const singleChapterBook = this.singleChapterBook.find((bible) => bible[passage.book])
-        if (!passage.verses) {
-            return {
-                error: true,
-                code: 101,
-                message: {
-                    chapter_exists: false,
-                    content: "Possible invalid chapter: " + reference,
-                },
-            }
-        }
-        if (!singleChapterBook) {
-            if (!this.chapterVerses[passage.book][passage.chapter]) {
+        const singleChapterBook = this.singleChapterBook.find((b) => Object.keys(b)[0] === passage.book)
+
+        // Check if verses exist at all
+        if (!passage.verses || passage.verses.length === 0) {
+            if (passage.type !== "single_chapter") {
                 return {
                     error: true,
-                    code: 102,
+                    code: 101,
                     message: {
                         chapter_exists: false,
-                        content: `Chapter ${passage.chapter} does not exist in ${passage.book}`,
+                        content: "Possible invalid chapter: " + reference,
                     },
                 }
             }
-        } else {
-            if (!singleChapterBook[passage.book][passage.chapter]) {
+        }
+
+        // Handle single-chapter books
+        if (singleChapterBook) {
+            const verseCount = singleChapterBook[passage.book][1].length
+
+            if (passage.chapter !== 1) {
                 return {
                     error: true,
                     code: 103,
@@ -761,19 +769,78 @@ class CodexParser {
                     },
                 }
             }
+
+            if (passage.type === "single_chapter") {
+                // For "2 John 1", validate the full range
+                const [range] = passage.verses // e.g., "1-13"
+                if (range) {
+                    const [start, end] = range.split("-").map(Number)
+                    if (start < 1 || end > verseCount) {
+                        return {
+                            error: true,
+                            code: 104,
+                            message: {
+                                verse_exists: false,
+                                content: `Verse range ${start}-${end} exceeds available verses (1-${verseCount}) in ${passage.book} 1`,
+                            },
+                        }
+                    }
+                }
+                return true // If no specific verses or range matches, it’s valid
+            }
+
+            // For specific verses in single-chapter books (e.g., "2 John 1:1-3")
+            for (let i = 0; i < passage.verses.length; i++) {
+                const verseRange = String(passage.verses[i])
+                let versesToCheck = verseRange.includes("-") ? verseRange.split("-").map(Number) : [Number(verseRange)]
+
+                if (versesToCheck.length === 2) {
+                    const [start, end] = versesToCheck
+                    versesToCheck = Array.from({ length: end - start + 1 }, (_, idx) => start + idx)
+                }
+
+                for (const verse of versesToCheck) {
+                    if (verse < 1 || verse > verseCount) {
+                        return {
+                            error: true,
+                            code: 104,
+                            message: {
+                                verse_exists: false,
+                                content: `Verse number ${verse} does not exist in ${passage.book} 1`,
+                            },
+                        }
+                    }
+                }
+            }
+            return true
         }
+
+        // Handle multi-chapter books
+        if (!this.chapterVerses[passage.book] || !this.chapterVerses[passage.book][passage.chapter]) {
+            return {
+                error: true,
+                code: 102,
+                message: {
+                    chapter_exists: false,
+                    content: `Chapter ${passage.chapter} does not exist in ${passage.book}`,
+                },
+            }
+        }
+
+        if (passage.type === "single_chapter") {
+            return true // For multi-chapter books, whole chapter is valid if it exists
+        }
+
         for (let i = 0; i < passage.verses.length; i++) {
             const passageVerses = String(passage.verses[i])
-            let verses = passageVerses.split("-").map(Number)
+            let verses = passageVerses.includes("-") ? passageVerses.split("-").map(Number) : [Number(passageVerses)]
 
             if (verses.length === 2) {
                 // Expand the range if there are two numbers
                 verses = Array.from({ length: verses[1] - verses[0] + 1 }, (_, index) => verses[0] + index)
             }
 
-            // The verses array now contains all values between the range or remains as a single value
             for (const verse of verses) {
-                // Check if the verse exists in the chapterVerses structure
                 const isValidVerse =
                     this.chapterVerses[passage.book] &&
                     this.chapterVerses[passage.book][passage.chapter] &&
@@ -791,6 +858,7 @@ class CodexParser {
                 }
             }
         }
+
         return true
     }
     _handleVersion(version, testament) {
