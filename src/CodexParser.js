@@ -203,7 +203,7 @@ class CodexParser {
                 version: this._handleVersion(passage.version, testament),
             }
 
-            // Split reference into parts (e.g., "2 John 1", "2 John 2", "2 John 1:1-3,5")
+            // Split reference into parts (e.g., "Matthew 1", "2 John 2", "Matthew 1:1-3,5")
             const parts = passage.reference.split(",")
 
             parts.forEach((part, partIndex) => {
@@ -231,9 +231,9 @@ class CodexParser {
                         parsedPassage.type = "single_chapter"
                         parsedPassage.verses = [`1-${verseCount}`] // e.g., "1-13"
                     } else if (part.includes("-")) {
-                        // "2 John 3-5" → "2 John 1:3-5"
+                        // "2 John 2-5" → "2 John 1:2-5"
                         parsedPassage.chapter = 1
-                        parsedPassage.verses.push(part) // e.g., "3-5"
+                        parsedPassage.verses.push(part) // e.g., "2-5"
                         parsedPassage.type = "chapter_verse_range"
                     } else {
                         // "2 John 2" → "2 John 1:2"
@@ -245,7 +245,7 @@ class CodexParser {
                         }
                     }
                 } else if (part.includes("-") && !parsedPassage.chapter) {
-                    // Range without chapter for multi-chapter books (e.g., "Isaiah 3-5")
+                    // Range without chapter for multi-chapter books (e.g., "Matthew 3-5")
                     const [start, end] = part.split("-").map(Number)
                     parsedPassage.chapter = start
                     parsedPassage.verses = [
@@ -266,6 +266,15 @@ class CodexParser {
                     if (partIndex === 0 && !parsedPassage.chapter) {
                         parsedPassage.chapter = Number(part)
                         parsedPassage.type = "single_chapter"
+                        // For multi-chapter books, set verses to full chapter range
+                        if (
+                            !singleChapterBook &&
+                            this.chapterVerses[book] &&
+                            this.chapterVerses[book][parsedPassage.chapter]
+                        ) {
+                            const chapterVerses = this.chapterVerses[book][parsedPassage.chapter]
+                            parsedPassage.verses = [`${chapterVerses[0]}-${chapterVerses[chapterVerses.length - 1]}`]
+                        }
                     } else {
                         parsedPassage.verses.push(Number(part))
                         parsedPassage.type = "comma_separated_verses"
