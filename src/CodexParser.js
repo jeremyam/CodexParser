@@ -203,7 +203,7 @@ class CodexParser {
                 version: this._handleVersion(passage.version, testament),
             }
 
-            // Split reference into parts (e.g., "2 John 1" or "2 John 1:1-3,5")
+            // Split reference into parts (e.g., "2 John 1", "2 John 2", "2 John 1:1-3,5")
             const parts = passage.reference.split(",")
 
             parts.forEach((part, partIndex) => {
@@ -222,28 +222,50 @@ class CodexParser {
                         parsedPassage.verses.push(Number(versePart)) // Add single verse
                     }
                     parsedPassage.type = versePart.includes("-") ? "chapter_verse_range" : "chapter_verse"
-                } else if (part.includes("-") && !parsedPassage.chapter) {
-                    // Range without chapter (e.g., "1-3" for single-chapter book)
-                    parsedPassage.chapter = 1 // Single-chapter books always use chapter 1
-                    parsedPassage.verses.push(part)
-                    parsedPassage.type = "chapter_verse_range"
-                } else if (singleChapterBook && part === "1" && parts.length === 1 && partIndex === 0) {
-                    // Special case: "2 John 1" means the whole chapter
-                    parsedPassage.chapter = 1
-                    parsedPassage.type = "single_chapter"
+                } else if (singleChapterBook) {
+                    // Handle single-chapter books
                     const verseCount = singleChapterBook[book][1].length
-                    parsedPassage.verses = [`1-${verseCount}`] // Set full range, e.g., "1-13" for 2 John
+                    if (part === "1" && parts.length === 1 && partIndex === 0) {
+                        // "2 John 1" means the whole chapter
+                        parsedPassage.chapter = 1
+                        parsedPassage.type = "single_chapter"
+                        parsedPassage.verses = [`1-${verseCount}`] // e.g., "1-13"
+                    } else if (part.includes("-")) {
+                        // "2 John 3-5" → "2 John 1:3-5"
+                        parsedPassage.chapter = 1
+                        parsedPassage.verses.push(part) // e.g., "3-5"
+                        parsedPassage.type = "chapter_verse_range"
+                    } else {
+                        // "2 John 2" → "2 John 1:2"
+                        const num = Number(part)
+                        if (num > 1 || (num === 1 && parts.length > 1)) {
+                            parsedPassage.chapter = 1
+                            parsedPassage.verses.push(num) // Treat as verse number
+                            parsedPassage.type = "chapter_verse"
+                        }
+                    }
+                } else if (part.includes("-") && !parsedPassage.chapter) {
+                    // Range without chapter for multi-chapter books (e.g., "Isaiah 3-5")
+                    const [start, end] = part.split("-").map(Number)
+                    parsedPassage.chapter = start
+                    parsedPassage.verses = [
+                        `${this.chapterVerses[book][start][0]}-${this.chapterVerses[book][start].slice(-1)[0]}`,
+                    ]
+                    parsedPassage.to = {
+                        book,
+                        chapter: end,
+                        verses: [`${this.chapterVerses[book][end][0]}-${this.chapterVerses[book][end].slice(-1)[0]}`],
+                    }
+                    parsedPassage.type = "chapter_range"
                 } else if (part.includes("-")) {
                     // Verse range in current chapter (e.g., "8-9" after "40:3-5")
                     parsedPassage.verses.push(part)
                     parsedPassage.type = "chapter_verse_range"
                 } else {
-                    // Single number (chapter or verse)
+                    // Single number (chapter or verse) for multi-chapter books
                     if (partIndex === 0 && !parsedPassage.chapter) {
                         parsedPassage.chapter = Number(part)
-                        if (!singleChapterBook) {
-                            parsedPassage.type = "single_chapter" // Multi-chapter book
-                        }
+                        parsedPassage.type = "single_chapter"
                     } else {
                         parsedPassage.verses.push(Number(part))
                         parsedPassage.type = "comma_separated_verses"
