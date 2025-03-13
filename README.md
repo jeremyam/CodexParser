@@ -184,12 +184,3 @@ Built with love by [jeremyam], powered by coffee and scripture.
 ---
 
 Let’s parse the scriptures together—happy coding! ✝️📚
-
----
-
-### Notes
-
--   Replace `your-username` with your actual GitHub username.
--   Add a `LICENSE` file to your repo if you choose MIT or another license.
--   If you have specific dependencies or setup steps (e.g., external data files like `chapterVerseCombine`), mention them under **Installation**.
--   Test the examples in your environment to ensure they match your output.
