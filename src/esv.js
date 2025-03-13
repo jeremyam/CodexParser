@@ -1,3 +1,4 @@
+require("dotenv").config()
 const axios = require("axios")
 
 // Get all books
@@ -7,7 +8,7 @@ axios
             q: "John+3:16",
         },
         headers: {
-            Authorization: "Token c117111babd413bd8a22b09ebfe84342dc792781",
+            Authorization: `Token ${process.env.ESV_TOKEN}`,
         },
     })
     .then((response) => {
