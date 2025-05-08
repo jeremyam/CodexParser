@@ -1,17 +1,18 @@
 # CodexParser: The Ultimate Bible Reference Parser 📖✨
 
-Welcome to **CodexParser**, a powerful and flexible Node.js library crafted to parse, validate, and structure Bible references with ease. Whether you're extracting verses from a sermon, building a scripture app, or analyzing biblical texts, CodexParser transforms raw references like "John 3:16" or "Genesis 1:1-5, 10" into rich, actionable data—complete with start and end points, versification support, and more. Dive into the Word like never before!
+Welcome to **CodexParser**, a powerful and flexible Node.js library crafted to parse, validate, and structure Bible references with ease. Whether you're extracting verses from a sermon, building a scripture app, or analyzing biblical texts, CodexParser transforms raw references like "John 3:16" or "Psalm 115:5,7,10" into rich, actionable data—complete with start and end points, SBL-style abbreviations, versification support, and validation. Dive into the Word like never before!
 
-Built with precision and passion, CodexParser handles single verses, ranges, multi-chapter spans, and even single-chapter books (looking at you, Jude!). It’s your trusty companion for navigating the sacred texts, supporting English, Septuagint (LXX), and Masoretic Text (MT) versions. Let’s unleash its power!
+Built with precision and passion, CodexParser handles single verses, ranges, multi-chapter spans, and single-chapter books (looking at you, Jude!). It’s your trusty companion for navigating the sacred texts, supporting English, Septuagint (LXX), and Masoretic Text (MT) versions. Let’s unleash its power!
 
 ---
 
 ## Features 🌟
 
--   **Parse Any Reference**: From "Jn 3:16" to "Exodus 20:1-17; 21:1-5", it’s got you covered.
--   **Structured Output**: Get book, chapter, verse, testament, start/end points, and more in a clean object.
--   **Versification Support**: Handles differences between English, LXX, and MT texts.
--   **Validation**: Ensures references are legit—no more phantom verses!
+-   **Parse Any Reference**: From "Jn 3:16" to "Psalm 115:5,7,10", it’s got you covered.
+-   **Structured Output**: Get book, chapter, verses, testament, start/end points, SBL abbreviations, and versification data in a clean object.
+-   **SBL Abbreviations**: Formatted references (e.g., "Ps. 115:5, 7, 10", "Gen. 1:1–3") with periods, en dashes for ranges, and commas with spaces for separated verses.
+-   **Versification Support**: Handles differences between English, LXX, and MT texts, with mappings like Psalm 115 (LXX) to Psalm 116 (MT/ENG).
+-   **Validation**: Checks if verses exist, with detailed error messages for invalid references.
 -   **Combine Passages**: Merge multiple references into a single, cohesive range.
 -   **Chainable API**: Fluent, intuitive method chaining for a smooth workflow.
 
@@ -28,7 +29,7 @@ npm install codexparser
 Or clone it from GitHub and dive into the source:
 
 ```bash
-git clone https://github.com/your-username/CodexParser.git
+git clone https://github.com/jeremyam/CodexParser.git
 cd CodexParser
 npm install
 ```
@@ -40,27 +41,57 @@ npm install
 Here’s how to wield CodexParser’s might:
 
 ```javascript
-const CodexParser = require("codex-parser")
+const CodexParser = require("codexparser")
 
 const parser = new CodexParser()
 
-// Parse a simple reference
-parser.parse("John 3:16")
+// Parse comma-separated verses with LXX version
+parser.bibleVersion("lxx").parse("Psalm 115:5,7,10")
 console.log(parser.getPassages().first())
 // Output: {
-//   original: "John 3:16",
-//   book: "John",
-//   chapter: 3,
-//   verses: [16],
-//   type: "chapter_verse",
-//   testament: "new",
-//   passages: [{ book: "John", chapter: 3, verse: 16 }],
-//   scripture: { passage: "John 3:16", cv: "3:16", hash: "john_3.16" },
-//   start: { book: "John", chapter: 3, verse: 16 },
-//   end: { book: "John", chapter: 3, verse: 16 },
+//   original: "Psalm 115:5,7,10",
+//   book: "Psalms",
+//   chapter: 115,
+//   verses: [5, 7, 10],
+//   type: "comma_separated_verses",
+//   testament: "old",
+//   index: 0,
+//   version: { name: "Septuagint", value: "LXX", abbreviation: "lxx" },
+//   passages: [
+//     {
+//       book: "Psalms",
+//       chapter: 115,
+//       verse: 5,
+//       versification: { lxx: "115:5", mt: "116:14", eng: "116:14" }
+//     },
+//     {
+//       book: "Psalms",
+//       chapter: 115,
+//       verse: 7,
+//       versification: { lxx: "115:7", mt: "116:16", eng: "116:16" }
+//     },
+//     {
+//       book: "Psalms",
+//       chapter: 115,
+//       verse: 10,
+//       versification: { lxx: "115:10", mt: "116:19", eng: "116:19" }
+//     }
+//   ],
+//   scripture: {
+//     passage: "Psalms 115:5,7,10",
+//     cv: "115:5,7,10",
+//     hash: "psalms_115.5,7,10"
+//   },
 //   valid: true,
-//   version: { name: "English", value: "ENG", abbreviation: "eng" }
+//   start: { book: "Psalms", chapter: 115, verse: 5 },
+//   end: { book: "Psalms", chapter: 115, verse: 10 },
+//   abbr: "Ps. 115:5, 7, 10",
+//   reference: [Function]
 // }
+
+// Parse a verse range
+console.log(parser.bibleVersion("eng").parse("Genesis 1:1-5").getPassages().first().abbr)
+// Output: "Gen. 1:1–5"
 
 // Chain it up!
 console.log(parser.parse("Genesis 1:1-5, 10; 2:1-3").getPassages().combine())
@@ -87,17 +118,17 @@ Here’s the breakdown of CodexParser’s key methods—your tools for mastering
 
 ### `.parse(reference)`
 
--   **What it does**: Takes a reference string, scans it, and builds structured passage objects with `start`, `end`, `passages`, and more. This is your main parsing powerhouse.
--   **Args**: `reference` (string) - The Bible reference (e.g., "John 3:16-18").
+-   **What it does**: Takes a reference string, scans it, and builds structured passage objects with `start`, `end`, `passages`, SBL abbreviations, versification, and validation. This is your main parsing powerhouse.
+-   **Args**: `reference` (string) - The Bible reference (e.g., "Psalm 115:5,7,10").
 -   **Returns**: The parser instance for chaining.
 -   **Example**: `parser.parse("Exodus 20:1-5").getPassages();`
 
 ### `.bibleVersion(version)`
 
--   **What it does**: Sets the Bible version (e.g., "lxx", "mt", "bhs") to adjust versification. Great for Old Testament nerds!
--   **Args**: `version` (string) - Version code ("lxx", "mt", "bhs", etc.).
+-   **What it does**: Sets the Bible version (e.g., "lxx", "mt", "eng") to adjust versification. Great for Old Testament nerds!
+-   **Args**: `version` (string) - Version code ("lxx", "mt", "eng", etc.).
 -   **Returns**: The parser instance for chaining.
--   **Example**: `parser.bibleVersion("lxx").parse("Psalm 23:1");`
+-   **Example**: `parser.bibleVersion("lxx").parse("Psalm 115:5,7,10");`
 
 ### `.getPassages()`
 
@@ -136,19 +167,44 @@ Each parsed passage looks like this:
 
 ```javascript
 {
-  original: "John 3:16-18",           // Original input
-  book: "John",                      // Full book name
-  chapter: 3,                        // Starting chapter
-  verses: ["16-18"],                 // Verse range or list
-  type: "chapter_verse_range",       // Reference type
-  testament: "new",                  // Old or New Testament
+  original: "Psalm 115:5,7,10",       // Original input
+  book: "Psalms",                    // Full book name
+  chapter: 115,                      // Starting chapter
+  verses: [5, 7, 10],                // Verse list
+  type: "comma_separated_verses",    // Reference type
+  testament: "old",                  // Old or New Testament
   index: 0,                          // Position in text
-  version: { name: "English", value: "ENG", abbreviation: "eng" }, // Version info
-  passages: [{ book: "John", chapter: 3, verse: 16 }, ...], // Expanded verses
-  scripture: { passage: "John 3:16-18", cv: "3:16-18", hash: "john_3.16.18" }, // Formatted output
+  version: { name: "Septuagint", value: "LXX", abbreviation: "lxx" }, // Version info
+  passages: [                        // Expanded verses
+    {
+      book: "Psalms",
+      chapter: 115,
+      verse: 5,
+      versification: { lxx: "115:5", mt: "116:14", eng: "116:14" }
+    },
+    {
+      book: "Psalms",
+      chapter: 115,
+      verse: 7,
+      versification: { lxx: "115:7", mt: "116:16", eng: "116:16" }
+    },
+    {
+      book: "Psalms",
+      chapter: 115,
+      verse: 10,
+      versification: { lxx: "115:10", mt: "116:19", eng: "116:19" }
+    }
+  ],
+  scripture: {                       // Formatted output
+    passage: "Psalms 115:5,7,10",
+    cv: "115:5,7,10",
+    hash: "psalms_115.5,7,10"
+  },
   valid: true,                       // Validation status
-  start: { book: "John", chapter: 3, verse: 16 }, // First verse
-  end: { book: "John", chapter: 3, verse: 18 }    // Last verse
+  start: { book: "Psalms", chapter: 115, verse: 5 }, // First verse
+  end: { book: "Psalms", chapter: 115, verse: 10 },  // Last verse
+  abbr: "Ps. 115:5, 7, 10",          // SBL-style abbreviation with period, comma spaces
+  reference: [Function]              // Method to get scripture.passage
 }
 ```
 
@@ -159,7 +215,7 @@ Each parsed passage looks like this:
 -   **Single Chapter**: `Jude 1` (whole chapter of a single-chapter book).
 -   **Chapter Verse**: `John 3:16` (one verse).
 -   **Chapter Verse Range**: `Genesis 1:1-5` (verse range in one chapter).
--   **Comma Separated Verses**: `Matthew 5:3, 5, 7` (multiple verses in one chapter).
+-   **Comma Separated Verses**: `Psalm 115:5,7,10` (multiple verses in one chapter).
 -   **Chapter Range**: `Exodus 20-22` (full chapters).
 -   **Multi-Chapter Verse Range**: `Psalm 119:1-120:5` (spans chapters).
 
