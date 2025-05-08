@@ -1,7 +1,8 @@
 const versified = require("./versified")
 const bible = require("./bible")
 const { bookRegex, chapterRegex, verseRegex, scripturesRegex } = require("./regex")
-const abbrevations = require("./abbr")
+const abbreviations = require("./abbr")
+const sblAbbreviations = require("./abbr/sbl")
 const dump = require("./functions").dump
 const dd = require("./functions").dd
 const sch = require("./functions").sch
@@ -16,7 +17,8 @@ class CodexParser {
         this.chapterRegex = chapterRegex
         this.verseRegex = verseRegex
         this.scripturesRegex = scripturesRegex
-        this.abbreviations = abbrevations
+        this.abbreviations = abbreviations
+        this.sblAbbreviations = sblAbbreviations
         this.versificationDifferences = versified
         this.singleChapterBook = [
             sch("Jude", 25),
@@ -192,6 +194,11 @@ class CodexParser {
             parsedPassage.passages = this.populate(parsedPassage)
             parsedPassage.scripture = this.scripturize(parsedPassage)
             parsedPassage.valid = this._isValid(parsedPassage, passage.reference)
+
+            // Add SBL abbreviation as full reference with period and en dashes
+            const sblBook = this.sblAbbreviations[book] || book
+            let abbr = parsedPassage.scripture.passage.replace(book, `${sblBook}.`).replace(/-/g, "–")
+            parsedPassage.abbr = abbr
 
             if (parsedPassage.type === this.MULTI_CHAPTER_RANGE) {
                 this.handleMultiChapterRange(parsedPassage, passage.reference)
