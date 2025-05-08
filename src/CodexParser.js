@@ -195,9 +195,13 @@ class CodexParser {
             parsedPassage.scripture = this.scripturize(parsedPassage)
             parsedPassage.valid = this._isValid(parsedPassage, passage.reference)
 
-            // Add SBL abbreviation as full reference with period and en dashes
+            // Add SBL abbreviation as full reference with period, en dashes, and space after commas for comma-separated verses
             const sblBook = this.sblAbbreviations[book] || book
             let abbr = parsedPassage.scripture.passage.replace(book, `${sblBook}.`).replace(/-/g, "–")
+            if (parsedPassage.type === "comma_separated_verses") {
+                const versePart = parsedPassage.verses.map((v) => `${v}`).join(", ")
+                abbr = `${sblBook}. ${parsedPassage.chapter}:${versePart}`
+            }
             parsedPassage.abbr = abbr
 
             if (parsedPassage.type === this.MULTI_CHAPTER_RANGE) {
