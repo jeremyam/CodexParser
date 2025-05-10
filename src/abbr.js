@@ -158,6 +158,7 @@ const abbrevations = {
     Mal: "Malachi",
     Ml: "Malachi",
     Matt: "Matthew",
+    Mat: "Matthew",
     Mt: "Matthew",
     Mark: "Mark",
     Mc: "Mark",

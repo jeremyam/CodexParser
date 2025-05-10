@@ -1,3 +1,10 @@
+/**
+ * CodexParser.js
+ * A class for scanning and parsing scripture references from text, supporting various formats
+ * (e.g., single verses, ranges, multi-chapter references) with validation and version-specific
+ * versification. Handles book names, abbreviations, and SBL-style formatting.
+ */
+
 const versified = require("./versified")
 const bible = require("./bible")
 const { bookRegex, chapterRegex, verseRegex, scripturesRegex } = require("./regex")
@@ -8,28 +15,37 @@ const dd = require("./functions").dd
 const sch = require("./functions").sch
 const chapter_verses = require("./chapterVerseCombine")
 
+/**
+ * Class for parsing and validating scripture references.
+ * @class
+ */
 class CodexParser {
+    /**
+     * Initializes the parser with default properties and data.
+     */
     constructor() {
-        this.found = []
-        this.passages = []
-        this.bible = bible
-        this.bookRegex = bookRegex
-        this.chapterRegex = chapterRegex
-        this.verseRegex = verseRegex
-        this.scripturesRegex = scripturesRegex
-        this.abbreviations = abbreviations
-        this.sblAbbreviations = sblAbbreviations
-        this.versificationDifferences = versified
+        this.found = [] // Array to store detected references
+        this.passages = [] // Array to store parsed passages
+        this.bible = bible // Bible data (Old/New Testament books)
+        this.bookRegex = bookRegex // Regex for book names
+        this.chapterRegex = chapterRegex // Regex for chapters
+        this.verseRegex = verseRegex // Regex for verses
+        this.scripturesRegex = scripturesRegex // Regex for full references
+        this.abbreviations = abbreviations // Book abbreviation mappings
+        this.sblAbbreviations = sblAbbreviations // SBL-style abbreviation mappings
+        this.versificationDifferences = versified // Version-specific verse differences
         this.singleChapterBook = [
+            // Books with a single chapter and their verse counts
             sch("Jude", 25),
             sch("2 John", 13),
             sch("3 John", 15),
             sch("Obadiah", 21),
             sch("Philemon", 25),
         ]
-        this.chapterVerses = chapter_verses
-        this.error = false
-        this.version = null
+        this.chapterVerses = chapter_verses // Chapter-verse mappings
+        this.error = false // Error flag
+        this.version = null // Bible version (e.g., lxx, mt, eng)
+        // Reference type constants
         this.SINGLE_CHAPTER = "single_chapter"
         this.CHAPTER_VERSE = "chapter_verse"
         this.CHAPTER_VERSE_RANGE = "chapter_verse_range"
@@ -38,15 +54,27 @@ class CodexParser {
         this.MULTI_CHAPTER_RANGE = "multi_chapter_verse_range"
     }
 
+    /**
+     * Retrieves available verses for a given book and chapter.
+     * @param {string} book - The book name (e.g., "Genesis").
+     * @param {number} chapter - The chapter number.
+     * @returns {number[]} Array of valid verse numbers.
+     */
     getChapterVerses(book, chapter) {
         const singleChapterBook = this.singleChapterBook.find((b) => Object.keys(b)[0] === book)
         return singleChapterBook ? singleChapterBook[book][chapter] || [] : this.chapterVerses[book]?.[chapter] || []
     }
 
+    /**
+     * Scans text for scripture references and stores them in `this.found`.
+     * @param {string} text - The text to scan.
+     * @returns {CodexParser} The parser instance for method chaining.
+     */
     scan(text) {
         const fullNames = [...this.bible.old, ...this.bible.new]
         const abbreviations = Object.keys(this.abbreviations)
         this.found = []
+        // Normalize text: replace periods before digits with colons, remove trailing periods, collapse spaces
         let normalizedText = text
             .replace(/\.(?=\d)/g, ":")
             .replace(/(\b[A-Za-z]+)\.(?=\s|$)/g, "$1")
@@ -56,7 +84,9 @@ class CodexParser {
         const lowerCaseText = normalizedText.toLowerCase()
         let i = 0
 
+        // Check if a character is valid for chapter/verse (non-letter)
         const isValidChapterVerseChar = (char) => /[^A-Za-z]/.test(char)
+        // Check if the next segment starts with a Bible book
         const isNextBibleBook = (startIndex) => {
             const textAfterCurrentPosition = lowerCaseText.substring(startIndex).trim()
             return (
@@ -64,16 +94,19 @@ class CodexParser {
                 lowercaseBibleAbbreviations.some((abbr) => textAfterCurrentPosition.startsWith(abbr))
             )
         }
+        // Detect version suffix (LXX or MT)
         const detectSuffix = (startIndex) => {
             const suffixMatch = normalizedText.substring(startIndex).match(/\b(LXX|MT)\b/i)
             return suffixMatch ? suffixMatch[0].toUpperCase() : null
         }
 
+        // Iterate through text to find book names or abbreviations
         while (i < lowerCaseText.length) {
             let foundBook = null
             let foundIndex = -1
             let matchedLength = 0
 
+            // Check for full book names
             for (let j = 0; j < lowercaseBibleFullNames.length; j++) {
                 const book = lowercaseBibleFullNames[j]
                 if (lowerCaseText.startsWith(book, i) && book.length > matchedLength) {
@@ -83,6 +116,7 @@ class CodexParser {
                 }
             }
 
+            // Check for abbreviations if no full name found
             if (!foundBook) {
                 for (let k = 0; k < lowercaseBibleAbbreviations.length; k++) {
                     const abbreviation = lowercaseBibleAbbreviations[k]
@@ -99,6 +133,7 @@ class CodexParser {
                 let chapterVerse = ""
                 const references = []
 
+                // Collect chapter-verse reference until next book or invalid character
                 while (i < normalizedText.length && isValidChapterVerseChar(normalizedText[i])) {
                     if (isNextBibleBook(i)) break
                     if (normalizedText[i] === ";") {
@@ -112,6 +147,7 @@ class CodexParser {
                     i++
                 }
 
+                // Add final reference if present
                 if (chapterVerse.trim().length > 0) {
                     const formattedReference = chapterVerse.trim().replace(/[^a-zA-Z0-9]+$/, "")
                     if (formattedReference) references.push(formattedReference)
@@ -119,6 +155,7 @@ class CodexParser {
 
                 const suffix = detectSuffix(i)
 
+                // Process each reference and determine its type
                 references.forEach((ref) => {
                     let type
                     if (ref.includes(":")) {
@@ -159,6 +196,11 @@ class CodexParser {
         return this
     }
 
+    /**
+     * Sets the Bible version for parsing.
+     * @param {string} version - The version (e.g., "lxx", "mt", "eng").
+     * @returns {CodexParser} The parser instance.
+     */
     bibleVersion(version) {
         const lowerVersion = version.toLowerCase()
         this.version =
@@ -168,6 +210,11 @@ class CodexParser {
         return this
     }
 
+    /**
+     * Parses a scripture reference into structured passage objects.
+     * @param {string} reference - The reference to parse (e.g., "John 3:16").
+     * @returns {CodexParser} The parser instance.
+     */
     parse(reference) {
         this.scan(reference)
 
@@ -190,12 +237,13 @@ class CodexParser {
                 end: null,
             }
 
+            // Parse reference parts (chapter, verses, ranges)
             this.parseReferenceParts(parsedPassage, passage.reference.split(","))
             parsedPassage.passages = this.populate(parsedPassage)
             parsedPassage.scripture = this.scripturize(parsedPassage)
             parsedPassage.valid = this._isValid(parsedPassage, passage.reference)
 
-            // Add SBL abbreviation as full reference with en dashes and space after commas for comma-separated verses
+            // Generate SBL abbreviation with conditional period
             const sblEntry = this.sblAbbreviations[book] || { value: book, abbr: false }
             const sblBook = sblEntry.value + (sblEntry.abbr ? "." : "")
             let abbr = parsedPassage.scripture.passage.replace(book, sblBook).replace(/-/g, "–")
@@ -205,12 +253,14 @@ class CodexParser {
             }
             parsedPassage.abbr = abbr
 
+            // Handle multi-chapter ranges
             if (parsedPassage.type === this.MULTI_CHAPTER_RANGE) {
                 this.handleMultiChapterRange(parsedPassage, passage.reference)
             } else {
                 delete parsedPassage.to
             }
 
+            // Set start and end points for passage range
             if (parsedPassage.passages.length > 0) {
                 const sortedPassages = parsedPassage.passages.slice().sort((a, b) => {
                     if (a.chapter !== b.chapter) return a.chapter - b.chapter
@@ -230,6 +280,7 @@ class CodexParser {
                 }
             }
 
+            // Default to English version if none specified
             if (!parsedPassage.version) {
                 parsedPassage.version = {
                     name: "English",
@@ -238,7 +289,7 @@ class CodexParser {
                 }
             }
 
-            // Attach the reference method to this individual passage object
+            // Attach reference method to passage
             parsedPassage.reference = function () {
                 return this.scripture.passage
             }
@@ -250,6 +301,12 @@ class CodexParser {
         return this
     }
 
+    /**
+     * Parses reference parts into chapter and verse components.
+     * @param {Object} passage - The passage object to populate.
+     * @param {string[]} parts - Array of reference parts.
+     * @private
+     */
     parseReferenceParts(passage, parts) {
         const singleChapterBook = this.singleChapterBook.find((b) => Object.keys(b)[0] === passage.book)
 
@@ -269,6 +326,13 @@ class CodexParser {
         })
     }
 
+    /**
+     * Parses chapter-verse references (e.g., "3:16").
+     * @param {Object} passage - The passage object.
+     * @param {string} part - The reference part.
+     * @param {boolean} isFirstPart - Whether this is the first part.
+     * @private
+     */
     parseChapterVerse(passage, part, isFirstPart) {
         const [chapter, verse] = part.split(":")
         if (isFirstPart) passage.chapter = Number(chapter)
@@ -276,6 +340,13 @@ class CodexParser {
         passage.verses.push(verse.includes("-") ? verse : Number(verse))
     }
 
+    /**
+     * Parses references for single-chapter books (e.g., "Jude 5").
+     * @param {Object} passage - The passage object.
+     * @param {string} part - The reference part.
+     * @param {boolean} isWholeChapter - Whether the reference is for the whole chapter.
+     * @private
+     */
     parseSingleChapterBook(passage, part, isWholeChapter) {
         const verseCount = this.getChapterVerses(passage.book, 1).length
         if (part === "1" && isWholeChapter) {
@@ -296,6 +367,13 @@ class CodexParser {
         }
     }
 
+    /**
+     * Parses range references (e.g., "1-3").
+     * @param {Object} passage - The passage object.
+     * @param {string} part - The reference part.
+     * @param {boolean} isFirstPart - Whether this is the first part.
+     * @private
+     */
     parseRange(passage, part, isFirstPart) {
         if (!passage.chapter && isFirstPart) {
             const [start, end] = part.split("-").map(Number)
@@ -318,6 +396,13 @@ class CodexParser {
         }
     }
 
+    /**
+     * Parses single number references (e.g., "3" for chapter or verse).
+     * @param {Object} passage - The passage object.
+     * @param {string} part - The reference part.
+     * @param {boolean} isFirstPart - Whether this is the first part.
+     * @private
+     */
     parseSingleNumber(passage, part, isFirstPart) {
         if (isFirstPart && !passage.chapter) {
             passage.chapter = Number(part)
@@ -332,6 +417,12 @@ class CodexParser {
         }
     }
 
+    /**
+     * Handles multi-chapter range references (e.g., "3:16-4:5").
+     * @param {Object} passage - The passage object.
+     * @param {string} reference - The full reference string.
+     * @private
+     */
     handleMultiChapterRange(passage, reference) {
         const parts = reference.split(",")
         const lastPart = parts[parts.length - 1]
@@ -345,6 +436,13 @@ class CodexParser {
         }
     }
 
+    /**
+     * Generates a range of numbers.
+     * @param {number} start - Start number.
+     * @param {number} end - End number.
+     * @returns {number[]} Array of numbers.
+     * @private
+     */
     _generateRange(start, end) {
         const range = []
         for (let i = start; i <= end; i++) {
@@ -353,6 +451,14 @@ class CodexParser {
         return range
     }
 
+    /**
+     * Searches for versification differences for a book and chapter.
+     * @param {string} book - The book name.
+     * @param {number} chapter - The chapter number.
+     * @param {string} version - The Bible version.
+     * @returns {Object|undefined} Updated chapter verses or undefined.
+     * @private
+     */
     _searchVersificationDifferences(book, chapter, version) {
         version = version.toLowerCase()
         if (!this.chapterVerses[book][chapter]) return
@@ -369,6 +475,13 @@ class CodexParser {
         return this.chapterVerses
     }
 
+    /**
+     * Sets the Bible version and applies versification differences.
+     * @param {string} book - The book name.
+     * @param {number} chapter - The chapter number.
+     * @param {string} version - The Bible version.
+     * @private
+     */
     _setVersion(book, chapter, version) {
         this.version = version ? version : "eng"
         if (this.version !== "eng") {
@@ -376,6 +489,9 @@ class CodexParser {
         }
     }
 
+    /**
+     * Applies versification differences to parsed passages.
+     */
     versification() {
         this.passages.forEach((passage) => {
             const hasVersification = this.versificationDifferences[passage.book]
@@ -407,6 +523,11 @@ class CodexParser {
         })
     }
 
+    /**
+     * Populates passage with expanded verse objects.
+     * @param {Object} passage - The passage object.
+     * @returns {Object[]} Array of verse objects.
+     */
     populate(passage) {
         const { book, chapter, verses, type, to } = passage
         const version = passage.version?.abbreviation || "eng"
@@ -449,6 +570,13 @@ class CodexParser {
         return []
     }
 
+    /**
+     * Expands verse references into individual verse objects.
+     * @param {string} book - The book name.
+     * @param {number} chapter - The chapter number.
+     * @param {Array<string|number>} verses - Array of verses or ranges.
+     * @returns {Object[]} Array of verse objects.
+     */
     expandVerses(book, chapter, verses) {
         const passages = []
         const chapterVerses = this.getChapterVerses(book, chapter)
@@ -466,6 +594,11 @@ class CodexParser {
         return passages
     }
 
+    /**
+     * Normalizes book names using abbreviations or full names.
+     * @param {string|Array} book - The book name or array.
+     * @returns {string} Normalized book name.
+     */
     bookify(book) {
         if (typeof book !== "string") {
             book = book[0]
@@ -487,6 +620,10 @@ class CodexParser {
         return bookified
     }
 
+    /**
+     * Returns parsed passages with utility methods.
+     * @returns {Object[]} Array of passages with methods.
+     */
     getPassages() {
         const passagesArray = [...this.passages]
 
@@ -553,10 +690,19 @@ class CodexParser {
         return passagesArray
     }
 
+    /**
+     * Returns the first parsed passage.
+     * @returns {Object|null} The first passage or null.
+     */
     first() {
         return this.passages.length > 0 ? this.passages[0] : null
     }
 
+    /**
+     * Formats a passage into a human-readable reference.
+     * @param {Object} passage - The passage object.
+     * @returns {Object} Formatted passage data.
+     */
     scripturize(passage) {
         const formatChapterVerse = (chapter, verses) => {
             if (!chapter || !verses || verses.length === 0) return ""
@@ -602,6 +748,11 @@ class CodexParser {
         }
     }
 
+    /**
+     * Combines multiple passages into a single reference.
+     * @param {Object[]} passages - Array of passages to combine.
+     * @returns {Object} Combined passage object.
+     */
     combine(passages) {
         if (!passages || passages.length === 0) {
             throw new Error("No passages provided to join.")
@@ -717,6 +868,11 @@ class CodexParser {
         return combined
     }
 
+    /**
+     * Merges verses into ranges or comma-separated lists.
+     * @param {number[]} verses - Array of verse numbers.
+     * @returns {string[]} Array of verse strings.
+     */
     mergeRanges(verses) {
         const sortedVerses = [...new Set(verses)].sort((a, b) => a - b)
         const merged = []
@@ -746,6 +902,11 @@ class CodexParser {
         return merged
     }
 
+    /**
+     * Generates a table of contents for the Bible.
+     * @param {string} [version="ESV"] - The Bible version.
+     * @returns {Object} TOC with book-chapter-verse mappings.
+     */
     getToc(version = "ESV") {
         const toc = {}
         this.bible.old.forEach((book) => {
@@ -775,6 +936,13 @@ class CodexParser {
         return orderedToc
     }
 
+    /**
+     * Validates a passage for correctness.
+     * @param {Object} passage - The passage object.
+     * @param {string} reference - The original reference.
+     * @returns {boolean|Object} True if valid, error object if invalid.
+     * @private
+     */
     _isValid(passage, reference) {
         const { book, chapter, verses, type } = passage
 
@@ -806,6 +974,15 @@ class CodexParser {
         return this.validateVerses(book, chapter, verses, reference)
     }
 
+    /**
+     * Validates verse numbers for a chapter.
+     * @param {string} book - The book name.
+     * @param {number} chapter - The chapter number.
+     * @param {Array<string|number>} verses - Array of verses or ranges.
+     * @param {string} reference - The original reference.
+     * @returns {boolean|Object} True if valid, error object if invalid.
+     * @private
+     */
     validateVerses(book, chapter, verses, reference) {
         const chapterVerses = this.getChapterVerses(book, chapter)
         for (const verse of verses) {
@@ -826,6 +1003,13 @@ class CodexParser {
         return true
     }
 
+    /**
+     * Creates an error object for validation failures.
+     * @param {number} code - Error code.
+     * @param {string} message - Error message.
+     * @returns {Object} Error object.
+     * @private
+     */
     validationError(code, message) {
         return {
             error: true,
@@ -834,6 +1018,13 @@ class CodexParser {
         }
     }
 
+    /**
+     * Determines the Bible version for a passage.
+     * @param {string} version - The version (e.g., "lxx").
+     * @param {string} testament - The testament ("old" or "new").
+     * @returns {Object} Version object.
+     * @private
+     */
     _handleVersion(version, testament) {
         const effectiveVersion = this.version || version || "eng"
         const lowerVersion = effectiveVersion.toLowerCase()
