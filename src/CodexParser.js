@@ -461,8 +461,37 @@ class CodexParser {
      */
     _searchVersificationDifferences(book, chapter, version) {
         version = version.toLowerCase()
-        if (!this.chapterVerses[book][chapter]) return
-        if (!this.versificationDifferences[book]) return
+
+        // Handle single-chapter book "Obadiah"
+        if (book === "Obadiah") {
+            const singleChapterBook = this.singleChapterBook.find((b) => Object.keys(b)[0] === "Obadiah")
+            if (!singleChapterBook || !singleChapterBook[book][chapter]) {
+                return // No data for Obadiah or chapter
+            }
+            if (!this.versificationDifferences[book]) {
+                return // No versification differences for Obadiah
+            }
+            // Process versification differences
+            for (const [key, value] of Object.entries(this.versificationDifferences[book])) {
+                if (value[version].startsWith(`${chapter}:`)) {
+                    if (value[version]) {
+                        const verse = value[version].split(":")[1]
+                        singleChapterBook[book][chapter].push(Number(verse))
+                    }
+                }
+            }
+            // Ensure unique verses and update the singleChapterBook entry
+            singleChapterBook[book][chapter] = Array.from(new Set(singleChapterBook[book][chapter]))
+            return singleChapterBook[book] // Return updated chapter data
+        }
+
+        // Handle all other books using chapterVerses
+        if (!this.chapterVerses[book][chapter]) {
+            return // No data for this book/chapter
+        }
+        if (!this.versificationDifferences[book]) {
+            return // No versification differences
+        }
         for (const [key, value] of Object.entries(this.versificationDifferences[book])) {
             if (value[version].startsWith(`${chapter}:`)) {
                 if (value[version]) {
@@ -472,7 +501,7 @@ class CodexParser {
             }
         }
         this.chapterVerses[book][chapter] = Array.from(this.chapterVerses[book][chapter])
-        return this.chapterVerses
+        return this.chapterVerses // Return updated chapterVerses
     }
 
     /**
