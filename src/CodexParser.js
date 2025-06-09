@@ -93,13 +93,7 @@ class CodexParser {
         }
         const detectSuffix = (startIndex) => {
             const suffixMatch = normalizedText.substring(startIndex).match(/\b(LXX|MT)\b/i)
-            return suffixMatch
-                ? {
-                      suffix: suffixMatch[0].toUpperCase(),
-                      length:
-                          suffixMatch[0].length + (normalizedText[startIndex + suffixMatch[0].length] === " " ? 1 : 0),
-                  }
-                : null
+            return suffixMatch ? { suffix: suffixMatch[0].toUpperCase(), length: suffixMatch[0].length } : null
         }
 
         while (i < lowerCaseText.length) {
@@ -153,12 +147,10 @@ class CodexParser {
 
                 const suffixData = detectSuffix(i)
                 const suffix = suffixData ? suffixData.suffix : null
-                if (suffixData) i += suffixData.length
-
-                // Adjust endIndex to exclude trailing space if present
-                let endIndex = i
-                if (endIndex > 0 && normalizedText[endIndex - 1] === " ") {
-                    endIndex--
+                let endIndex = i // Set endIndex before suffix
+                if (suffixData) {
+                    endIndex += suffixData.length // Include suffix in endIndex
+                    i += suffixData.length // Advance i
                 }
 
                 references.forEach((ref) => {
