@@ -74,16 +74,14 @@ class CodexParser {
         const fullNames = [...this.bible.old, ...this.bible.new]
         const abbreviations = Object.keys(this.abbreviations)
         this.found = []
-        let normalizedText = text
-            .replace(/\.(?=\d)/g, ":")
-            .replace(/(\b[A-Za-z]+)\.(?=\s|$)/g, "$1")
-            .replace(/\s+/g, " ")
+        // Minimal normalization: fix periods before numbers, remove trailing periods
+        let normalizedText = text.replace(/\.(?=\d)/g, ":").replace(/(\b[A-Za-z]+)\.(?=\s|$)/g, "$1")
         const lowercaseBibleFullNames = fullNames.map((book) => book.toLowerCase())
         const lowercaseBibleAbbreviations = abbreviations.map((abbr) => abbr.toLowerCase())
         const lowerCaseText = normalizedText.toLowerCase()
         let i = 0
 
-        const isValidChapterVerseChar = (char) => /[^A-Za-z]/.test(char)
+        const isValidChapterVerseChar = (char) => /[\d:,\-;]/.test(char)
         const isNextBibleBook = (startIndex) => {
             const textAfterCurrentPosition = lowerCaseText.substring(startIndex).trim()
             return (
@@ -100,6 +98,12 @@ class CodexParser {
             let foundBook = null
             let startIndex = -1
             let matchedLength = 0
+
+            // Skip non-alphabetic characters (e.g., \n, —, spaces) before book
+            while (i < lowerCaseText.length && !/[A-Za-z]/.test(lowerCaseText[i])) {
+                i++
+            }
+            if (i >= lowerCaseText.length) break
 
             for (let j = 0; j < lowercaseBibleFullNames.length; j++) {
                 const book = lowercaseBibleFullNames[j]
@@ -127,10 +131,14 @@ class CodexParser {
                 const references = []
                 const startOfReference = startIndex
 
-                while (i < normalizedText.length && isValidChapterVerseChar(normalizedText[i])) {
+                // Capture chapter/verse, allowing spaces between book and reference
+                while (
+                    i < normalizedText.length &&
+                    (isValidChapterVerseChar(normalizedText[i]) || normalizedText[i] === " ")
+                ) {
                     if (isNextBibleBook(i)) break
                     if (normalizedText[i] === ";") {
-                        const formattedReference = chapterVerse.trim().replace(/[^a-zA-Z0-9]+$/, "")
+                        const formattedReference = chapterVerse.trim()
                         if (formattedReference) references.push(formattedReference)
                         chapterVerse = ""
                         i++
@@ -141,23 +149,29 @@ class CodexParser {
                 }
 
                 if (chapterVerse.trim().length > 0) {
-                    const formattedReference = chapterVerse.trim().replace(/[^a-zA-Z0-9]+$/, "")
+                    const formattedReference = chapterVerse.trim()
                     if (formattedReference) references.push(formattedReference)
                 }
 
+                // Set endIndex to the current position
+                let endIndex = i
                 const suffixData = detectSuffix(i)
                 const suffix = suffixData ? suffixData.suffix : null
-                let endIndex = i // Set endIndex before suffix
                 if (suffixData) {
-                    endIndex += suffixData.length // Include suffix in endIndex
-                    i += suffixData.length // Advance i
+                    endIndex += suffixData.length
+                    i += suffixData.length
                 }
 
-                references.forEach((ref) => {
+                // Trim endIndex to exclude trailing non-reference characters
+                while (endIndex > startOfReference && /[^A-Za-z0-9]/.test(normalizedText[endIndex - 1])) {
+                    endIndex--
+                }
+
+                references.forEach((reference) => {
                     let type
-                    if (ref.includes(":")) {
-                        if (ref.includes("-")) {
-                            const [start, end] = ref.split("-")
+                    if (reference.includes(":")) {
+                        if (reference.includes("-")) {
+                            const [start, end] = reference.split("-")
                             const startParts = start.split(":")
                             const endParts = end.split(":")
                             type =
@@ -166,12 +180,12 @@ class CodexParser {
                                 startParts[0].trim() !== endParts[0].trim()
                                     ? "multi_chapter_verse_range"
                                     : "chapter_verse_range"
-                        } else if (ref.includes(",")) {
+                        } else if (reference.includes(",")) {
                             type = "comma_separated_verses"
                         } else {
                             type = "chapter_verse"
                         }
-                    } else if (ref.includes("-")) {
+                    } else if (reference.includes("-")) {
                         type = "chapter_range"
                     } else {
                         type = "single_chapter"
@@ -179,12 +193,12 @@ class CodexParser {
 
                     this.found.push({
                         book: foundBook,
-                        reference: ref,
-                        startIndex: startOfReference,
-                        endIndex: endIndex,
+                        reference: reference,
+                        startIndex: startOfReference + 1,
+                        endIndex: endIndex + 1,
                         version: suffix || null,
                         type,
-                        originalText: normalizedText.slice(startOfReference, endIndex),
+                        originalText: text.slice(startOfReference, endIndex),
                     })
                 })
             } else {
