@@ -81,7 +81,7 @@ class CodexParser {
         const lowerCaseText = normalizedText.toLowerCase()
         let i = 0
 
-        const isValidChapterVerseChar = (char) => /[\d:,\-;]/.test(char)
+        const isValidChapterVerseChar = (char) => /[\d:,\-;\s]/.test(char)
         const isNextBibleBook = (startIndex) => {
             const textAfterCurrentPosition = lowerCaseText.substring(startIndex).trim()
             return (
@@ -99,8 +99,8 @@ class CodexParser {
             let startIndex = -1
             let matchedLength = 0
 
-            // Skip non-alphabetic characters (e.g., \n, —, spaces) before book
-            while (i < lowerCaseText.length && !/[A-Za-z]/.test(lowerCaseText[i])) {
+            // Skip whitespace and special characters before checking for book
+            while (i < lowerCaseText.length && /[\s—-]/.test(lowerCaseText[i])) {
                 i++
             }
             if (i >= lowerCaseText.length) break
@@ -131,14 +131,10 @@ class CodexParser {
                 const references = []
                 const startOfReference = startIndex
 
-                // Capture chapter/verse, allowing spaces between book and reference
-                while (
-                    i < normalizedText.length &&
-                    (isValidChapterVerseChar(normalizedText[i]) || normalizedText[i] === " ")
-                ) {
+                while (i < normalizedText.length && isValidChapterVerseChar(normalizedText[i])) {
                     if (isNextBibleBook(i)) break
                     if (normalizedText[i] === ";") {
-                        const formattedReference = chapterVerse.trim()
+                        const formattedReference = chapterVerse.trim().replace(/[^a-zA-Z0-9]+$/, "")
                         if (formattedReference) references.push(formattedReference)
                         chapterVerse = ""
                         i++
@@ -149,7 +145,7 @@ class CodexParser {
                 }
 
                 if (chapterVerse.trim().length > 0) {
-                    const formattedReference = chapterVerse.trim()
+                    const formattedReference = chapterVerse.trim().replace(/[^a-zA-Z0-9]+$/, "")
                     if (formattedReference) references.push(formattedReference)
                 }
 
@@ -162,16 +158,16 @@ class CodexParser {
                     i += suffixData.length
                 }
 
-                // Trim endIndex to exclude trailing non-reference characters
-                while (endIndex > startOfReference && /[^A-Za-z0-9]/.test(normalizedText[endIndex - 1])) {
+                // Trim endIndex to exclude trailing whitespace or non-reference characters
+                while (endIndex > startOfReference && /[\s]/.test(normalizedText[endIndex - 1])) {
                     endIndex--
                 }
 
-                references.forEach((reference) => {
+                references.forEach((ref) => {
                     let type
-                    if (reference.includes(":")) {
-                        if (reference.includes("-")) {
-                            const [start, end] = reference.split("-")
+                    if (ref.includes(":")) {
+                        if (ref.includes("-")) {
+                            const [start, end] = ref.split("-")
                             const startParts = start.split(":")
                             const endParts = end.split(":")
                             type =
@@ -180,12 +176,12 @@ class CodexParser {
                                 startParts[0].trim() !== endParts[0].trim()
                                     ? "multi_chapter_verse_range"
                                     : "chapter_verse_range"
-                        } else if (reference.includes(",")) {
+                        } else if (ref.includes(",")) {
                             type = "comma_separated_verses"
                         } else {
                             type = "chapter_verse"
                         }
-                    } else if (reference.includes("-")) {
+                    } else if (ref.includes("-")) {
                         type = "chapter_range"
                     } else {
                         type = "single_chapter"
@@ -193,12 +189,12 @@ class CodexParser {
 
                     this.found.push({
                         book: foundBook,
-                        reference: reference,
+                        reference: ref,
                         startIndex: startOfReference + 1,
                         endIndex: endIndex + 1,
                         version: suffix || null,
                         type,
-                        originalText: text.slice(startOfReference, endIndex),
+                        originalText: text.slice(startOfReference, endIndex), // Use original text
                     })
                 })
             } else {
