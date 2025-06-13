@@ -74,53 +74,57 @@ class CodexParser {
         const fullNames = [...this.bible.old, ...this.bible.new]
         const abbreviations = Object.keys(this.abbreviations)
         this.found = []
-        // Minimal normalization: fix periods before numbers, remove trailing periods
-        let normalizedText = text.replace(/\.(?=\d)/g, ":").replace(/(\b[A-Za-z]+)\.(?=\s|$)/g, "$1")
-        const lowercaseBibleFullNames = fullNames.map((book) => book.toLowerCase())
-        const lowercaseBibleAbbreviations = abbreviations.map((abbr) => abbr.toLowerCase())
+
+        // Normalize text: remove curly quotes, replace periods before numbers with colons
+        let normalizedText = text
+            .replace(/[“”]/g, "") // Remove curly quotes
+            .replace(/\.(?=\d)/g, ":")
         const lowerCaseText = normalizedText.toLowerCase()
         let i = 0
-
-        const isValidChapterVerseChar = (char) => /[\d:,\-;\s]/.test(char)
-        const isNextBibleBook = (startIndex) => {
-            const textAfterCurrentPosition = lowerCaseText.substring(startIndex).trim()
-            return (
-                lowercaseBibleFullNames.some((book) => textAfterCurrentPosition.startsWith(book)) ||
-                lowercaseBibleAbbreviations.some((abbr) => textAfterCurrentPosition.startsWith(abbr))
-            )
-        }
-        const detectSuffix = (startIndex) => {
-            const suffixMatch = normalizedText.substring(startIndex).match(/\b(LXX|MT)\b/i)
-            return suffixMatch ? { suffix: suffixMatch[0].toUpperCase(), length: suffixMatch[0].length } : null
-        }
 
         while (i < lowerCaseText.length) {
             let foundBook = null
             let startIndex = -1
             let matchedLength = 0
+            let hasOpeningParen = false
+            let parenStartIndex = -1
 
-            // Skip whitespace and special characters before checking for book
-            while (i < lowerCaseText.length && /[\s—-]/.test(lowerCaseText[i])) {
+            // Skip whitespace
+            while (i < lowerCaseText.length && /\s/.test(lowerCaseText[i])) {
                 i++
             }
             if (i >= lowerCaseText.length) break
 
-            for (let j = 0; j < lowercaseBibleFullNames.length; j++) {
-                const book = lowercaseBibleFullNames[j]
-                if (lowerCaseText.startsWith(book, i) && book.length > matchedLength) {
-                    foundBook = fullNames[j]
-                    startIndex = i
-                    matchedLength = book.length
-                }
+            // Check for opening parenthesis
+            if (i < lowerCaseText.length && lowerCaseText[i] === "(") {
+                hasOpeningParen = true
+                parenStartIndex = i
+                i++
             }
 
+            // Record potential start of reference
+            startIndex = i
+
+            // Check for book names or abbreviations
+            for (let book of fullNames) {
+                if (
+                    lowerCaseText.startsWith(book.toLowerCase(), i) &&
+                    (i + book.length >= lowerCaseText.length || /\s|:|\d/.test(lowerCaseText[i + book.length]))
+                ) {
+                    foundBook = book
+                    matchedLength = book.length
+                    break
+                }
+            }
             if (!foundBook) {
-                for (let k = 0; k < lowercaseBibleAbbreviations.length; k++) {
-                    const abbreviation = lowercaseBibleAbbreviations[k]
-                    if (lowerCaseText.startsWith(abbreviation, i) && abbreviation.length > matchedLength) {
-                        foundBook = this.abbreviations[abbreviations[k]]
-                        startIndex = i
-                        matchedLength = abbreviation.length
+                for (let abbr of abbreviations) {
+                    if (
+                        lowerCaseText.startsWith(abbr.toLowerCase(), i) &&
+                        (i + abbr.length >= lowerCaseText.length || /\s|:|\d/.test(lowerCaseText[i + abbr.length]))
+                    ) {
+                        foundBook = this.abbreviations[abbr]
+                        matchedLength = abbr.length
+                        break
                     }
                 }
             }
@@ -128,43 +132,52 @@ class CodexParser {
             if (foundBook) {
                 i += matchedLength
                 let chapterVerse = ""
-                const references = []
-                const startOfReference = startIndex
+                let hasColon = false
 
-                while (i < normalizedText.length && isValidChapterVerseChar(normalizedText[i])) {
-                    if (isNextBibleBook(i)) break
-                    if (normalizedText[i] === ";") {
-                        const formattedReference = chapterVerse.trim().replace(/[^a-zA-Z0-9]+$/, "")
-                        if (formattedReference) references.push(formattedReference)
-                        chapterVerse = ""
-                        i++
-                        continue
-                    }
+                // Capture space after book
+                if (i < normalizedText.length && normalizedText[i] === " ") {
+                    chapterVerse += " "
+                    i++
+                }
+
+                // Capture chapter-verse
+                while (
+                    i < lowerCaseText.length &&
+                    (/[\d]/.test(normalizedText[i]) ||
+                        normalizedText[i] === ":" ||
+                        normalizedText[i] === "," ||
+                        normalizedText[i] === "-")
+                ) {
+                    if (normalizedText[i] === ":") hasColon = true
                     chapterVerse += normalizedText[i]
                     i++
                 }
 
-                if (chapterVerse.trim().length > 0) {
-                    const formattedReference = chapterVerse.trim().replace(/[^a-zA-Z0-9]+$/, "")
-                    if (formattedReference) references.push(formattedReference)
-                }
+                // Only proceed if valid reference
+                if (hasColon && chapterVerse.trim().length > 0) {
+                    let endIndex = i
+                    let version = null
 
-                // Set endIndex to the current position
-                let endIndex = i
-                const suffixData = detectSuffix(i)
-                const suffix = suffixData ? suffixData.suffix : null
-                if (suffixData) {
-                    endIndex += suffixData.length
-                    i += suffixData.length
-                }
+                    // Detect suffix
+                    const suffixMatch = normalizedText.substring(i).match(/\b(LXX|MT)\b/i)
+                    if (suffixMatch) {
+                        version = suffixMatch[0].toUpperCase()
+                        endIndex += suffixMatch[0].length
+                        i += suffixMatch[0].length
+                    }
 
-                // Trim endIndex to exclude trailing whitespace or non-reference characters
-                while (endIndex > startOfReference && /[\s]/.test(normalizedText[endIndex - 1])) {
-                    endIndex--
-                }
+                    // Handle closing parenthesis
+                    if (hasOpeningParen && i < lowerCaseText.length && normalizedText[i] === ")") {
+                        endIndex = i + 1
+                        i++
+                    }
 
-                references.forEach((ref) => {
+                    // Use original text for reference only (exclude parentheses)
+                    const originalText = normalizedText.slice(startIndex, hasOpeningParen ? endIndex - 1 : endIndex)
+
+                    // Determine type
                     let type
+                    const ref = chapterVerse.trim()
                     if (ref.includes(":")) {
                         if (ref.includes("-")) {
                             const [start, end] = ref.split("-")
@@ -190,18 +203,21 @@ class CodexParser {
                     this.found.push({
                         book: foundBook,
                         reference: ref,
-                        startIndex: startOfReference + 1,
-                        endIndex: endIndex + 1,
-                        version: suffix || null,
+                        startIndex: hasOpeningParen ? parenStartIndex : startIndex,
+                        endIndex,
+                        version,
                         type,
-                        originalText: text.slice(startOfReference, endIndex), // Use original text
+                        originalText,
                     })
-                })
+                } else {
+                    i = startIndex + 1
+                }
             } else {
                 i++
             }
         }
 
+        console.log("Found references:", JSON.stringify(this.found, null, 2)) // Debug
         return this
     }
 
@@ -268,7 +284,7 @@ class CodexParser {
                 // Use abbreviation with period for abbreviated books
                 parsedPassage.abbr = `${abbrKey}. ${passage.reference}${passage.version ? " " + passage.version : ""}`
             } else {
-                // Fallback to original if no abbreviation (shouldn't occur with proper data)
+                // Fallback to original if no abbreviation
                 parsedPassage.abbr = parsedPassage.original
             }
 
@@ -1074,6 +1090,12 @@ class CodexParser {
         return { name: "English", value: "ENG", abbreviation: "eng" }
     }
 
+    /**
+     * Replaces scripture references in text with formatted references.
+     * @param {string} text - The original text.
+     * @param {boolean} useAbbreviations - Whether to use abbreviated book names.
+     * @returns {string} Text with replaced references.
+     */
     replace(text, useAbbreviations = true) {
         if (!this.passages.length) {
             console.log("No parsed passages to replace")
@@ -1081,15 +1103,32 @@ class CodexParser {
         }
 
         let result = text
-        // Process replacements in reverse order to avoid index shifting
         for (let i = this.passages.length - 1; i >= 0; i--) {
             const passage = this.passages[i]
-            const { startIndex, endIndex, originalText, abbr, original } = passage
-
-            // Use abbreviated or full reference
+            const { originalText, abbr, original } = passage
             const newReference = useAbbreviations ? abbr : original
-            console.log(`Replacing "${originalText}" with "${newReference}" at [${startIndex}, ${endIndex}]`) // Debug
-            result = result.slice(0, startIndex) + newReference + result.slice(endIndex)
+
+            // Create regex to match originalText with optional parentheses
+            const escapedOriginalText = originalText.replace(/([:.])/g, "\\$1").replace(/\s+/g, "\\s*")
+            const regex = new RegExp(`(\\()?\\s*${escapedOriginalText}\\s*(\\))?`, "g")
+
+            // Find all matches
+            const matches = [...result.matchAll(regex)]
+            if (matches.length > 0) {
+                // Process matches in reverse to avoid index shifting
+                for (let j = matches.length - 1; j >= 0; j--) {
+                    const match = matches[j]
+                    const startIndex = match.index
+                    const endIndex = startIndex + match[0].length
+                    // Preserve parentheses if present in the match
+                    const hasParens = match[1] === "(" && match[2] === ")"
+                    const replacement = hasParens ? `(${newReference})` : newReference
+                    console.log(`Replacing "${match[0]}" with "${replacement}" at [${startIndex}, ${endIndex}]`)
+                    result = result.slice(0, startIndex) + replacement + result.slice(endIndex)
+                }
+            } else {
+                console.log(`No match found for originalText "${originalText}"`)
+            }
         }
 
         return result
