@@ -1,19 +1,19 @@
 const abbrevations = {
     Gen: "Genesis",
-    Ge: "Genesis",
+    /* Ge: "Genesis", */
     Gn: "Genesis",
     Ex: "Exodus",
     Exo: "Exodus",
     Exod: "Exodus",
     Lev: "Leviticus",
-    Le: "Leviticus",
+    /* Le: "Leviticus", */
     Lv: "Leviticus",
     Num: "Numbers",
     Nu: "Numbers",
     Nb: "Numbers",
     Nm: "Numbers",
     Deut: "Deuteronomy",
-    De: "Deuteronomy",
+    /* De: "Deuteronomy", */
     Dt: "Deuteronomy",
     Josh: "Joshua",
     Jos: "Joshua",
@@ -24,7 +24,7 @@ const abbrevations = {
     Jdg: "Judges",
     Ruth: "Ruth",
     Rth: "Ruth",
-    Ru: "Ruth",
+    /* Ru: "Ruth", */
     "1Sam": "1 Samuel",
     "1sam": "1 Samuel",
     "1SA": "1 Samuel",
@@ -92,10 +92,10 @@ const abbrevations = {
     Ezra: "Ezra",
     Ezr: "Ezra",
     Neh: "Nehemiah",
-    Ne: "Nehemiah",
+    /* Ne: "Nehemiah", */
     Esth: "Esther",
     Est: "Esther",
-    Es: "Esther",
+    /* Es: "Esther", */
     Job: "Job",
     Jb: "Job",
     Ps: "Psalms",
@@ -107,12 +107,12 @@ const abbrevations = {
     Prov: "Proverbs",
     Pro: "Proverbs",
     Prv: "Proverbs",
-    Pr: "Proverbs",
+    /* Pr: "Proverbs", */
     Eccl: "Ecclesiastes",
     Eccles: "Ecclesiastes",
     Eccle: "Ecclesiastes",
     Ecc: "Ecclesiastes",
-    Ec: "Ecclesiastes",
+    /* Ec: "Ecclesiastes", */
     Qoh: "Ecclesiastes",
     Song: "Song of Songs",
     SOS: "Song of Songs",
@@ -121,22 +121,22 @@ const abbrevations = {
     Isa: "Isaiah",
     Is: "Isaiah",
     Jer: "Jeremiah",
-    Je: "Jeremiah",
+    /* Je: "Jeremiah", */
     Lam: "Lamentations",
     La: "Lamentations",
     Ezek: "Ezekiel",
     Eze: "Ezekiel",
     Ezk: "Ezekiel",
     Dan: "Daniel",
-    Da: "Daniel",
+    /* Da: "Daniel", */
     Dn: "Daniel",
     Hos: "Hosea",
-    Ho: "Hosea",
+    /* Ho: "Hosea", */
     Joel: "Joel",
     Jl: "Joel",
     Amos: "Amos",
     Am: "Amos",
-    Ob: "Obadiah",
+    /* Ob: "Obadiah", */
     Obad: "Obadiah",
     Jonah: "Jonah",
     Jnh: "Jonah",
@@ -144,7 +144,7 @@ const abbrevations = {
     Mic: "Micah",
     Mc: "Micah",
     Nah: "Nahum",
-    Na: "Nahum",
+    /* Na: "Nahum", */
     Hb: "Habakkuk",
     Hab: "Habakkuk",
     Zeph: "Zephaniah",
@@ -177,7 +177,7 @@ const abbrevations = {
     Act: "Acts",
     Ac: "Acts",
     Rom: "Romans",
-    Ro: "Romans",
+    /* Ro: "Romans", */
     Rm: "Romans",
     "1Cor": "1 Corinthians",
     "1 Cor": "1 Corinthians",
@@ -200,14 +200,14 @@ const abbrevations = {
     "2 co": "2 Corinthians",
     "2co": "2 Corinthians",
     Gal: "Galatians",
-    Ga: "Galatians",
+    /* Ga: "Galatians", */
     Eph: "Ephesians",
     Ephes: "Ephesians",
     Php: "Philippians",
     Phil: "Philippians",
     Pp: "Philippians",
     Col: "Colossians",
-    Co: "Colossians",
+    /* Co: "Colossians", */
     "1Thess": "1 Thessalonians",
     "1 Thess": "1 Thessalonians",
     "1Thes": "1 Thessalonians",
@@ -233,11 +233,11 @@ const abbrevations = {
     Titus: "Titus",
     Tt: "Titus",
     Tit: "Titus",
-    Ti: "Titus",
+    /* Ti: "Titus", */
     Phlm: "Philemon",
     Phm: "Philemon",
     Philem: "Philemon",
-    He: "Hebrews",
+    /* He: "Hebrews", */
     Hebr: "Hebrews",
     Heb: "Hebrews",
     Jas: "James",
@@ -275,7 +275,7 @@ const abbrevations = {
     Jud: "Jude",
     Jd: "Jude",
     Rev: "Revelation",
-    Re: "Revelation",
+    /* Re: "Revelation", */
     Mt: "Matthew",
     Mc: "Mark",
     Act: "Acts",
