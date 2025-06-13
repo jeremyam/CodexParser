@@ -217,7 +217,6 @@ class CodexParser {
             }
         }
 
-        console.log("Found references:", JSON.stringify(this.found, null, 2)) // Debug
         return this
     }
 
@@ -1098,7 +1097,6 @@ class CodexParser {
      */
     replace(text, useAbbreviations = true) {
         if (!this.passages.length) {
-            console.log("No parsed passages to replace")
             return text
         }
 
@@ -1123,11 +1121,8 @@ class CodexParser {
                     // Preserve parentheses if present in the match
                     const hasParens = match[1] === "(" && match[2] === ")"
                     const replacement = hasParens ? `(${newReference})` : newReference
-                    console.log(`Replacing "${match[0]}" with "${replacement}" at [${startIndex}, ${endIndex}]`)
                     result = result.slice(0, startIndex) + replacement + result.slice(endIndex)
                 }
-            } else {
-                console.log(`No match found for originalText "${originalText}"`)
             }
         }
 
