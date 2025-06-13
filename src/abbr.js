@@ -119,7 +119,7 @@ const abbrevations = {
     So: "Song of Songs",
     Cant: "Song of Songs",
     Isa: "Isaiah",
-    Is: "Isaiah",
+    /* Is: "Isaiah", */
     Jer: "Jeremiah",
     /* Je: "Jeremiah", */
     Lam: "Lamentations",
