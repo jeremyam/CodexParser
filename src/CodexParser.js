@@ -52,6 +52,21 @@ class CodexParser {
         this.COMMA_SEPARATED = "comma_separated_verses"
         this.CHAPTER_RANGE = "chapter_range"
         this.MULTI_CHAPTER_RANGE = "multi_chapter_verse_range"
+        this.config = {
+            booksOnly: false,
+        }
+    }
+    /**
+     * Sets configuration options for the parser.
+     * @param {Object} config - Configuration options.
+     * @param {boolean} [config.booksOnly=false] - Whether to capture book names without references.
+     * @returns {CodexParser} The parser instance for method chaining.
+     */
+    options(config) {
+        this.config = {
+            booksOnly: config.booksOnly ?? false,
+        }
+        return this
     }
 
     /**
@@ -130,6 +145,15 @@ class CodexParser {
             }
 
             if (foundBook) {
+                // Check if book is followed by a number when booksOnly is false
+                const nextCharIndex = i + matchedLength
+                const isFollowedByNumber =
+                    nextCharIndex < lowerCaseText.length && /\d/.test(lowerCaseText[nextCharIndex])
+                if (!this.config.booksOnly && !isFollowedByNumber && !hasOpeningParen) {
+                    i++
+                    continue
+                }
+
                 i += matchedLength
                 let chapterVerse = ""
                 let hasColon = false
@@ -153,8 +177,8 @@ class CodexParser {
                     i++
                 }
 
-                // Only proceed if valid reference
-                if (hasColon && chapterVerse.trim().length > 0) {
+                // Only proceed if valid reference or booksOnly is true
+                if ((hasColon && chapterVerse.trim().length > 0) || this.config.booksOnly) {
                     let endIndex = i
                     let version = null
 
@@ -178,7 +202,9 @@ class CodexParser {
                     // Determine type
                     let type
                     const ref = chapterVerse.trim()
-                    if (ref.includes(":")) {
+                    if (this.config.booksOnly && !ref) {
+                        type = "book_only"
+                    } else if (ref.includes(":")) {
                         if (ref.includes("-")) {
                             const [start, end] = ref.split("-")
                             const startParts = start.split(":")
