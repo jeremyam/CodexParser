@@ -367,6 +367,7 @@ class CodexParser {
 
         parts.forEach((part, index) => {
             part = part.trim()
+            if (!part) return // Skip empty parts from trailing commas
             const isFirstPart = index === 0
 
             if (part.includes(":")) {
@@ -829,10 +830,10 @@ class CodexParser {
 
     /**
      * Combines multiple passages into a single reference.
-     * @param {Object[]} passages - Array of passages to combine.
+     * @param {Object[]} [passages=this.passages] - Array of passages to combine, defaults to this.passages.
      * @returns {Object} Combined passage object.
      */
-    combine(passages) {
+    combine(passages = this.passages) {
         if (!passages || passages.length === 0) {
             throw new Error("No passages provided to join.")
         }
@@ -880,10 +881,6 @@ class CodexParser {
                     lastVerse = p.verse
                 }
             })
-
-            const chapters = passage.passages.map((p) => p.chapter)
-            firstChapter = firstChapter === null ? Math.min(...chapters) : Math.min(firstChapter, ...chapters)
-            lastChapter = lastChapter === null ? Math.max(...chapters) : Math.max(lastChapter, ...chapters)
         })
 
         combined.passages = Array.from(new Set(combined.passages.map(JSON.stringify))).map(JSON.parse)
@@ -894,27 +891,34 @@ class CodexParser {
             .sort((a, b) => a - b)
 
         sortedChapters.forEach((chapter) => {
-            const verses = Array.from(chapterVerses[chapter]).sort((a, b) => a - b)
-            const mergedVerses = this.mergeRanges(verses)
-            chapterStrings.push(`${chapter}:${mergedVerses.join(",")}`)
-            if (chapter === firstChapter) {
-                combined.verses = mergedVerses
+            const verses = Array.from(chapterVerses[chapter])
+                .map(Number)
+                .filter((verse) => verse > 0) // Exclude invalid verse 0
+                .sort((a, b) => a - b)
+            if (verses.length > 0) {
+                const mergedVerses = this.mergeRanges(verses)
+                chapterStrings.push(`${chapter}:${mergedVerses.join(",")}`)
+                if (chapter === firstChapter) {
+                    combined.verses = mergedVerses
+                }
             }
         })
+
+        if (chapterStrings.length === 0) {
+            throw new Error("No valid verses found in passages.")
+        }
 
         if (firstChapter !== lastChapter) {
             combined.type = this.MULTI_CHAPTER_RANGE
             combined.to = {
                 book: combined.book,
                 chapter: lastChapter,
-                verses: this.mergeRanges(Array.from(chapterVerses[lastChapter])),
+                verses: this.mergeRanges(Array.from(chapterVerses[lastChapter]).filter((verse) => verse > 0)),
             }
-            combined.original = `${combined.book} ${firstChapter}:${combined.verses.join(
-                ","
-            )}; ${lastChapter}:${combined.to.verses.join(",")}`
+            combined.original = `${combined.book} ${chapterStrings.join("; ")}`
         } else {
             combined.type = combined.verses.length > 1 ? this.CHAPTER_VERSE_RANGE : this.CHAPTER_VERSE
-            combined.original = `${combined.book} ${firstChapter}:${combined.verses.join(",")}`
+            combined.original = `${combined.book} ${chapterStrings[0]}`
         }
 
         const chapterString = chapterStrings.join(";")
@@ -927,12 +931,18 @@ class CodexParser {
         combined.start = {
             book: combined.book,
             chapter: firstChapter,
-            verse: firstVerse || Math.min(...Array.from(chapterVerses[firstChapter])),
+            verse:
+                firstVerse > 0
+                    ? firstVerse
+                    : Math.min(...Array.from(chapterVerses[firstChapter]).filter((verse) => verse > 0)),
         }
         combined.end = {
             book: combined.book,
             chapter: lastChapter,
-            verse: lastVerse || Math.max(...Array.from(chapterVerses[lastChapter])),
+            verse:
+                lastVerse > 0
+                    ? lastVerse
+                    : Math.max(...Array.from(chapterVerses[lastChapter]).filter((verse) => verse > 0)),
         }
 
         // Reattach the reference method to the combined passage
@@ -1159,6 +1169,18 @@ class CodexParser {
         }
 
         return result
+    }
+    /**
+     * Checks if all references in the passages array are from the same book.
+     * @returns {boolean} True if all passages are from the same book, false otherwise.
+     */
+    same() {
+        if (this.passages.length <= 1) {
+            return true
+        }
+
+        const firstBook = this.passages[0].book.toLowerCase()
+        return this.passages.every((passage) => passage.book.toLowerCase() === firstBook)
     }
 }
 
