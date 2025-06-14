@@ -145,23 +145,22 @@ class CodexParser {
             }
 
             if (foundBook) {
-                // Check if book is followed by a valid reference when booksOnly is false
+                // Check if book is followed by a valid reference or version when booksOnly is false
                 let isFollowedByReference = false
-                if (!this.config.booksOnly && !hasOpeningParen) {
-                    let j = i + matchedLength
-                    // Skip spaces
-                    while (j < lowerCaseText.length && /\s/.test(lowerCaseText[j])) {
-                        j++
-                    }
-                    // Check for a digit (chapter number) to start a valid reference
-                    if (j < lowerCaseText.length && /\d/.test(lowerCaseText[j])) {
-                        isFollowedByReference = true
-                    }
-                } else {
-                    isFollowedByReference = true // Allow if booksOnly or in parentheses
+                let j = i + matchedLength
+                // Skip spaces
+                while (j < lowerCaseText.length && /\s/.test(lowerCaseText[j])) {
+                    j++
+                }
+                // Check for digit (chapter number) or version suffix (LXX/MT)
+                if (
+                    j < lowerCaseText.length &&
+                    (/\d/.test(lowerCaseText[j]) || lowerCaseText.substring(j).match(/^(lxx|mt)\b/i))
+                ) {
+                    isFollowedByReference = true
                 }
 
-                if (!isFollowedByReference) {
+                if (!this.config.booksOnly && !hasOpeningParen && !isFollowedByReference) {
                     i++
                     continue
                 }
@@ -184,7 +183,10 @@ class CodexParser {
                 }
 
                 // Only proceed if valid reference or booksOnly is true
-                if ((hasColon && chapterVerse.trim().length > 0) || (this.config.booksOnly && !chapterVerse.trim())) {
+                if (
+                    (chapterVerse.trim().length > 0 && (hasColon || /\d/.test(chapterVerse.trim()))) ||
+                    (this.config.booksOnly && !chapterVerse.trim())
+                ) {
                     let endIndex = i
                     let version = null
 
@@ -228,8 +230,10 @@ class CodexParser {
                         }
                     } else if (ref.includes("-")) {
                         type = "chapter_range"
-                    } else {
+                    } else if (/\d/.test(ref)) {
                         type = "single_chapter"
+                    } else {
+                        type = "book_only"
                     }
 
                     this.found.push({
@@ -296,10 +300,31 @@ class CodexParser {
                 abbr: null,
             }
 
-            this.parseReferenceParts(parsedPassage, passage.reference.split(","))
+            // Clean reference for parsing, removing version suffix
+            let cleanReference = passage.reference
+            if (passage.version) {
+                cleanReference = cleanReference.replace(/\s*(LXX|MT)$/i, "").trim()
+            }
+
+            // Handle chapter-only references (e.g., "113 :" or "113")
+            if (!cleanReference || cleanReference.match(/^\d+\s*[:;]?\s*$/)) {
+                const chapterMatch = cleanReference.match(/\d+/) || ["1"]
+                const chapter = Number(chapterMatch[0])
+                parsedPassage.chapter = chapter
+                parsedPassage.type = this.SINGLE_CHAPTER
+                const chapterVerses = this.getChapterVerses(book, chapter)
+                if (chapterVerses.length) {
+                    const startVerse = chapterVerses[0]
+                    const endVerse = chapterVerses[chapterVerses.length - 1]
+                    parsedPassage.verses = [`${startVerse}-${endVerse}`]
+                }
+            } else {
+                this.parseReferenceParts(parsedPassage, cleanReference.split(","))
+            }
+
             parsedPassage.passages = this.populate(parsedPassage)
             parsedPassage.scripture = this.scripturize(parsedPassage)
-            parsedPassage.valid = this._isValid(parsedPassage, passage.reference)
+            parsedPassage.valid = this._isValid(parsedPassage, cleanReference)
 
             // Set abbr property using SBL-style abbreviations
             const sblEntry = Object.entries(this.sblAbbreviations).find(
@@ -307,16 +332,16 @@ class CodexParser {
             )
             if (sblEntry) {
                 const { value, abbr } = sblEntry[1]
+                const ref = passage.reference.replace(/\s*(LXX|MT)$/i, "").trim()
                 parsedPassage.abbr = abbr
-                    ? `${value}. ${passage.reference}${passage.version ? " " + passage.version : ""}`
-                    : `${value} ${passage.reference}${passage.version ? " " + passage.version : ""}`
+                    ? `${value}. ${ref}${passage.version ? " " + passage.version : ""}`
+                    : `${value} ${ref}${passage.version ? " " + passage.version : ""}`
             } else {
-                // Fallback to original
                 parsedPassage.abbr = parsedPassage.original
             }
 
             if (parsedPassage.type === this.MULTI_CHAPTER_RANGE) {
-                this.handleMultiChapterRange(parsedPassage, passage.reference)
+                this.handleMultiChapterRange(parsedPassage, cleanReference)
             } else {
                 delete parsedPassage.to
             }
@@ -370,6 +395,22 @@ class CodexParser {
             if (!part) return // Skip empty parts from trailing commas
             const isFirstPart = index === 0
 
+            // Handle chapter-only references (e.g., "113 :" or "113")
+            if (!part.includes(":") && !part.includes("-") && !singleChapterBook) {
+                const chapter = Number(part.replace(/[^0-9]/g, "")) // Extract number, remove trailing colon
+                if (chapter > 0) {
+                    passage.chapter = chapter
+                    passage.type = this.SINGLE_CHAPTER
+                    const chapterVerses = this.getChapterVerses(passage.book, chapter)
+                    if (chapterVerses.length) {
+                        const startVerse = chapterVerses[0]
+                        const endVerse = chapterVerses[chapterVerses.length - 1]
+                        passage.verses = [`${startVerse}-${endVerse}`]
+                    }
+                    return
+                }
+            }
+
             if (part.includes(":")) {
                 this.parseChapterVerse(passage, part, isFirstPart)
             } else if (singleChapterBook) {
@@ -381,7 +422,6 @@ class CodexParser {
             }
         })
     }
-
     /**
      * Parses chapter-verse references (e.g., "3:16").
      * @param {Object} passage - The passage object.
