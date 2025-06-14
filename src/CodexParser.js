@@ -87,44 +87,24 @@ class CodexParser {
      */
     scan(text) {
         const fullNames = [...this.bible.old, ...this.bible.new]
-        const abbreviations = Object.keys(this.abbreviations)
+        const abbreviations = Object.keys(this.abbreviations).filter((abbr) => abbr.length >= 3)
         this.found = []
 
         // Normalize text: remove curly quotes, replace periods before numbers with colons
-        let normalizedText = text
-            .replace(/[“”]/g, "") // Remove curly quotes
-            .replace(/\.(?=\d)/g, ":")
+        let normalizedText = text.replace(/[“”]/g, "").replace(/\.(?=\d)/g, ":")
         const lowerCaseText = normalizedText.toLowerCase()
         let i = 0
 
         while (i < lowerCaseText.length) {
             let foundBook = null
-            let startIndex = -1
+            let startIndex = i
             let matchedLength = 0
-            let hasOpeningParen = false
-            let parenStartIndex = -1
-
-            // Skip whitespace
-            while (i < lowerCaseText.length && /\s/.test(lowerCaseText[i])) {
-                i++
-            }
-            if (i >= lowerCaseText.length) break
-
-            // Check for opening parenthesis
-            if (i < lowerCaseText.length && lowerCaseText[i] === "(") {
-                hasOpeningParen = true
-                parenStartIndex = i
-                i++
-            }
-
-            // Record potential start of reference
-            startIndex = i
 
             // Check for book names or abbreviations
             for (let book of fullNames) {
                 if (
                     lowerCaseText.startsWith(book.toLowerCase(), i) &&
-                    (i + book.length >= lowerCaseText.length || /[\s:;\d]/.test(lowerCaseText[i + book.length]))
+                    (i + book.length >= lowerCaseText.length || /[\s:;]/.test(lowerCaseText[i + book.length]))
                 ) {
                     foundBook = book
                     matchedLength = book.length
@@ -135,7 +115,7 @@ class CodexParser {
                 for (let abbr of abbreviations) {
                     if (
                         lowerCaseText.startsWith(abbr.toLowerCase(), i) &&
-                        (i + abbr.length >= lowerCaseText.length || /[\s:;\d]/.test(lowerCaseText[i + abbr.length]))
+                        (i + abbr.length >= lowerCaseText.length || /[\s:;]/.test(lowerCaseText[i + abbr.length]))
                     ) {
                         foundBook = this.abbreviations[abbr]
                         matchedLength = abbr.length
@@ -145,109 +125,116 @@ class CodexParser {
             }
 
             if (foundBook) {
-                // Check if book is followed by a valid reference or version when booksOnly is false
-                let isFollowedByReference = false
                 let j = i + matchedLength
-                // Skip spaces
-                while (j < lowerCaseText.length && /\s/.test(lowerCaseText[j])) {
-                    j++
-                }
-                // Check for digit (chapter number) or version suffix (LXX/MT)
-                if (
-                    j < lowerCaseText.length &&
-                    (/\d/.test(lowerCaseText[j]) || lowerCaseText.substring(j).match(/^(lxx|mt)\b/i))
-                ) {
-                    isFollowedByReference = true
-                }
+                let currentBook = foundBook
+                let currentStartIndex = startIndex
 
-                if (!this.config.booksOnly && !hasOpeningParen && !isFollowedByReference) {
-                    i++
-                    continue
-                }
-
-                i += matchedLength
-                let chapterVerse = ""
-                let hasColon = false
-
-                // Capture space after book
-                if (i < normalizedText.length && normalizedText[i] === " ") {
-                    chapterVerse += " "
-                    i++
-                }
-
-                // Capture chapter-verse (allow digits, colons, commas, dashes, spaces)
-                while (i < lowerCaseText.length && (/[\d:,\-]/.test(normalizedText[i]) || normalizedText[i] === " ")) {
-                    if (normalizedText[i] === ":") hasColon = true
-                    chapterVerse += normalizedText[i]
-                    i++
-                }
-
-                // Only proceed if valid reference or booksOnly is true
-                if (
-                    (chapterVerse.trim().length > 0 && (hasColon || /\d/.test(chapterVerse.trim()))) ||
-                    (this.config.booksOnly && !chapterVerse.trim())
-                ) {
-                    let endIndex = i
+                // Process multiple references for the same book
+                while (j < lowerCaseText.length) {
+                    let chapterVerse = ""
+                    let hasColon = false
                     let version = null
+                    let refStart = j
 
-                    // Detect suffix
-                    const suffixMatch = normalizedText.substring(i).match(/\b(LXX|MT)\b/i)
+                    // Skip spaces
+                    while (j < lowerCaseText.length && /\s/.test(lowerCaseText[j])) {
+                        chapterVerse += normalizedText[j]
+                        j++
+                    }
+                    refStart = j // Update start after spaces
+
+                    // Next character must be a digit or version suffix
+                    if (j < lowerCaseText.length) {
+                        const nextChar = lowerCaseText[j]
+                        const isVersion = lowerCaseText.substring(j).match(/^(lxx|mt)\b/i)
+                        if (!/\d/.test(nextChar) && !isVersion && !this.config.booksOnly) {
+                            break
+                        }
+                    } else if (!this.config.booksOnly) {
+                        break
+                    }
+
+                    // Capture chapter-verse
+                    while (j < lowerCaseText.length && /\d/.test(lowerCaseText[j])) {
+                        chapterVerse += normalizedText[j]
+                        j++
+                    }
+                    while (
+                        j < lowerCaseText.length &&
+                        (/[\d:,\-;]/.test(normalizedText[j]) || normalizedText[j] === " ")
+                    ) {
+                        if (normalizedText[j] === ":") hasColon = true
+                        chapterVerse += normalizedText[j]
+                        if (normalizedText[j] === ";") break
+                        j++
+                    }
+
+                    // Check for version suffix
+                    let endIndex = j
+                    const suffixMatch = normalizedText.substring(j).match(/\b(LXX|MT)\b/i)
                     if (suffixMatch) {
                         version = suffixMatch[0].toUpperCase()
                         endIndex += suffixMatch[0].length
-                        i += suffixMatch[0].length
+                        j += suffixMatch[0].length
                     }
 
-                    // Handle closing parenthesis
-                    if (hasOpeningParen && i < lowerCaseText.length && normalizedText[i] === ")") {
-                        endIndex = i + 1
-                        i++
-                    }
-
-                    // Use original text for reference only (exclude parentheses)
-                    const originalText = normalizedText.slice(startIndex, hasOpeningParen ? endIndex - 1 : endIndex)
-
-                    // Determine type
-                    let type
+                    // Store the reference
                     const ref = chapterVerse.trim()
-                    if (this.config.booksOnly && !ref) {
-                        type = "book_only"
-                    } else if (ref.includes(":")) {
-                        if (ref.includes("-")) {
-                            const [start, end] = ref.split("-")
-                            const startParts = start.split(":")
-                            const endParts = end.split(":")
-                            type =
-                                startParts.length > 1 &&
-                                endParts.length > 1 &&
-                                startParts[0].trim() !== endParts[0].trim()
-                                    ? "multi_chapter_verse_range"
-                                    : "chapter_verse_range"
-                        } else if (ref.includes(",")) {
-                            type = "comma_separated_verses"
+                    if (ref.length > 0 || version || this.config.booksOnly) {
+                        let type
+                        if (this.config.booksOnly && !ref) {
+                            type = "book_only"
+                        } else if (ref.includes(":")) {
+                            if (ref.includes("-")) {
+                                const [start, end] = ref.split("-")
+                                const startParts = start.split(":")
+                                const endParts = end.split(":")
+                                type =
+                                    startParts.length > 1 &&
+                                    endParts.length > 1 &&
+                                    startParts[0].trim() !== endParts[0].trim()
+                                        ? "multi_chapter_verse_range"
+                                        : "chapter_verse_range"
+                            } else if (ref.includes(",")) {
+                                type = "comma_separated_verses"
+                            } else {
+                                type = "chapter_verse"
+                            }
+                        } else if (ref.includes("-")) {
+                            type = "chapter_range"
+                        } else if (/\d/.test(ref)) {
+                            type = "single_chapter"
                         } else {
-                            type = "chapter_verse"
+                            type = "book_only"
                         }
-                    } else if (ref.includes("-")) {
-                        type = "chapter_range"
-                    } else if (/\d/.test(ref)) {
-                        type = "single_chapter"
-                    } else {
-                        type = "book_only"
+
+                        this.found.push({
+                            book: currentBook,
+                            reference: ref,
+                            startIndex: currentStartIndex,
+                            endIndex,
+                            version,
+                            type,
+                            originalText: normalizedText.slice(currentStartIndex, endIndex),
+                        })
                     }
 
-                    this.found.push({
-                        book: foundBook,
-                        reference: ref,
-                        startIndex: hasOpeningParen ? parenStartIndex : startIndex,
-                        endIndex,
-                        version,
-                        type,
-                        originalText,
-                    })
-                } else {
-                    i = startIndex + 1
+                    // Handle semicolon for next reference
+                    if (j < lowerCaseText.length && lowerCaseText[j] === ";") {
+                        j++ // Move past semicolon
+                        currentStartIndex = j // Reset start for next reference
+                        // Skip spaces after semicolon
+                        while (j < lowerCaseText.length && /\s/.test(lowerCaseText[j])) {
+                            j++
+                        }
+                        continue // Process next reference
+                    }
+
+                    // Exit if no semicolon or end of reference
+                    break
                 }
+
+                i = j
             } else {
                 i++
             }
