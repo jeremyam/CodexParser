@@ -124,7 +124,7 @@ class CodexParser {
             for (let book of fullNames) {
                 if (
                     lowerCaseText.startsWith(book.toLowerCase(), i) &&
-                    (i + book.length >= lowerCaseText.length || /\s|:|\d/.test(lowerCaseText[i + book.length]))
+                    (i + book.length >= lowerCaseText.length || /[\s:;\d]/.test(lowerCaseText[i + book.length]))
                 ) {
                     foundBook = book
                     matchedLength = book.length
@@ -135,7 +135,7 @@ class CodexParser {
                 for (let abbr of abbreviations) {
                     if (
                         lowerCaseText.startsWith(abbr.toLowerCase(), i) &&
-                        (i + abbr.length >= lowerCaseText.length || /\s|:|\d/.test(lowerCaseText[i + abbr.length]))
+                        (i + abbr.length >= lowerCaseText.length || /[\s:;\d]/.test(lowerCaseText[i + abbr.length]))
                     ) {
                         foundBook = this.abbreviations[abbr]
                         matchedLength = abbr.length
@@ -145,11 +145,23 @@ class CodexParser {
             }
 
             if (foundBook) {
-                // Check if book is followed by a number when booksOnly is false
-                const nextCharIndex = i + matchedLength
-                const isFollowedByNumber =
-                    nextCharIndex < lowerCaseText.length && /\d/.test(lowerCaseText[nextCharIndex])
-                if (!this.config.booksOnly && !isFollowedByNumber && !hasOpeningParen) {
+                // Check if book is followed by a valid reference when booksOnly is false
+                let isFollowedByReference = false
+                if (!this.config.booksOnly && !hasOpeningParen) {
+                    let j = i + matchedLength
+                    // Skip spaces
+                    while (j < lowerCaseText.length && /\s/.test(lowerCaseText[j])) {
+                        j++
+                    }
+                    // Check for digit or colon indicating a reference
+                    if (j < lowerCaseText.length && /[\d:]/.test(lowerCaseText[j])) {
+                        isFollowedByReference = true
+                    }
+                } else {
+                    isFollowedByReference = true // Allow if booksOnly or in parentheses
+                }
+
+                if (!isFollowedByReference) {
                     i++
                     continue
                 }
@@ -164,21 +176,15 @@ class CodexParser {
                     i++
                 }
 
-                // Capture chapter-verse
-                while (
-                    i < lowerCaseText.length &&
-                    (/[\d]/.test(normalizedText[i]) ||
-                        normalizedText[i] === ":" ||
-                        normalizedText[i] === "," ||
-                        normalizedText[i] === "-")
-                ) {
+                // Capture chapter-verse (allow digits, colons, commas, dashes, spaces)
+                while (i < lowerCaseText.length && (/[\d:,\-]/.test(normalizedText[i]) || normalizedText[i] === " ")) {
                     if (normalizedText[i] === ":") hasColon = true
                     chapterVerse += normalizedText[i]
                     i++
                 }
 
                 // Only proceed if valid reference or booksOnly is true
-                if ((hasColon && chapterVerse.trim().length > 0) || this.config.booksOnly) {
+                if ((hasColon && chapterVerse.trim().length > 0) || (this.config.booksOnly && !chapterVerse.trim())) {
                     let endIndex = i
                     let version = null
 
