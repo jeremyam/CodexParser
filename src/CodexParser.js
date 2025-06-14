@@ -1134,9 +1134,7 @@ class CodexParser {
             const { originalText, abbr, original } = passage
             const newReference = useAbbreviations ? abbr : original
 
-            // Create regex to match originalText with optional parentheses
-            const escapedOriginalText = originalText.replace(/([:.])/g, "\\$1").replace(/\s+/g, "\\s*")
-            const regex = new RegExp(`(\\()?\\s*${escapedOriginalText}\\s*(\\))?`, "g")
+            const regex = new RegExp(`${originalText}`, "g")
 
             // Find all matches
             const matches = [...result.matchAll(regex)]
@@ -1146,9 +1144,15 @@ class CodexParser {
                     const match = matches[j]
                     const startIndex = match.index
                     const endIndex = startIndex + match[0].length
-                    // Preserve parentheses if present in the match
-                    const hasParens = match[1] === "(" && match[2] === ")"
-                    const replacement = hasParens ? `(${newReference})` : newReference
+                    const leadingSpace = match[1] || "" // Capture leading spaces
+                    const hasOpeningParen = match[2] === "("
+                    const hasClosingParen = match[3] === ")"
+                    const trailingSpace = match[4] || " " // Capture trailing spaces
+                    // Preserve parentheses if present
+                    const replacement =
+                        hasOpeningParen && hasClosingParen
+                            ? `${leadingSpace}(${newReference})${trailingSpace}`
+                            : `${leadingSpace}${newReference}${trailingSpace}`
                     result = result.slice(0, startIndex) + replacement + result.slice(endIndex)
                 }
             }
