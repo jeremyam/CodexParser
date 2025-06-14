@@ -153,8 +153,8 @@ class CodexParser {
                     while (j < lowerCaseText.length && /\s/.test(lowerCaseText[j])) {
                         j++
                     }
-                    // Check for digit or colon indicating a reference
-                    if (j < lowerCaseText.length && /[\d:]/.test(lowerCaseText[j])) {
+                    // Check for a digit (chapter number) to start a valid reference
+                    if (j < lowerCaseText.length && /\d/.test(lowerCaseText[j])) {
                         isFollowedByReference = true
                     }
                 } else {
