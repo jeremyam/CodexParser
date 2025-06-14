@@ -274,9 +274,6 @@ class CodexParser {
     parse(reference) {
         this.scan(reference)
 
-        // Define non-abbreviated books per SBL/Crossway
-        const nonAbbreviatedBooks = ["John", "Luke", "Acts", "Jude", "James", "Titus"]
-
         this.passages = this.found.map((passage) => {
             const book = this.bookify(passage.book)
             const testament = this.bible.old.includes(book) ? "old" : "new"
@@ -304,18 +301,17 @@ class CodexParser {
             parsedPassage.scripture = this.scripturize(parsedPassage)
             parsedPassage.valid = this._isValid(parsedPassage, passage.reference)
 
-            // Set abbr property using SBL-style rules
-            const abbrKey = Object.keys(this.abbreviations).find(
-                (abbr) => this.abbreviations[abbr].toLowerCase() === book.toLowerCase()
+            // Set abbr property using SBL-style abbreviations
+            const sblEntry = Object.entries(this.sblAbbreviations).find(
+                ([key]) => key.toLowerCase() === book.toLowerCase()
             )
-            if (nonAbbreviatedBooks.includes(book)) {
-                // Use full book name without period for non-abbreviated books
-                parsedPassage.abbr = `${book} ${passage.reference}${passage.version ? " " + passage.version : ""}`
-            } else if (abbrKey) {
-                // Use abbreviation with period for abbreviated books
-                parsedPassage.abbr = `${abbrKey}. ${passage.reference}${passage.version ? " " + passage.version : ""}`
+            if (sblEntry) {
+                const { value, abbr } = sblEntry[1]
+                parsedPassage.abbr = abbr
+                    ? `${value}. ${passage.reference}${passage.version ? " " + passage.version : ""}`
+                    : `${value} ${passage.reference}${passage.version ? " " + passage.version : ""}`
             } else {
-                // Fallback to original if no abbreviation
+                // Fallback to original
                 parsedPassage.abbr = parsedPassage.original
             }
 
