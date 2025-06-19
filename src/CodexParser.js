@@ -87,13 +87,16 @@ class CodexParser {
      */
     scan(text) {
         const fullNames = [...this.bible.old, ...this.bible.new]
-        const abbreviations = Object.keys(this.abbreviations).filter((abbr) => abbr.length >= 3)
+        const abbreviations = Object.keys(this.abbreviations)
         this.found = []
 
-        // Normalize text: remove curly quotes, replace periods before numbers with colons
-        let normalizedText = text.replace(/[“”]/g, "").replace(/\.(?=\d)/g, ":")
+        // Preserve original text, minimal normalization (only remove curly quotes)
+        let normalizedText = text.replace(/[“”]/g, "")
         const lowerCaseText = normalizedText.toLowerCase()
         let i = 0
+
+        console.log("[Scan] Input text:", text)
+        console.log("[Scan] Normalized text:", normalizedText)
 
         while (i < lowerCaseText.length) {
             let foundBook = null
@@ -104,21 +107,25 @@ class CodexParser {
             for (let book of fullNames) {
                 if (
                     lowerCaseText.startsWith(book.toLowerCase(), i) &&
-                    (i + book.length >= lowerCaseText.length || /[\s:;]/.test(lowerCaseText[i + book.length]))
+                    (i + book.length >= lowerCaseText.length || /[\s:;.]/.test(lowerCaseText[i + book.length]))
                 ) {
                     foundBook = book
                     matchedLength = book.length
+                    console.log(`[Scan] Matched full book name: "${book}" at index ${i}`)
                     break
                 }
             }
             if (!foundBook) {
                 for (let abbr of abbreviations) {
+                    const abbrPattern = abbr.toLowerCase().replace(/\./g, "\\.?") // Handle optional period
+                    const regex = new RegExp(`^${abbrPattern}(?=$|[\\s:;])`, "i")
                     if (
-                        lowerCaseText.startsWith(abbr.toLowerCase(), i) &&
-                        (i + abbr.length >= lowerCaseText.length || /[\s:;]/.test(lowerCaseText[i + abbr.length]))
+                        lowerCaseText.slice(i).match(regex) &&
+                        (i + abbr.length >= lowerCaseText.length || /[\s:;.]/.test(lowerCaseText[i + abbr.length]))
                     ) {
                         foundBook = this.abbreviations[abbr]
-                        matchedLength = abbr.length
+                        matchedLength = lowerCaseText.slice(i).match(regex)[0].length
+                        console.log(`[Scan] Matched abbreviation: "${abbr}" -> "${foundBook}" at index ${i}`)
                         break
                     }
                 }
@@ -141,29 +148,28 @@ class CodexParser {
                         chapterVerse += normalizedText[j]
                         j++
                     }
-                    refStart = j // Update start after spaces
+                    refStart = j
 
                     // Next character must be a digit or version suffix
                     if (j < lowerCaseText.length) {
                         const nextChar = lowerCaseText[j]
                         const isVersion = lowerCaseText.substring(j).match(/^(lxx|mt)\b/i)
                         if (!/\d/.test(nextChar) && !isVersion && !this.config.booksOnly) {
+                            console.log(`[Scan] No digit or version after book at index ${j}, breaking`)
                             break
                         }
                     } else if (!this.config.booksOnly) {
+                        console.log(`[Scan] End of text after book, breaking`)
                         break
                     }
 
-                    // Capture chapter-verse
+                    // Capture chapter-verse (allow periods as separators)
                     while (j < lowerCaseText.length && /\d/.test(lowerCaseText[j])) {
                         chapterVerse += normalizedText[j]
                         j++
                     }
-                    while (
-                        j < lowerCaseText.length &&
-                        (/[\d:,\-;]/.test(normalizedText[j]) || normalizedText[j] === " ")
-                    ) {
-                        if (normalizedText[j] === ":") hasColon = true
+                    while (j < lowerCaseText.length && /[\d:,\-;. ]/.test(normalizedText[j])) {
+                        if (normalizedText[j] === ":" || normalizedText[j] === ".") hasColon = true
                         chapterVerse += normalizedText[j]
                         if (normalizedText[j] === ";") break
                         j++
@@ -184,11 +190,11 @@ class CodexParser {
                         let type
                         if (this.config.booksOnly && !ref) {
                             type = "book_only"
-                        } else if (ref.includes(":")) {
+                        } else if (ref.includes(":") || ref.includes(".")) {
                             if (ref.includes("-")) {
                                 const [start, end] = ref.split("-")
-                                const startParts = start.split(":")
-                                const endParts = end.split(":")
+                                const startParts = start.split(/[:.]/)
+                                const endParts = end.split(/[:.]/)
                                 type =
                                     startParts.length > 1 &&
                                     endParts.length > 1 &&
@@ -208,29 +214,29 @@ class CodexParser {
                             type = "book_only"
                         }
 
-                        this.found.push({
+                        const referenceObj = {
                             book: currentBook,
-                            reference: ref,
+                            reference: ref.replace(/\./g, ":"), // Normalize periods to colons for parsing
                             startIndex: currentStartIndex,
                             endIndex,
                             version,
                             type,
-                            originalText: normalizedText.slice(currentStartIndex, endIndex),
-                        })
+                            originalText: text.slice(currentStartIndex, endIndex), // Preserve original text
+                        }
+                        this.found.push(referenceObj)
+                        console.log(`[Scan] Stored reference: ${JSON.stringify(referenceObj)}`)
                     }
 
                     // Handle semicolon for next reference
                     if (j < lowerCaseText.length && lowerCaseText[j] === ";") {
-                        j++ // Move past semicolon
-                        currentStartIndex = j // Reset start for next reference
-                        // Skip spaces after semicolon
+                        j++
+                        currentStartIndex = j
                         while (j < lowerCaseText.length && /\s/.test(lowerCaseText[j])) {
                             j++
                         }
-                        continue // Process next reference
+                        continue
                     }
 
-                    // Exit if no semicolon or end of reference
                     break
                 }
 
@@ -240,6 +246,7 @@ class CodexParser {
             }
         }
 
+        console.log("[Scan] Final found references:", JSON.stringify(this.found, null, 2))
         return this
     }
 
