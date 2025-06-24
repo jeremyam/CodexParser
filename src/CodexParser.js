@@ -90,78 +90,62 @@ class CodexParser {
      * @param {string} text - The text to scan.
      * @returns {CodexParser} The parser instance for method chaining.
      */
+    /**
+     * Scans text for scripture references and stores them in `this.found`.
+     * @param {string} text - The text to scan.
+     * @returns {CodexParser} The parser instance for method chaining.
+     */
     scan(text) {
         const fullNames = [...this.bible.old, ...this.bible.new]
         const abbreviations = Object.keys(this.abbreviations)
         this.found = []
-        // Normalize text for parsing but keep original for originalText
-        let normalizedText = text
-            .replace(/[“”]/g, "") // Remove curly quotes
-            .replace(/\.(?=\d)/g, ":") // Replace periods before digits with colons (e.g., "Re13.8" -> "Re13:8")
-            .replace(/\s+/g, " ") // Normalize multiple spaces to single
+        // Minimal normalization: fix periods before numbers, remove trailing periods
+        let normalizedText = text.replace(/\.(?=\d)/g, ":").replace(/(\b[A-Za-z]+)\.(?=\s|$)/g, "$1")
         const lowercaseBibleFullNames = fullNames.map((book) => book.toLowerCase())
         const lowercaseBibleAbbreviations = abbreviations.map((abbr) => abbr.toLowerCase())
         const lowerCaseText = normalizedText.toLowerCase()
         let i = 0
 
-        const isValidChapterVerseChar = (char) => /[^A-Za-z]/.test(char) // Non-letter characters
+        const isValidChapterVerseChar = (char) => /[\d:,\-;\s]/.test(char)
         const isNextBibleBook = (startIndex) => {
             const textAfterCurrentPosition = lowerCaseText.substring(startIndex).trim()
-            // Check if the text starts with a book name or abbreviation followed by a digit
             return (
-                lowercaseBibleFullNames.some((book) => {
-                    if (textAfterCurrentPosition.startsWith(book)) {
-                        const nextIndex = startIndex + book.length
-                        const nextChar = lowerCaseText[nextIndex]
-                        return nextChar && /\d/.test(nextChar)
-                    }
-                    return false
-                }) ||
-                lowercaseBibleAbbreviations.some((abbr) => {
-                    if (textAfterCurrentPosition.startsWith(abbr)) {
-                        const nextIndex = startIndex + abbr.length
-                        const nextChar = lowerCaseText[nextIndex]
-                        return nextChar && (/\d/.test(nextChar) || /\./.test(nextChar))
-                    }
-                    return false
-                })
+                lowercaseBibleFullNames.some((book) => textAfterCurrentPosition.startsWith(book)) ||
+                lowercaseBibleAbbreviations.some((abbr) => textAfterCurrentPosition.startsWith(abbr))
             )
         }
-        const detectSuffix = (startIndex, inputText) => {
-            const suffixMatch = inputText.substring(startIndex).match(/\b(LXX|MT)\b/i)
-            return suffixMatch ? { version: suffixMatch[0].toUpperCase(), length: suffixMatch[0].length } : null
+        const detectSuffix = (startIndex) => {
+            const suffixMatch = normalizedText.substring(startIndex).match(/\b(LXX|MT)\b/i)
+            return suffixMatch ? { suffix: suffixMatch[0].toUpperCase(), length: suffixMatch[0].length } : null
         }
 
         while (i < lowerCaseText.length) {
             let foundBook = null
+            let startIndex = -1
             let matchedLength = 0
-            let originalBookText = ""
-            let startIndex = i
 
-            // Check full book names
+            // Skip whitespace and special characters before checking for book
+            while (i < lowerCaseText.length && /[\s—-]/.test(lowerCaseText[i])) {
+                i++
+            }
+            if (i >= lowerCaseText.length) break
+
             for (let j = 0; j < lowercaseBibleFullNames.length; j++) {
                 const book = lowercaseBibleFullNames[j]
-                if (
-                    lowerCaseText.startsWith(book, i) &&
-                    (i + book.length >= lowerCaseText.length || /\d/.test(lowerCaseText[i + book.length]))
-                ) {
+                if (lowerCaseText.startsWith(book, i) && book.length > matchedLength) {
                     foundBook = fullNames[j]
+                    startIndex = i
                     matchedLength = book.length
-                    originalBookText = text.slice(i, i + book.length)
                 }
             }
 
-            // Check abbreviations
             if (!foundBook) {
                 for (let k = 0; k < lowercaseBibleAbbreviations.length; k++) {
                     const abbreviation = lowercaseBibleAbbreviations[k]
-                    const abbrPattern = abbreviation.replace(/\./g, "\\.?")
-                    const regex = new RegExp(`^${abbrPattern}(\\.?\\s*\\d)`, "i")
-                    const match = lowerCaseText.slice(i).match(regex)
-                    if (match) {
+                    if (lowerCaseText.startsWith(abbreviation, i) && abbreviation.length > matchedLength) {
                         foundBook = this.abbreviations[abbreviations[k]]
-                        matchedLength = match[0].length - match[1].length // Exclude chapter-verse part
-                        originalBookText = text.slice(i, i + matchedLength)
+                        startIndex = i
+                        matchedLength = abbreviation.length
                     }
                 }
             }
@@ -169,90 +153,52 @@ class CodexParser {
             if (foundBook) {
                 i += matchedLength
                 let chapterVerse = ""
-                let originalChapterVerseText = ""
                 const references = []
+                const startOfReference = startIndex
 
-                // Capture chapter-verse until a letter (potential new book) or semicolon
                 while (i < normalizedText.length && isValidChapterVerseChar(normalizedText[i])) {
-                    if (isNextBibleBook(i)) {
-                        break
-                    }
+                    if (isNextBibleBook(i)) break
                     if (normalizedText[i] === ";") {
-                        const formattedReference = chapterVerse.trim().replace(/[^a-zA-Z0-9:,\-]+$/g, "")
-                        if (formattedReference) {
-                            // Find the last digit in the reference
-                            const lastDigitMatch = formattedReference.match(/\d(?=[^0-9]*$)/)
-                            let endIndex = i - 1 // Default to position before semicolon
-                            if (lastDigitMatch) {
-                                const lastDigitIndex = formattedReference.lastIndexOf(lastDigitMatch[0])
-                                endIndex = startIndex + matchedLength + lastDigitIndex
-                            }
-                            references.push({
-                                reference: formattedReference,
-                                originalText: (originalBookText + originalChapterVerseText).trim(),
-                                startIndex,
-                                endIndex,
-                            })
-                        }
+                        const formattedReference = chapterVerse.trim().replace(/[^a-zA-Z0-9]+$/, "")
+                        if (formattedReference) references.push(formattedReference)
                         chapterVerse = ""
-                        originalChapterVerseText = ""
-                        originalBookText = foundBook // Reuse book for semicolon-separated references
-                        startIndex = i + 1 // Start of next reference
                         i++
                         continue
                     }
                     chapterVerse += normalizedText[i]
-                    originalChapterVerseText += text[i]
                     i++
                 }
 
-                // Add any remaining reference
                 if (chapterVerse.trim().length > 0) {
-                    const formattedReference = chapterVerse.trim().replace(/[^a-zA-Z0-9:,\-]+$/g, "")
-                    if (formattedReference) {
-                        // Find the last digit in the reference
-                        const lastDigitMatch = formattedReference.match(/\d(?=[^0-9]*$)/)
-                        let endIndex = i - 1 // Default to last character
-                        if (lastDigitMatch) {
-                            const lastDigitIndex = formattedReference.lastIndexOf(lastDigitMatch[0])
-                            endIndex = startIndex + matchedLength + lastDigitIndex
-                        }
-                        references.push({
-                            reference: formattedReference,
-                            originalText: (originalBookText + originalChapterVerseText).trim(),
-                            startIndex,
-                            endIndex,
-                        })
-                    }
+                    const formattedReference = chapterVerse.trim().replace(/[^a-zA-Z0-9]+$/, "")
+                    if (formattedReference) references.push(formattedReference)
                 }
 
-                // Process each reference
-                references.forEach((refObj) => {
-                    // Detect version suffix (LXX or MT)
-                    let version = null
-                    let originalText = refObj.originalText
-                    const suffix = detectSuffix(i, text)
-                    if (suffix) {
-                        version = suffix.version
-                        originalText += ` ${version}`
-                        i += suffix.length
-                        // Update endIndex if version suffix follows a digit
-                        if (refObj.endIndex === i - suffix.length - 1) {
-                            refObj.endIndex = i - 1
-                        }
-                    }
+                // Set endIndex to the current position
+                let endIndex = i
+                const suffixData = detectSuffix(i)
+                const suffix = suffixData ? suffixData.suffix : null
+                if (suffixData) {
+                    endIndex += suffixData.length
+                    i += suffixData.length
+                }
 
+                // Trim endIndex to exclude trailing whitespace or non-reference characters
+                while (endIndex > startOfReference && /[\s]/.test(normalizedText[endIndex - 1])) {
+                    endIndex--
+                }
+
+                references.forEach((ref) => {
                     let type
-                    let ref = refObj.reference.replace(/^\.\s*/, "") // Remove leading period and space
-                    if (this.config.booksOnly && !ref) {
-                        type = "book_only"
-                    } else if (ref.includes(":")) {
+                    if (ref.includes(":")) {
                         if (ref.includes("-")) {
-                            const [start, end] = ref.split("-").map((s) => s.trim())
-                            const startParts = start.split(":").map((s) => s.trim())
-                            const endParts = end.split(":").map((s) => s.trim())
+                            const [start, end] = ref.split("-")
+                            const startParts = start.split(":")
+                            const endParts = end.split(":")
                             type =
-                                startParts.length > 1 && endParts.length > 1 && startParts[0] !== endParts[0]
+                                startParts.length > 1 &&
+                                endParts.length > 1 &&
+                                startParts[0].trim() !== endParts[0].trim()
                                     ? "multi_chapter_verse_range"
                                     : "chapter_verse_range"
                         } else if (ref.includes(",")) {
@@ -262,32 +208,25 @@ class CodexParser {
                         }
                     } else if (ref.includes("-")) {
                         type = "chapter_range"
-                    } else if (/\d/.test(ref)) {
-                        type = "single_chapter"
                     } else {
-                        type = "book_only"
+                        type = "single_chapter"
                     }
 
-                    const referenceObj = {
+                    this.found.push({
                         book: foundBook,
                         reference: ref,
-                        version,
+                        startIndex: startOfReference + 1,
+                        endIndex: endIndex + 1,
+                        version: suffix || null,
                         type,
-                        originalText,
-                        startIndex: refObj.startIndex,
-                        endIndex: refObj.endIndex,
-                    }
-                    this.found.push(referenceObj)
+                        originalText: text.slice(startOfReference, endIndex), // Use original text
+                    })
                 })
-
-                // Skip any trailing spaces after the reference
-                while (i < lowerCaseText.length && /\s/.test(lowerCaseText[i])) {
-                    i++
-                }
             } else {
                 i++
             }
         }
+
         return this
     }
 
