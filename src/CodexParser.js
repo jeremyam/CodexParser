@@ -90,11 +90,6 @@ class CodexParser {
      * @param {string} text - The text to scan.
      * @returns {CodexParser} The parser instance for method chaining.
      */
-    /**
-     * Scans text for scripture references and stores them in `this.found`.
-     * @param {string} text - The text to scan.
-     * @returns {CodexParser} The parser instance for method chaining.
-     */
     scan(text) {
         const fullNames = [...this.bible.old, ...this.bible.new]
         const abbreviations = Object.keys(this.abbreviations)
