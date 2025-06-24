@@ -104,9 +104,6 @@ class CodexParser {
         const lowerCaseText = normalizedText.toLowerCase()
         let i = 0
 
-        console.log("[Scan] Input text:", text)
-        console.log("[Scan] Normalized text:", normalizedText)
-
         const isValidChapterVerseChar = (char) => /[^A-Za-z]/.test(char) // Non-letter characters
         const isNextBibleBook = (startIndex) => {
             const textAfterCurrentPosition = lowerCaseText.substring(startIndex).trim()
@@ -151,7 +148,6 @@ class CodexParser {
                     foundBook = fullNames[j]
                     matchedLength = book.length
                     originalBookText = text.slice(i, i + book.length)
-                    console.log(`[Scan] Matched full book name: "${foundBook}" at index ${i}`)
                 }
             }
 
@@ -166,9 +162,6 @@ class CodexParser {
                         foundBook = this.abbreviations[abbreviations[k]]
                         matchedLength = match[0].length - match[1].length // Exclude chapter-verse part
                         originalBookText = text.slice(i, i + matchedLength)
-                        console.log(
-                            `[Scan] Matched abbreviation: "${abbreviations[k]}" -> "${foundBook}" at index ${i}`
-                        )
                     }
                 }
             }
@@ -182,7 +175,6 @@ class CodexParser {
                 // Capture chapter-verse until a letter (potential new book) or semicolon
                 while (i < normalizedText.length && isValidChapterVerseChar(normalizedText[i])) {
                     if (isNextBibleBook(i)) {
-                        console.log(`[Scan] Detected next book at index ${i}, breaking`)
                         break
                     }
                     if (normalizedText[i] === ";") {
@@ -286,7 +278,6 @@ class CodexParser {
                         endIndex: refObj.endIndex,
                     }
                     this.found.push(referenceObj)
-                    console.log(`[Scan] Stored reference: ${JSON.stringify(referenceObj)}`)
                 })
 
                 // Skip any trailing spaces after the reference
@@ -297,8 +288,6 @@ class CodexParser {
                 i++
             }
         }
-
-        console.log("[Scan] Final found references:", JSON.stringify(this.found, null, 2))
         return this
     }
 
