@@ -234,10 +234,7 @@ class CodexParser {
                     }
 
                     // Construct full reference text for original text
-                    const fullRefText =
-                        start === bookStartIndex
-                            ? `${originalBookText} ${ref.replace(":", ".")}`
-                            : ref.replace(":", ".")
+                    const fullRefText = `${originalBookText} ${ref.replace(":", ".")}`
                     const suffixData = detectSuffix(end)
                     const suffix = suffixData ? suffixData.suffix : null
                     let refEndIndex = end
@@ -247,20 +244,13 @@ class CodexParser {
                     }
 
                     // Map to original text
-                    let originalStartIndex = originalBookStartIndex
-                    if (start > bookStartIndex) {
-                        // For subsequent references, adjust search to include book
-                        const searchText = `${originalBookText} ${ref.replace(":", ".")}`
-                        originalStartIndex =
-                            text.indexOf(searchText, originalRefStartIndex - matchedLength) !== -1
-                                ? text.indexOf(searchText, originalRefStartIndex - matchedLength)
-                                : originalRefStartIndex
-                    } else {
-                        originalStartIndex =
-                            text.indexOf(fullRefText, originalRefStartIndex) !== -1
-                                ? text.indexOf(fullRefText, originalRefStartIndex)
-                                : originalRefStartIndex
-                    }
+                    let originalStartIndex =
+                        text.indexOf(fullRefText, originalRefStartIndex) !== -1
+                            ? text.indexOf(fullRefText, originalRefStartIndex)
+                            : originalBookStartIndex
+                    console.log(
+                        `Searching for fullRefText: ${fullRefText} at index ${originalRefStartIndex}, found at ${originalStartIndex}`
+                    )
 
                     let originalEndIndex = originalStartIndex + fullRefText.length
                     let originalText = text.slice(originalStartIndex, originalEndIndex)
@@ -350,6 +340,7 @@ class CodexParser {
 
             // Clean reference for parsing
             let cleanReference = passage.reference.replace(/\s*(LXX|MT)$/i, "").trim()
+            console.log(`Parsing reference: ${cleanReference}, type: ${passage.type}`)
             if (cleanReference.endsWith(",")) {
                 cleanReference = cleanReference.slice(0, -1).trim()
             }
@@ -357,6 +348,7 @@ class CodexParser {
             // Handle book-only or empty references
             if (!cleanReference && this.config.booksOnly) {
                 parsedPassage.type = "book_only"
+                console.log(`Book-only reference: ${book}`)
             } else if (!cleanReference || cleanReference.match(/^\d+\s*[:;]?\s*$/)) {
                 const chapterMatch = cleanReference.match(/\d+/) || ["1"]
                 const chapter = Number(chapterMatch[0])
@@ -368,8 +360,18 @@ class CodexParser {
                     const endVerse = chapterVerses[chapterVerses.length - 1]
                     parsedPassage.verses = [`${startVerse}-${endVerse}`]
                 }
+                console.log(`Single chapter: ${chapter}, verses: ${parsedPassage.verses}`)
+            } else if (passage.type === "comma_separated_verses") {
+                // Handle comma-separated verses (e.g., "1:7,18")
+                const [chapter, verses] = cleanReference.split(":")
+                parsedPassage.chapter = Number(chapter)
+                parsedPassage.verses = verses.split(",").map((v) => v.trim())
+                console.log(`Comma-separated verses: chapter ${chapter}, verses ${parsedPassage.verses}`)
             } else {
                 this.parseReferenceParts(parsedPassage, cleanReference)
+                console.log(
+                    `Parsed with parseReferenceParts: chapter ${parsedPassage.chapter}, verses ${parsedPassage.verses}`
+                )
             }
 
             parsedPassage.passages = this.populate(parsedPassage)
@@ -389,6 +391,7 @@ class CodexParser {
             } else {
                 parsedPassage.abbr = parsedPassage.original
             }
+            console.log(`Abbreviation set: ${parsedPassage.abbr}`)
 
             if (parsedPassage.type === this.MULTI_CHAPTER_RANGE) {
                 this.handleMultiChapterRange(parsedPassage, cleanReference)
@@ -414,6 +417,7 @@ class CodexParser {
                     chapter: lastPassage.chapter,
                     verse: lastPassage.verse,
                 }
+                console.log(`Start: ${JSON.stringify(parsedPassage.start)}, End: ${JSON.stringify(parsedPassage.end)}`)
             }
 
             if (!parsedPassage.version) {
@@ -428,9 +432,9 @@ class CodexParser {
         })
 
         this.versification()
+        console.log(`Final passages: ${JSON.stringify(this.passages, null, 2)}`)
         return this
     }
-
     /**
      * Parses reference parts into chapter and verse components.
      * @param {Object} passage - The passage object to populate.
