@@ -24,28 +24,26 @@ class CodexParser {
      * Initializes the parser with default properties and data.
      */
     constructor(config = {}) {
-        this.found = [] // Array to store detected references
-        this.passages = [] // Array to store parsed passages
-        this.bible = bible // Bible data (Old/New Testament books)
-        this.bookRegex = bookRegex // Regex for book names
-        this.chapterRegex = chapterRegex // Regex for chapters
-        this.verseRegex = verseRegex // Regex for verses
-        this.scripturesRegex = scripturesRegex // Regex for full references
-        this.abbreviations = abbreviations // Book abbreviation mappings
-        this.sblAbbreviations = sblAbbreviations // SBL-style abbreviation mappings
-        this.versificationDifferences = versified // Version-specific verse differences
+        this.found = []
+        this.passages = []
+        this.bible = bible
+        this.bookRegex = bookRegex
+        this.chapterRegex = chapterRegex
+        this.verseRegex = verseRegex
+        this.scripturesRegex = scripturesRegex
+        this.abbreviations = abbreviations
+        this.sblAbbreviations = sblAbbreviations
+        this.versificationDifferences = versified
         this.singleChapterBook = [
-            // Books with a single chapter and their verse counts
             sch("Jude", 25),
             sch("2 John", 13),
             sch("3 John", 15),
             sch("Obadiah", 21),
             sch("Philemon", 25),
         ]
-        this.chapterVerses = chapter_verses // Chapter-verse mappings
-        this.error = false // Error flag
-        this.version = null // Bible version (e.g., lxx, mt, eng)
-        // Reference type constants
+        this.chapterVerses = chapter_verses
+        this.error = false
+        this.version = null
         this.SINGLE_CHAPTER = "single_chapter"
         this.CHAPTER_VERSE = "chapter_verse"
         this.CHAPTER_VERSE_RANGE = "chapter_verse_range"
@@ -96,8 +94,6 @@ class CodexParser {
         this.found = []
         // Minimal normalization: fix periods before numbers, remove trailing periods
         let normalizedText = text.replace(/\.(?=\d)/g, ":").replace(/(\b[A-Za-z]+)\.(?=\s|$)/g, "$1")
-        console.log(`Input text: ${text}`)
-        console.log(`Normalized text: ${normalizedText}`)
         const lowercaseBibleFullNames = fullNames.map((book) => book.toLowerCase())
         const lowercaseBibleAbbreviations = abbreviations.map((abbr) => abbr.toLowerCase())
         const lowerCaseText = normalizedText.toLowerCase()
@@ -127,8 +123,6 @@ class CodexParser {
             }
             if (i >= lowerCaseText.length) break
 
-            console.log(`Scanning at index ${i}: ${lowerCaseText.slice(i, i + 10)}...`)
-
             for (let j = 0; j < lowercaseBibleFullNames.length; j++) {
                 const book = lowercaseBibleFullNames[j]
                 if (lowerCaseText.startsWith(book, i) && book.length > matchedLength) {
@@ -150,16 +144,14 @@ class CodexParser {
             }
 
             if (foundBook) {
-                console.log(`Found book: ${foundBook} at index ${bookStartIndex}, length ${matchedLength}`)
                 i += matchedLength
                 let chapterVerse = ""
                 const references = []
-                let refStartIndex = bookStartIndex // Start of reference (including book) in normalizedText
-                let originalRefStartIndex = bookStartIndex // Start in original text
+                let refStartIndex = bookStartIndex
+                let originalRefStartIndex = bookStartIndex
 
                 while (i < normalizedText.length && isValidChapterVerseChar(normalizedText[i])) {
                     if (isNextBibleBook(i)) {
-                        console.log(`Next book detected at index ${i}, stopping reference parsing`)
                         break
                     }
                     if (normalizedText[i] === ";") {
@@ -171,9 +163,6 @@ class CodexParser {
                                 start: refStartIndex,
                                 end: refEndIndex,
                             })
-                            console.log(
-                                `Reference found: ${formattedReference}, normalized indices ${refStartIndex}-${refEndIndex}`
-                            )
                         }
                         chapterVerse = ""
                         refStartIndex = i + 1
@@ -195,9 +184,6 @@ class CodexParser {
                             start: refStartIndex,
                             end: refEndIndex,
                         })
-                        console.log(
-                            `Final reference found: ${formattedReference}, normalized indices ${refStartIndex}-${refEndIndex}`
-                        )
                     }
                 }
 
@@ -207,9 +193,8 @@ class CodexParser {
                     text.indexOf(originalBookText, bookStartIndex) !== -1
                         ? text.indexOf(originalBookText, bookStartIndex)
                         : bookStartIndex
-                console.log(`Original book text: ${originalBookText}, original start index: ${originalBookStartIndex}`)
 
-                references.forEach(({ ref, start, end }, refIndex) => {
+                references.forEach(({ ref, start, end }) => {
                     let type
                     if (ref.includes(":")) {
                         if (ref.includes("-")) {
@@ -248,9 +233,6 @@ class CodexParser {
                         text.indexOf(fullRefText, originalRefStartIndex) !== -1
                             ? text.indexOf(fullRefText, originalRefStartIndex)
                             : originalBookStartIndex
-                    console.log(
-                        `Searching for fullRefText: ${fullRefText} at index ${originalRefStartIndex}, found at ${originalStartIndex}`
-                    )
 
                     let originalEndIndex = originalStartIndex + fullRefText.length
                     let originalText = text.slice(originalStartIndex, originalEndIndex)
@@ -267,14 +249,6 @@ class CodexParser {
                         originalText = text.slice(originalStartIndex, originalEndIndex)
                     }
 
-                    console.log(
-                        `Reference ${
-                            refIndex + 1
-                        }: ${originalText}, original indices ${originalStartIndex}-${originalEndIndex}, type: ${type}, suffix: ${
-                            suffix || "none"
-                        }, search text: ${fullRefText}`
-                    )
-
                     this.found.push({
                         book: foundBook,
                         reference: ref,
@@ -290,7 +264,6 @@ class CodexParser {
             }
         }
 
-        console.log(`Found references: ${JSON.stringify(this.found, null, 2)}`)
         return this
     }
 
@@ -340,7 +313,6 @@ class CodexParser {
 
             // Clean reference for parsing
             let cleanReference = passage.reference.replace(/\s*(LXX|MT)$/i, "").trim()
-            console.log(`Parsing reference: ${cleanReference}, type: ${passage.type}`)
             if (cleanReference.endsWith(",")) {
                 cleanReference = cleanReference.slice(0, -1).trim()
             }
@@ -348,7 +320,6 @@ class CodexParser {
             // Handle book-only or empty references
             if (!cleanReference && this.config.booksOnly) {
                 parsedPassage.type = "book_only"
-                console.log(`Book-only reference: ${book}`)
             } else if (!cleanReference || cleanReference.match(/^\d+\s*[:;]?\s*$/)) {
                 const chapterMatch = cleanReference.match(/\d+/) || ["1"]
                 const chapter = Number(chapterMatch[0])
@@ -360,18 +331,13 @@ class CodexParser {
                     const endVerse = chapterVerses[chapterVerses.length - 1]
                     parsedPassage.verses = [`${startVerse}-${endVerse}`]
                 }
-                console.log(`Single chapter: ${chapter}, verses: ${parsedPassage.verses}`)
             } else if (passage.type === "comma_separated_verses") {
                 // Handle comma-separated verses (e.g., "1:7,18")
                 const [chapter, verses] = cleanReference.split(":")
                 parsedPassage.chapter = Number(chapter)
                 parsedPassage.verses = verses.split(",").map((v) => v.trim())
-                console.log(`Comma-separated verses: chapter ${chapter}, verses ${parsedPassage.verses}`)
             } else {
                 this.parseReferenceParts(parsedPassage, cleanReference)
-                console.log(
-                    `Parsed with parseReferenceParts: chapter ${parsedPassage.chapter}, verses ${parsedPassage.verses}`
-                )
             }
 
             parsedPassage.passages = this.populate(parsedPassage)
@@ -391,7 +357,6 @@ class CodexParser {
             } else {
                 parsedPassage.abbr = parsedPassage.original
             }
-            console.log(`Abbreviation set: ${parsedPassage.abbr}`)
 
             if (parsedPassage.type === this.MULTI_CHAPTER_RANGE) {
                 this.handleMultiChapterRange(parsedPassage, cleanReference)
@@ -417,7 +382,6 @@ class CodexParser {
                     chapter: lastPassage.chapter,
                     verse: lastPassage.verse,
                 }
-                console.log(`Start: ${JSON.stringify(parsedPassage.start)}, End: ${JSON.stringify(parsedPassage.end)}`)
             }
 
             if (!parsedPassage.version) {
@@ -432,7 +396,6 @@ class CodexParser {
         })
 
         this.versification()
-        console.log(`Final passages: ${JSON.stringify(this.passages, null, 2)}`)
         return this
     }
     /**
