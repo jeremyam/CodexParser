@@ -96,6 +96,8 @@ class CodexParser {
         this.found = []
         // Minimal normalization: fix periods before numbers, remove trailing periods
         let normalizedText = text.replace(/\.(?=\d)/g, ":").replace(/(\b[A-Za-z]+)\.(?=\s|$)/g, "$1")
+        console.log(`Input text: ${text}`)
+        console.log(`Normalized text: ${normalizedText}`)
         const lowercaseBibleFullNames = fullNames.map((book) => book.toLowerCase())
         const lowercaseBibleAbbreviations = abbreviations.map((abbr) => abbr.toLowerCase())
         const lowerCaseText = normalizedText.toLowerCase()
@@ -116,7 +118,7 @@ class CodexParser {
 
         while (i < lowerCaseText.length) {
             let foundBook = null
-            let startIndex = -1
+            let bookStartIndex = -1
             let matchedLength = 0
 
             // Skip whitespace and special characters before checking for book
@@ -125,11 +127,13 @@ class CodexParser {
             }
             if (i >= lowerCaseText.length) break
 
+            console.log(`Scanning at index ${i}: ${lowerCaseText.slice(i, i + 10)}...`)
+
             for (let j = 0; j < lowercaseBibleFullNames.length; j++) {
                 const book = lowercaseBibleFullNames[j]
                 if (lowerCaseText.startsWith(book, i) && book.length > matchedLength) {
                     foundBook = fullNames[j]
-                    startIndex = i
+                    bookStartIndex = i
                     matchedLength = book.length
                 }
             }
@@ -139,24 +143,42 @@ class CodexParser {
                     const abbreviation = lowercaseBibleAbbreviations[k]
                     if (lowerCaseText.startsWith(abbreviation, i) && abbreviation.length > matchedLength) {
                         foundBook = this.abbreviations[abbreviations[k]]
-                        startIndex = i
+                        bookStartIndex = i
                         matchedLength = abbreviation.length
                     }
                 }
             }
 
             if (foundBook) {
+                console.log(`Found book: ${foundBook} at index ${bookStartIndex}, length ${matchedLength}`)
                 i += matchedLength
                 let chapterVerse = ""
                 const references = []
-                const startOfReference = startIndex
+                let refStartIndex = bookStartIndex // Start of reference (including book) in normalizedText
+                let originalRefStartIndex = bookStartIndex // Start in original text
 
                 while (i < normalizedText.length && isValidChapterVerseChar(normalizedText[i])) {
-                    if (isNextBibleBook(i)) break
+                    if (isNextBibleBook(i)) {
+                        console.log(`Next book detected at index ${i}, stopping reference parsing`)
+                        break
+                    }
                     if (normalizedText[i] === ";") {
-                        const formattedReference = chapterVerse.trim().replace(/[^a-zA-Z0-9]+$/, "")
-                        if (formattedReference) references.push(formattedReference)
+                        const formattedReference = chapterVerse.trim()
+                        if (formattedReference) {
+                            const refEndIndex = i
+                            references.push({
+                                ref: formattedReference,
+                                start: refStartIndex,
+                                end: refEndIndex,
+                            })
+                            console.log(
+                                `Reference found: ${formattedReference}, normalized indices ${refStartIndex}-${refEndIndex}`
+                            )
+                        }
                         chapterVerse = ""
+                        refStartIndex = i + 1
+                        const semicolonIndex = text.indexOf(";", originalRefStartIndex)
+                        originalRefStartIndex = semicolonIndex !== -1 ? semicolonIndex + 1 : refStartIndex
                         i++
                         continue
                     }
@@ -165,25 +187,29 @@ class CodexParser {
                 }
 
                 if (chapterVerse.trim().length > 0) {
-                    const formattedReference = chapterVerse.trim().replace(/[^a-zA-Z0-9]+$/, "")
-                    if (formattedReference) references.push(formattedReference)
+                    const formattedReference = chapterVerse.trim()
+                    if (formattedReference) {
+                        const refEndIndex = i
+                        references.push({
+                            ref: formattedReference,
+                            start: refStartIndex,
+                            end: refEndIndex,
+                        })
+                        console.log(
+                            `Final reference found: ${formattedReference}, normalized indices ${refStartIndex}-${refEndIndex}`
+                        )
+                    }
                 }
 
-                // Set endIndex to the current position
-                let endIndex = i
-                const suffixData = detectSuffix(i)
-                const suffix = suffixData ? suffixData.suffix : null
-                if (suffixData) {
-                    endIndex += suffixData.length
-                    i += suffixData.length
-                }
+                // Align indices with original text
+                const originalBookText = text.slice(bookStartIndex, bookStartIndex + matchedLength)
+                const originalBookStartIndex =
+                    text.indexOf(originalBookText, bookStartIndex) !== -1
+                        ? text.indexOf(originalBookText, bookStartIndex)
+                        : bookStartIndex
+                console.log(`Original book text: ${originalBookText}, original start index: ${originalBookStartIndex}`)
 
-                // Trim endIndex to exclude trailing whitespace or non-reference characters
-                while (endIndex > startOfReference && /[\s]/.test(normalizedText[endIndex - 1])) {
-                    endIndex--
-                }
-
-                references.forEach((ref) => {
+                references.forEach(({ ref, start, end }, refIndex) => {
                     let type
                     if (ref.includes(":")) {
                         if (ref.includes("-")) {
@@ -207,14 +233,66 @@ class CodexParser {
                         type = "single_chapter"
                     }
 
+                    // Construct full reference text for original text
+                    const fullRefText =
+                        start === bookStartIndex
+                            ? `${originalBookText} ${ref.replace(":", ".")}`
+                            : ref.replace(":", ".")
+                    const suffixData = detectSuffix(end)
+                    const suffix = suffixData ? suffixData.suffix : null
+                    let refEndIndex = end
+                    if (suffixData) {
+                        refEndIndex += suffixData.length
+                        i += suffixData.length // Skip suffix
+                    }
+
+                    // Map to original text
+                    let originalStartIndex = originalBookStartIndex
+                    if (start > bookStartIndex) {
+                        // For subsequent references, adjust search to include book
+                        const searchText = `${originalBookText} ${ref.replace(":", ".")}`
+                        originalStartIndex =
+                            text.indexOf(searchText, originalRefStartIndex - matchedLength) !== -1
+                                ? text.indexOf(searchText, originalRefStartIndex - matchedLength)
+                                : originalRefStartIndex
+                    } else {
+                        originalStartIndex =
+                            text.indexOf(fullRefText, originalRefStartIndex) !== -1
+                                ? text.indexOf(fullRefText, originalRefStartIndex)
+                                : originalRefStartIndex
+                    }
+
+                    let originalEndIndex = originalStartIndex + fullRefText.length
+                    let originalText = text.slice(originalStartIndex, originalEndIndex)
+
+                    // Adjust for suffix in original text
+                    if (suffixData) {
+                        originalEndIndex += suffixData.length
+                        originalText = text.slice(originalStartIndex, originalEndIndex)
+                    }
+
+                    // Trim trailing whitespace from originalText
+                    while (originalEndIndex > originalStartIndex && /[\s]/.test(text[originalEndIndex - 1])) {
+                        originalEndIndex--
+                        originalText = text.slice(originalStartIndex, originalEndIndex)
+                    }
+
+                    console.log(
+                        `Reference ${
+                            refIndex + 1
+                        }: ${originalText}, original indices ${originalStartIndex}-${originalEndIndex}, type: ${type}, suffix: ${
+                            suffix || "none"
+                        }, search text: ${fullRefText}`
+                    )
+
                     this.found.push({
                         book: foundBook,
                         reference: ref,
-                        startIndex: startOfReference + 1,
-                        endIndex: endIndex + 1,
+                        startIndex: originalStartIndex,
+                        endIndex: originalEndIndex,
                         version: suffix || null,
                         type,
-                        originalText: text.slice(startOfReference, endIndex), // Use original text
+                        originalText: originalText,
                     })
                 })
             } else {
@@ -222,6 +300,7 @@ class CodexParser {
             }
         }
 
+        console.log(`Found references: ${JSON.stringify(this.found, null, 2)}`)
         return this
     }
 
