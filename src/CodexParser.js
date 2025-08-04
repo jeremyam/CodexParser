@@ -957,23 +957,35 @@ class CodexParser {
 
         passages.forEach((passage) => {
             passage.passages.forEach((p) => {
-                if (!chapterVerses[p.chapter]) {
-                    chapterVerses[p.chapter] = new Set()
+                let normChapter = p.chapter
+                let normVerse = p.verse
+                if (p.versification && p.versification.eng) {
+                    const [c, v] = p.versification.eng.split(":").map(Number)
+                    normChapter = c
+                    normVerse = v
                 }
-                chapterVerses[p.chapter].add(p.verse)
-                combined.passages.push(p)
+                if (!chapterVerses[normChapter]) {
+                    chapterVerses[normChapter] = new Set()
+                }
+                chapterVerses[normChapter].add(normVerse)
+                combined.passages.push({
+                    book: p.book,
+                    chapter: normChapter,
+                    verse: normVerse,
+                    versification: p.versification,
+                })
 
-                if (firstChapter === null || p.chapter < firstChapter) {
-                    firstChapter = p.chapter
-                    firstVerse = p.verse
-                } else if (p.chapter === firstChapter && (firstVerse === null || p.verse < firstVerse)) {
-                    firstVerse = p.verse
+                if (firstChapter === null || normChapter < firstChapter) {
+                    firstChapter = normChapter
+                    firstVerse = normVerse
+                } else if (normChapter === firstChapter && (firstVerse === null || normVerse < firstVerse)) {
+                    firstVerse = normVerse
                 }
-                if (lastChapter === null || p.chapter > lastChapter) {
-                    lastChapter = p.chapter
-                    lastVerse = p.verse
-                } else if (p.chapter === lastChapter && (lastVerse === null || p.verse > lastVerse)) {
-                    lastVerse = p.verse
+                if (lastChapter === null || normChapter > lastChapter) {
+                    lastChapter = normChapter
+                    lastVerse = normVerse
+                } else if (normChapter === lastChapter && (lastVerse === null || normVerse > lastVerse)) {
+                    lastVerse = normVerse
                 }
             })
         })
@@ -1003,12 +1015,18 @@ class CodexParser {
             throw new Error("No valid verses found in passages.")
         }
 
+        combined.chapter = firstChapter
+
         if (firstChapter !== lastChapter) {
             combined.type = this.MULTI_CHAPTER_RANGE
             combined.to = {
                 book: combined.book,
                 chapter: lastChapter,
-                verses: this.mergeRanges(Array.from(chapterVerses[lastChapter]).filter((verse) => verse > 0)),
+                verses: this.mergeRanges(
+                    Array.from(chapterVerses[lastChapter])
+                        .filter((verse) => verse > 0)
+                        .sort((a, b) => a - b)
+                ),
             }
             combined.original = `${combined.book} ${chapterStrings.join("; ")}`
         } else {
@@ -1046,6 +1064,20 @@ class CodexParser {
 
         if (combined.to === null) {
             delete combined.to
+        }
+
+        // Prefer English version
+        combined.version = { name: "English", value: "ENG", abbreviation: "eng" }
+
+        // Set abbr without version suffix
+        const sblEntry = Object.entries(this.sblAbbreviations).find(
+            ([key]) => key.toLowerCase() === combined.book.toLowerCase()
+        )
+        if (sblEntry) {
+            const { value, abbr } = sblEntry[1]
+            combined.abbr = abbr ? `${value}. ${combined.scripture.cv}` : `${value} ${combined.scripture.cv}`
+        } else {
+            combined.abbr = `${combined.book} ${combined.scripture.cv}`
         }
 
         return combined
