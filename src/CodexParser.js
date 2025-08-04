@@ -1286,6 +1286,143 @@ class CodexParser {
             combined.abbr = `${combined.book} ${combined.scripture.cv}`
         }
 
+        const self = this
+        combined.getVersion = function (targetVersion) {
+            const cloned = JSON.parse(JSON.stringify(this))
+            const targetAbbr = targetVersion.toLowerCase() === "bhs" ? "mt" : targetVersion.toLowerCase()
+            let versionObj
+            if (targetAbbr === "eng") {
+                versionObj = { name: "English", value: "ENG", abbreviation: "eng" }
+            } else if (targetAbbr === "mt") {
+                versionObj = { name: "Masoretic Text", value: "MT", abbreviation: "mt" }
+            } else if (targetAbbr === "lxx") {
+                versionObj = { name: "Septuagint", value: "LXX", abbreviation: "lxx" }
+            } else {
+                throw new Error("Invalid version: must be one of 'eng', 'mt', 'bhs', 'lxx'")
+            }
+
+            cloned.version = versionObj
+
+            cloned.passages.forEach((sub) => {
+                if (sub.versification && sub.versification[targetAbbr]) {
+                    const [ch, v] = sub.versification[targetAbbr].split(":").map(Number)
+                    sub.chapter = ch
+                    sub.verse = v
+                }
+                // else remain unchanged
+            })
+
+            // Recompute summary fields
+            cloned.passages.sort((a, b) => a.chapter - b.chapter || a.verse - b.verse)
+
+            if (cloned.passages.length > 0) {
+                cloned.start = {
+                    book: cloned.book,
+                    chapter: cloned.passages[0].chapter,
+                    verse: cloned.passages[0].verse,
+                }
+                cloned.end = {
+                    book: cloned.book,
+                    chapter: cloned.passages[cloned.passages.length - 1].chapter,
+                    verse: cloned.passages[cloned.passages.length - 1].verse,
+                }
+            }
+
+            const chapterVersesMap = {}
+            cloned.passages.forEach((p) => {
+                if (!chapterVersesMap[p.chapter]) chapterVersesMap[p.chapter] = new Set()
+                chapterVersesMap[p.chapter].add(p.verse)
+            })
+
+            const sortedChs = Object.keys(chapterVersesMap)
+                .map(Number)
+                .sort((a, b) => a - b)
+            const chapterStrs = []
+
+            const mergeFunc = (verses) => {
+                const sorted = [...verses].sort((a, b) => a - b)
+                const merged = []
+                if (sorted.length === 0) return merged
+                let start = sorted[0]
+                let end = sorted[0]
+                for (let i = 1; i < sorted.length; i++) {
+                    if (sorted[i] === end + 1) {
+                        end = sorted[i]
+                    } else {
+                        merged.push(start === end ? `${start}` : `${start}-${end}`)
+                        start = end = sorted[i]
+                    }
+                }
+                merged.push(start === end ? `${start}` : `${start}-${end}`)
+                return merged
+            }
+
+            sortedChs.forEach((ch) => {
+                const vs = Array.from(chapterVersesMap[ch])
+                    .filter((v) => v > 0)
+                    .sort((a, b) => a - b)
+                if (vs.length > 0) {
+                    const merged = mergeFunc(vs)
+                    chapterStrs.push(`${ch}:${merged.join(",")}`)
+                }
+            })
+
+            if (chapterStrs.length === 0) {
+                return cloned // no verses, perhaps error but return as is
+            }
+
+            const firstCh = sortedChs[0]
+            const lastCh = sortedChs[sortedChs.length - 1]
+            cloned.chapter = firstCh
+
+            const mergedFirst = mergeFunc(chapterVersesMap[firstCh] || new Set())
+            cloned.verses = mergedFirst
+
+            if (firstCh !== lastCh) {
+                cloned.type = "multi_chapter_verse_range"
+                cloned.to = {
+                    book: cloned.book,
+                    chapter: lastCh,
+                    verses: mergeFunc(chapterVersesMap[lastCh] || new Set()),
+                }
+                cloned.original = `${cloned.book} ${chapterStrs.join("; ")}`
+            } else {
+                const hasRangeOrMultiple =
+                    mergedFirst.length > 1 || (mergedFirst.length === 1 && mergedFirst[0].includes("-"))
+                cloned.type = hasRangeOrMultiple ? "chapter_verse_range" : "chapter_verse"
+                if (cloned.to) delete cloned.to
+                cloned.original = `${cloned.book} ${chapterStrs[0]}`
+            }
+
+            const chString = chapterStrs.join("; ")
+            cloned.scripture = {
+                passage: `${cloned.book} ${chString}`,
+                cv: chString,
+                hash: `${cloned.book.toLowerCase()}_${chString
+                    .replace(/:/g, ".")
+                    .replace(/-/g, ".")
+                    .replace(/[,; ]/g, ".")}`,
+            }
+
+            // Set abbr
+            const sblEntry = Object.entries(self.sblAbbreviations).find(
+                ([key]) => key.toLowerCase() === cloned.book.toLowerCase()
+            )
+            const suffix = versionObj.abbreviation === "eng" ? "" : ` ${versionObj.value}`
+            if (sblEntry) {
+                const { value, abbr } = sblEntry[1]
+                cloned.abbr = abbr
+                    ? `${value}. ${cloned.scripture.cv}${suffix}`
+                    : `${value} ${cloned.scripture.cv}${suffix}`
+            } else {
+                cloned.abbr = `${cloned.book} ${cloned.scripture.cv}${suffix}`
+            }
+
+            cloned.getVersion = this.getVersion
+
+            return cloned
+        }
+
         return combined
     }
 
