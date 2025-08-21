@@ -1141,6 +1141,11 @@ class CodexParser {
             throw new Error("Passages must be from the same book to join.")
         }
 
+        const versions = new Set(passages.map((p) => p.version.abbreviation))
+        if (versions.size > 1) {
+            throw new Error("Cannot combine passages from different versions.")
+        }
+
         const combined = {
             ...passages[0],
             verses: [],
@@ -1160,35 +1165,30 @@ class CodexParser {
 
         passages.forEach((passage) => {
             passage.passages.forEach((p) => {
-                let normChapter = p.chapter
-                let normVerse = p.verse
-                if (p.versification && p.versification.eng) {
-                    const [c, v] = p.versification.eng.split(":").map(Number)
-                    normChapter = c
-                    normVerse = v
+                const chapter = p.chapter
+                const verse = p.verse
+                if (!chapterVerses[chapter]) {
+                    chapterVerses[chapter] = new Set()
                 }
-                if (!chapterVerses[normChapter]) {
-                    chapterVerses[normChapter] = new Set()
-                }
-                chapterVerses[normChapter].add(normVerse)
+                chapterVerses[chapter].add(verse)
                 combined.passages.push({
                     book: p.book,
-                    chapter: normChapter,
-                    verse: normVerse,
+                    chapter: p.chapter,
+                    verse: p.verse,
                     versification: p.versification,
                 })
 
-                if (firstChapter === null || normChapter < firstChapter) {
-                    firstChapter = normChapter
-                    firstVerse = normVerse
-                } else if (normChapter === firstChapter && (firstVerse === null || normVerse < firstVerse)) {
-                    firstVerse = normVerse
+                if (firstChapter === null || chapter < firstChapter) {
+                    firstChapter = chapter
+                    firstVerse = verse
+                } else if (chapter === firstChapter && (firstVerse === null || verse < firstVerse)) {
+                    firstVerse = verse
                 }
-                if (lastChapter === null || normChapter > lastChapter) {
-                    lastChapter = normChapter
-                    lastVerse = normVerse
-                } else if (normChapter === lastChapter && (lastVerse === null || normVerse > lastVerse)) {
-                    lastVerse = normVerse
+                if (lastChapter === null || chapter > lastChapter) {
+                    lastChapter = chapter
+                    lastVerse = verse
+                } else if (chapter === lastChapter && (lastVerse === null || verse > lastVerse)) {
+                    lastVerse = verse
                 }
             })
         })
@@ -1272,18 +1272,21 @@ class CodexParser {
             delete combined.to
         }
 
-        // Prefer English version
-        combined.version = { name: "English", value: "ENG", abbreviation: "eng" }
+        // Respect the common version
+        combined.version = passages[0].version
 
-        // Set abbr without version suffix
+        // Set abbr with version suffix if not ENG
         const sblEntry = Object.entries(this.sblAbbreviations).find(
             ([key]) => key.toLowerCase() === combined.book.toLowerCase()
         )
+        const suffix = combined.version.abbreviation === "eng" ? "" : ` ${combined.version.value}`
         if (sblEntry) {
             const { value, abbr } = sblEntry[1]
-            combined.abbr = abbr ? `${value}. ${combined.scripture.cv}` : `${value} ${combined.scripture.cv}`
+            combined.abbr = abbr
+                ? `${value}. ${combined.scripture.cv}${suffix}`
+                : `${value} ${combined.scripture.cv}${suffix}`
         } else {
-            combined.abbr = `${combined.book} ${combined.scripture.cv}`
+            combined.abbr = `${combined.book} ${combined.scripture.cv}${suffix}`
         }
 
         const self = this
