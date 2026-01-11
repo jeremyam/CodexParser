@@ -2,6 +2,17 @@
 
 All notable changes to this project are documented here. For full details, see the Release Notes in README and the GitHub Releases page.
 
+## 0.3.0 — 2026-01-10
+
+- Added `convertVersion(targetVersion)` method on passage objects for versification conversion.
+- Accepts version string: `"eng"`, `"lxx"`, `"mt"`, or `"bhs"` (alias for MT).
+- Automatically converts chapter/verse references between versifications when versification data exists.
+- Returns same reference with updated version metadata if no versification exists.
+- Tested with Psalms, Zechariah, and NT passages.
+- Published to npm as `codexparser@0.3.0`.
+
+See the release: https://github.com/jeremyam/CodexParser/releases/tag/v0.3.0
+
 ## 0.2.0 — 2026-01-10
 
 - Refactored internal architecture into clear folders:
