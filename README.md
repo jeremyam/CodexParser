@@ -1,5 +1,7 @@
 # CodexParser: The Ultimate Bible Reference Parser 📖✨
 
+[![GitHub Release](https://img.shields.io/github/v/release/jeremyam/CodexParser?sort=semver)](https://github.com/jeremyam/CodexParser/releases)
+
 Welcome to **CodexParser**, a powerful and flexible Node.js library crafted to parse, validate, and structure Bible references with ease. Whether you're extracting verses from a sermon, building a scripture app, or analyzing biblical texts, CodexParser transforms raw references like "John 3:16" or "Psalm 115:5,7,10" into rich, actionable data—complete with start and end points, SBL-style abbreviations, versification support, and validation. Dive into the Word like never before!
 
 Built with precision and passion, CodexParser handles single verses, ranges, multi-chapter spans, and single-chapter books (looking at you, Jude!). It’s your trusty companion for navigating the sacred texts, supporting English, Septuagint (LXX), and Masoretic Text (MT) versions. Let’s unleash its power!
@@ -37,6 +39,8 @@ npm install
 ---
 
 ## Quick Start ⚡
+
+For version detection and switching examples, see [Versions & Versification](#versions--versification).
 
 Here’s how to wield CodexParser’s might:
 
@@ -97,6 +101,61 @@ console.log(parser.bibleVersion("eng").parse("Genesis 1:1-5").getPassages().firs
 console.log(parser.parse("Genesis 1:1-5, 10; 2:1-3").getPassages().combine())
 // Combines into a single passage with start/end spanning the range!
 ```
+
+---
+
+## Versions & Versification 🔁
+
+CodexParser supports English (`ENG`), Septuagint (`LXX`), and Masoretic (`MT`/`BHS`) versifications. You can set a default via `.bibleVersion()` or use per-passage helpers to convert.
+
+- Set default version for parsing:
+
+```javascript
+const CodexParser = require("codexparser")
+const parser = new CodexParser()
+
+// Default LXX if no suffix in the input
+parser.bibleVersion("lxx")
+const [p] = parser.parse("Psalms 4:5").getPassages()
+console.log(p.version.abbreviation) // "lxx"
+console.log(p.scripture.hash)       // "Ps.4.5"
+
+// Convert to English versification
+const eng = p.getEnglish()
+console.log(eng.scripture.cv)       // "4:4" (example of LXX→ENG shift)
+```
+
+- Detect version from suffix and convert across versions:
+
+```javascript
+const CodexParser = require("codexparser")
+const parser = new CodexParser()
+
+// Suffix sets version automatically
+const passages = parser.parse("Psalms 94:4-100:6 MT").getPassages()
+const base = passages[0]
+console.log(base.version.abbreviation) // "mt"
+console.log(base.scripture.hash)       // e.g., "Ps.94.4-Ps.100.6"
+
+// Convert to LXX and ENG with helpers
+const lxx = base.getLXX()
+const eng = base.getEnglish()
+console.log(lxx.scripture.cv) // "93:4-23; 94:1-11; ..." (mapped LXX ranges)
+console.log(eng.scripture.cv) // "94:4-23; 95:1-11; ..." (ENG/MT alignment)
+```
+
+- Zechariah example (chapter offsets):
+
+```javascript
+const parser = new CodexParser()
+const [z] = parser.parse("Zechariah 2:8").getPassages()
+console.log(z.getEnglish().scripture.hash) // "Zech.2.8"
+console.log(z.getLXX().scripture.hash)     // "Zech.2.12" (LXX mapping)
+```
+
+Notes:
+- `getVersion("eng"|"lxx"|"mt"|"bhs")` is available; `getBHS()` aliases `MT`.
+- `.scripture.hash` is OSIS textual (e.g., `John.3.16`), `.osisNumeric` uses pythonbible-style integer IDs.
 
 ---
 
