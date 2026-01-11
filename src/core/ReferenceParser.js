@@ -267,6 +267,22 @@ class ReferenceParser {
         passage.getEnglish = function () {
             return this.getVersion("eng")
         }
+        passage.convertVersion = function (targetVersion) {
+            const targetAbbr = targetVersion.toLowerCase() === "bhs" ? "mt" : targetVersion.toLowerCase()
+
+            // Check if any passages have versification data
+            const hasVersification = this.passages.some((p) => p.versification)
+
+            if (!hasVersification) {
+                // No versification exists, return a clone with updated version info only
+                const cloned = JSON.parse(JSON.stringify(this))
+                cloned.version = VersionHandler.getVersionObject(targetAbbr)
+                return cloned
+            }
+
+            // Has versification, use the full conversion
+            return computeConverted(this, targetAbbr)
+        }
     }
 
     /**
