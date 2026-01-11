@@ -4,13 +4,10 @@
   "description": "This is a Javascript Bible parser and text scanner. It will search through texts and collate all scripture references into an array and parse them into objects, and it will parse passages into objects by book, chapter, verse, and testament. ",
   "main": "index.js",
   "scripts": {
-    "test": "echo \"Error: no automated test runner configured\" && exit 0",
-    "build": "browserify ./src/core/CodexParser.js -o ./dist/bundle.js"
+    "test": "echo \"Error: no automated test runner configured\" && exit 0"
   },
   "author": "Jeremy Menicucci",
   "license": "ISC",
-  "devDependencies": {
-    "browserify": "^17.0.0"
-  },
+  "devDependencies": {},
   "dependencies": {}
 }
