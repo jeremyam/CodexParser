@@ -1,2 +1,2 @@
-const CodexParser = require("./src/CodexParser.js")
+const CodexParser = require("./src/core/CodexParser.js")
 module.exports = { CodexParser }

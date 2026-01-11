@@ -1,303 +1,359 @@
 /**
  * CodexParser.js
- * A class for scanning and parsing scripture references from text, supporting various formats
- * (e.g., single verses, ranges, multi-chapter references) with validation and version-specific
- * versification. Handles book names, abbreviations, and SBL-style formatting.
+ * A modern ES6+ class for scanning and parsing scripture references from text.
+ * Supports various formats (single verses, ranges, multi-chapter references) with 
+ * validation and version-specific versification.
  */
 
-const versified = require("./versified")
-const bible = require("./bible")
-const { bookRegex, chapterRegex, verseRegex, scripturesRegex } = require("./regex")
-const abbreviations = require("./abbr")
-const sblAbbreviations = require("./abbr/sbl")
-const dump = require("./functions").dump
-const dd = require("./functions").dd
-const sch = require("./functions").sch
-const chapter_verses = require("./chapterVerseCombine")
+const bible = require("./bible");
+const { bookRegex, chapterRegex, verseRegex, scripturesRegex } = require("./regex");
+const ScriptureScanner = require("./ScriptureScanner");
+const ReferenceParser = require("./ReferenceParser");
+const VersificationHandler = require("./VersificationHandler");
+const PassageCollection = require("./PassageCollection");
+const PassageUtils = require("./PassageUtils");
+const VersionHandler = require("./VersionHandler");
+const chapter_verses = require("./chapterVerseCombine");
 
 /**
- * Class for parsing and validating scripture references.
+ * Main class for parsing and validating scripture references
  * @class
  */
 class CodexParser {
+    // Private fields using ES6+ syntax
+    #scanner;
+    #parser;
+    #versificationHandler;
+    #config;
+    #version;
+    #found;
+    #passages;
+
     /**
-     * Initializes the parser with default properties and data.
+     * Initializes the parser with configuration
+     * @param {Object} config - Configuration options
      */
     constructor(config = {}) {
-        this.found = []
-        this.passages = []
-        this.bible = bible
-        this.bookRegex = bookRegex
-        this.chapterRegex = chapterRegex
-        this.verseRegex = verseRegex
-        this.scripturesRegex = scripturesRegex
-        this.abbreviations = abbreviations
-        this.sblAbbreviations = sblAbbreviations
-        this.versificationDifferences = versified
-        this.singleChapterBook = [
-            sch("Jude", 25),
-            sch("2 John", 13),
-            sch("3 John", 15),
-            sch("Obadiah", 21),
-            sch("Philemon", 25),
-        ]
-        this.chapterVerses = chapter_verses
-        this.error = false
-        this.version = null
-        this.SINGLE_CHAPTER = "single_chapter"
-        this.CHAPTER_VERSE = "chapter_verse"
-        this.CHAPTER_VERSE_RANGE = "chapter_verse_range"
-        this.COMMA_SEPARATED = "comma_separated_verses"
-        this.CHAPTER_RANGE = "chapter_range"
-        this.MULTI_CHAPTER_RANGE = "multi_chapter_verse_range"
-        this.config = {
+        this.#config = {
             booksOnly: config.booksOnly ?? false,
             invalid_sequence_strategy: config.invalid_sequence_strategy ?? "include",
             invalid_passage_strategy: config.invalid_passage_strategy ?? "include",
-        }
+        };
+
+        this.#scanner = new ScriptureScanner(this.#config);
+        this.#parser = new ReferenceParser(this.#config);
+        this.#versificationHandler = new VersificationHandler();
+        this.#version = null;
+        this.#found = [];
+        this.#passages = [];
+
+        // Legacy public properties for backward compatibility
+        this.bible = bible;
+        this.bookRegex = bookRegex;
+        this.chapterRegex = chapterRegex;
+        this.verseRegex = verseRegex;
+        this.scripturesRegex = scripturesRegex;
+        this.chapterVerses = chapter_verses;
+        this.error = false;
+        
+        // Legacy constants
+        this.SINGLE_CHAPTER = "single_chapter";
+        this.CHAPTER_VERSE = "chapter_verse";
+        this.CHAPTER_VERSE_RANGE = "chapter_verse_range";
+        this.COMMA_SEPARATED = "comma_separated_verses";
+        this.CHAPTER_RANGE = "chapter_range";
+        this.MULTI_CHAPTER_RANGE = "multi_chapter_verse_range";
     }
 
     /**
-     * Sets configuration options for the parser.
-     * @param {Object} config - Configuration options.
-     * @param {boolean} [config.booksOnly=false] - Whether to capture book names without references.
-     * @returns {CodexParser} The parser instance for method chaining.
+     * Gets the found references (legacy getter)
+     */
+    get found() {
+        return this.#found;
+    }
+
+    /**
+     * Sets the found references (legacy setter)
+     */
+    set found(value) {
+        this.#found = value;
+    }
+
+    /**
+     * Gets the parsed passages (legacy getter)
+     */
+    get passages() {
+        return this.#passages;
+    }
+
+    /**
+     * Sets the parsed passages (legacy setter)
+     */
+    set passages(value) {
+        this.#passages = value;
+    }
+
+    /**
+     * Gets the current version (legacy getter)
+     */
+    get version() {
+        return this.#version;
+    }
+
+    /**
+     * Sets the current version (legacy setter)
+     */
+    set version(value) {
+        this.#version = value;
+    }
+
+    /**
+     * Gets the current config (legacy getter)
+     */
+    get config() {
+        return this.#config;
+    }
+
+    /**
+     * Sets the current config (legacy setter)
+     */
+    set config(value) {
+        this.#config = value;
+    }
+
+    /**
+     * Sets configuration options for the parser
+     * @param {Object} config - Configuration options
+     * @param {boolean} [config.booksOnly=false] - Whether to capture book names without references
+     * @returns {CodexParser} The parser instance for method chaining
      */
     options(config) {
-        this.config = {
-            booksOnly: config.booksOnly ?? false,
-            invalid_sequence_strategy: config.invalid_sequence_strategy ?? this.config.invalid_sequence_strategy,
-            invalid_passage_strategy: config.invalid_passage_strategy ?? this.config.invalid_passage_strategy,
-        }
-        return this
+        this.#config = {
+            booksOnly: config.booksOnly ?? this.#config.booksOnly,
+            invalid_sequence_strategy: config.invalid_sequence_strategy ?? this.#config.invalid_sequence_strategy,
+            invalid_passage_strategy: config.invalid_passage_strategy ?? this.#config.invalid_passage_strategy,
+        };
+        
+        // Update scanner and parser configs
+        this.#scanner = new ScriptureScanner(this.#config);
+        this.#parser = new ReferenceParser(this.#config);
+        
+        return this;
     }
 
     /**
-     * Retrieves available verses for a given book and chapter.
-     * @param {string} book - The book name (e.g., "Genesis").
-     * @param {number} chapter - The chapter number.
-     * @returns {number[]} Array of valid verse numbers.
+     * Retrieves available verses for a given book and chapter (legacy method)
+     * @param {string} book - The book name
+     * @param {number} chapter - The chapter number
+     * @returns {number[]} Array of valid verse numbers
      */
     getChapterVerses(book, chapter) {
-        const singleChapterBook = this.singleChapterBook.find((b) => Object.keys(b)[0] === book)
-        return singleChapterBook ? singleChapterBook[book][chapter] || [] : this.chapterVerses[book]?.[chapter] || []
+        return PassageUtils.getChapterVerses(book, chapter);
     }
 
     /**
-     * Scans text for scripture references and stores them in `this.found`.
-     * @param {string} text - The text to scan.
-     * @returns {CodexParser} The parser instance for method chaining.
+     * Scans text for scripture references
+     * @param {string} text - The text to scan
+     * @returns {CodexParser} The parser instance for method chaining
      */
     scan(text) {
-        const fullNames = [...this.bible.old, ...this.bible.new]
-        const abbreviations = Object.keys(this.abbreviations)
-        this.found = []
-        // Minimal normalization: fix periods before numbers, remove trailing periods
-        let normalizedText = text.replace(/\.(?=\d)/g, ":").replace(/(\b[A-Za-z]+)\.(?=\s|$)/g, "$1")
-        const lowercaseBibleFullNames = fullNames.map((book) => book.toLowerCase())
-        const lowercaseBibleAbbreviations = abbreviations.map((abbr) => abbr.toLowerCase())
-        const lowerCaseText = normalizedText.toLowerCase()
-        let i = 0
-
-        const isValidChapterVerseChar = (char) => /[\d:,\-;\s]/.test(char)
-        const isNextBibleBook = (startIndex) => {
-            const textAfterCurrentPosition = lowerCaseText.substring(startIndex).trim()
-            return (
-                lowercaseBibleFullNames.some((book) => textAfterCurrentPosition.startsWith(book)) ||
-                lowercaseBibleAbbreviations.some((abbr) => textAfterCurrentPosition.startsWith(abbr))
-            )
-        }
-        const detectSuffix = (startIndex) => {
-            const suffixMatch = normalizedText.substring(startIndex).match(/\b(LXX|MT)\b/i)
-            return suffixMatch ? { suffix: suffixMatch[0].toUpperCase(), length: suffixMatch[0].length } : null
-        }
-
-        while (i < lowerCaseText.length) {
-            let foundBook = null
-            let bookStartIndex = -1
-            let matchedLength = 0
-
-            // Skip whitespace and special characters before checking for book
-            while (i < lowerCaseText.length && /[\s—-]/.test(lowerCaseText[i])) {
-                i++
-            }
-            if (i >= lowerCaseText.length) break
-
-            for (let j = 0; j < lowercaseBibleFullNames.length; j++) {
-                const book = lowercaseBibleFullNames[j]
-                if (lowerCaseText.startsWith(book, i) && book.length > matchedLength) {
-                    foundBook = fullNames[j]
-                    bookStartIndex = i
-                    matchedLength = book.length
-                }
-            }
-
-            if (!foundBook) {
-                for (let k = 0; k < lowercaseBibleAbbreviations.length; k++) {
-                    const abbreviation = lowercaseBibleAbbreviations[k]
-                    if (lowerCaseText.startsWith(abbreviation, i) && abbreviation.length > matchedLength) {
-                        foundBook = this.abbreviations[abbreviations[k]]
-                        bookStartIndex = i
-                        matchedLength = abbreviation.length
-                    }
-                }
-            }
-
-            if (foundBook) {
-                i += matchedLength
-                let chapterVerse = ""
-                const references = []
-                let refStartIndex = bookStartIndex
-                let originalRefStartIndex = bookStartIndex
-
-                while (i < normalizedText.length && isValidChapterVerseChar(normalizedText[i])) {
-                    if (isNextBibleBook(i)) {
-                        break
-                    }
-                    if (normalizedText[i] === ";") {
-                        const formattedReference = chapterVerse.trim()
-                        if (formattedReference) {
-                            const refEndIndex = i
-                            references.push({
-                                ref: formattedReference,
-                                start: refStartIndex,
-                                end: refEndIndex,
-                            })
-                        }
-                        chapterVerse = ""
-                        refStartIndex = i + 1
-                        const semicolonIndex = text.indexOf(";", originalRefStartIndex)
-                        originalRefStartIndex = semicolonIndex !== -1 ? semicolonIndex + 1 : refStartIndex
-                        i++
-                        continue
-                    }
-                    chapterVerse += normalizedText[i]
-                    i++
-                }
-
-                if (chapterVerse.trim().length > 0) {
-                    const formattedReference = chapterVerse.trim()
-                    if (formattedReference) {
-                        const refEndIndex = i
-                        references.push({
-                            ref: formattedReference,
-                            start: refStartIndex,
-                            end: refEndIndex,
-                        })
-                    }
-                }
-
-                // Align indices with original text
-                const originalBookText = text.slice(bookStartIndex, bookStartIndex + matchedLength)
-                const originalBookStartIndex =
-                    text.indexOf(originalBookText, bookStartIndex) !== -1
-                        ? text.indexOf(originalBookText, bookStartIndex)
-                        : bookStartIndex
-
-                references.forEach(({ ref, start, end }) => {
-                    let type
-                    if (ref.includes(":")) {
-                        if (ref.includes("-")) {
-                            const [start, end] = ref.split("-")
-                            const startParts = start.split(":")
-                            const endParts = end.split(":")
-                            type =
-                                startParts.length > 1 &&
-                                endParts.length > 1 &&
-                                startParts[0].trim() !== endParts[0].trim()
-                                    ? "multi_chapter_verse_range"
-                                    : "chapter_verse_range"
-                        } else if (ref.includes(",")) {
-                            type = "comma_separated_verses"
-                        } else {
-                            type = "chapter_verse"
-                        }
-                    } else if (ref.includes("-")) {
-                        type = "chapter_range"
-                    } else {
-                        type = "single_chapter"
-                    }
-
-                    // Construct full reference text for original text
-                    const fullRefText = `${originalBookText} ${ref.replace(":", ".")}`
-                    const suffixData = detectSuffix(end)
-                    const suffix = suffixData ? suffixData.suffix : null
-                    let refEndIndex = end
-                    if (suffixData) {
-                        refEndIndex += suffixData.length
-                        i += suffixData.length // Skip suffix
-                    }
-
-                    // Map to original text
-                    let originalStartIndex =
-                        text.indexOf(fullRefText, originalRefStartIndex) !== -1
-                            ? text.indexOf(fullRefText, originalRefStartIndex)
-                            : originalBookStartIndex
-
-                    let originalEndIndex = originalStartIndex + fullRefText.length
-                    let originalText = text.slice(originalStartIndex, originalEndIndex)
-
-                    // Adjust for suffix in original text
-                    if (suffixData) {
-                        originalEndIndex += suffixData.length
-                        originalText = text.slice(originalStartIndex, originalEndIndex)
-                    }
-
-                    // Trim trailing whitespace from originalText
-                    while (originalEndIndex > originalStartIndex && /[\s]/.test(text[originalEndIndex - 1])) {
-                        originalEndIndex--
-                        originalText = text.slice(originalStartIndex, originalEndIndex)
-                    }
-
-                    this.found.push({
-                        book: foundBook,
-                        reference: ref,
-                        startIndex: originalStartIndex,
-                        endIndex: originalEndIndex,
-                        version: suffix || null,
-                        type,
-                        originalText: originalText,
-                    })
-                })
-            } else {
-                i++
-            }
-        }
-
-        return this
+        this.#found = this.#scanner.scan(text);
+        return this;
     }
 
     /**
-     * Sets the Bible version for parsing.
-     * @param {string} version - The version (e.g., "lxx", "mt", "eng").
-     * @returns {CodexParser} The parser instance.
+     * Sets the Bible version for parsing
+     * @param {string} version - The version (e.g., "lxx", "mt", "eng")
+     * @returns {CodexParser} The parser instance
      */
     bibleVersion(version) {
-        const lowerVersion = version.toLowerCase()
-        this.version =
-            lowerVersion === "lxx" || lowerVersion === "eng" || lowerVersion === "bhs" || lowerVersion === "mt"
-                ? lowerVersion
-                : null
-        return this
+        this.#version = VersionHandler.normalizeVersion(version);
+        return this;
     }
 
     /**
-     * Parses a scripture reference into structured passage objects.
-     * @param {string} reference - The reference to parse (e.g., "John 3:16").
-     * @returns {CodexParser} The parser instance.
+     * Parses a scripture reference into structured passage objects
+     * @param {string} reference - The reference to parse (e.g., "John 3:16")
+     * @returns {CodexParser} The parser instance
      */
     parse(reference) {
-        this.scan(reference)
+        this.scan(reference);
+        this.#passages = this.#parser.parse(this.#found, this.#version);
+        this.#passages = this.#versificationHandler.applyVersification(this.#passages);
+        return this;
+    }
 
-        this.passages = this.found.map((passage) => {
-            const book = this.bookify(passage.book)
-            const testament = this.bible.old.includes(book) ? "old" : "new"
-            const parsedPassage = {
-                original: `${passage.book} ${passage.reference}`,
-                book,
-                chapter: null,
-                verses: [],
-                type: passage.type,
+    /**
+     * Returns parsed passages with utility methods
+     * @returns {PassageCollection} Collection of passages with utility methods
+     */
+    getPassages() {
+        return PassageCollection.from(this.#passages);
+    }
+
+    /**
+     * Returns the first parsed passage
+     * @returns {Object|null} The first passage or null
+     */
+    first() {
+        return this.#passages.length > 0 ? this.#passages[0] : null;
+    }
+
+    /**
+     * Normalizes book names using abbreviations or full names (legacy method)
+     * @param {string|Array} book - The book name or array
+     * @returns {string} Normalized book name
+     */
+    bookify(book) {
+        return this.#parser.constructor.prototype.normalizeBookName?.(book) || book;
+    }
+
+    /**
+     * Combines multiple passages into a single reference
+     * @param {Object[]} [passages=this.passages] - Array of passages to combine
+     * @returns {Object} Combined passage object
+     */
+    combine(passages = this.#passages) {
+        return PassageCollection.combinePassages(passages);
+    }
+
+    /**
+     * Merges verses into ranges or comma-separated lists (legacy method)
+     * @param {number[]} verses - Array of verse numbers
+     * @returns {string[]} Array of verse strings
+     */
+    mergeRanges(verses) {
+        return PassageUtils.mergeRanges(verses);
+    }
+
+    /**
+     * Generates a table of contents for the Bible
+     * @param {string} [version="ESV"] - The Bible version
+     * @returns {Object} TOC with book-chapter-verse mappings
+     */
+    getToc(version = "ESV") {
+        const toc = {};
+        
+        bible.old.forEach((book) => {
+            if (chapter_verses[book]) {
+                toc[book] = chapter_verses[book];
+            }
+        });
+        
+        bible.new.forEach((book) => {
+            if (chapter_verses[book]) {
+                toc[book] = chapter_verses[book];
+            }
+        });
+        
+        PassageUtils.SINGLE_CHAPTER_BOOKS.forEach((item) => {
+            Object.keys(item).forEach((book) => {
+                if (!toc[book]) {
+                    toc[book] = item[book];
+                }
+            });
+        });
+        
+        const orderedToc = {};
+        const canonicalOrder = [...bible.old, ...bible.new];
+        canonicalOrder.forEach((book) => {
+            if (toc[book]) {
+                orderedToc[book] = toc[book];
+            }
+        });
+        
+        return orderedToc;
+    }
+
+    /**
+     * Replaces scripture references in text with formatted references
+     * @param {string} text - The original text
+     * @param {boolean} useAbbreviations - Whether to use abbreviated book names
+     * @returns {string} Text with replaced references
+     */
+    replace(text, useAbbreviations = true) {
+        if (!this.#passages.length) {
+            return text;
+        }
+
+        let result = text;
+        for (let i = this.#passages.length - 1; i >= 0; i--) {
+            const passage = this.#passages[i];
+            const { originalText, abbr, original } = passage;
+            const newReference = useAbbreviations ? abbr : original;
+
+            const regex = new RegExp(`${originalText.replace(/([.*+?^${}()|[\]\\])/g, "\\$1")}`, "g");
+
+            const matches = [...result.matchAll(regex)];
+            if (matches.length > 0) {
+                for (let j = matches.length - 1; j >= 0; j--) {
+                    const match = matches[j];
+                    const startIndex = match.index;
+                    const endIndex = startIndex + match[0].length;
+                    const leadingSpace = match[1] || "";
+                    const hasOpeningParen = match[2] === "(";
+                    const hasClosingParen = match[3] === ")";
+                    const trailingSpace = match[4] || " ";
+                    const replacement =
+                        hasOpeningParen && hasClosingParen
+                            ? `${leadingSpace}(${newReference})${trailingSpace}`
+                            : `${leadingSpace}${newReference}${trailingSpace}`;
+                    result = result.slice(0, startIndex) + replacement + result.slice(endIndex);
+                }
+            }
+        }
+
+        return result;
+    }
+
+    /**
+     * Checks if all references in the passages array are from the same book
+     * @returns {boolean} True if all passages are from the same book
+     */
+    same() {
+        if (this.#passages.length <= 1) {
+            return true;
+        }
+
+        const firstBook = this.#passages[0].book.toLowerCase();
+        return this.#passages.every((passage) => passage.book.toLowerCase() === firstBook);
+    }
+
+    // Legacy methods for backward compatibility
+    
+    /**
+     * Expands verse references into individual verse objects (legacy)
+     */
+    expandVerses(book, chapter, verses) {
+        return PassageUtils.expandVerses(book, chapter, verses);
+    }
+
+    /**
+     * Populates passage with expanded verse objects (legacy)
+     */
+    populate(passage) {
+        return this.#parser.constructor.prototype._populatePassage?.(passage) || [];
+    }
+
+    /**
+     * Formats a passage into a human-readable reference (legacy)
+     */
+    scripturize(passage) {
+        return this.#parser.constructor.prototype._formatScripture?.(passage) || {};
+    }
+
+    /**
+     * Applies versification differences to parsed passages (legacy)
+     */
+    versification() {
+        this.#passages = this.#versificationHandler.applyVersification(this.#passages);
+    }
+}
+
+module.exports = CodexParser;
+
+
+
                 testament,
                 startIndex: passage.startIndex,
                 endIndex: passage.endIndex,
