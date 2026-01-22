@@ -346,8 +346,8 @@ class ReferenceParser {
                 }
             }
 
-            // Handle chapter-only references
-            if (!part.includes(":") && !part.includes("-") && !singleChapterBook) {
+            // Handle chapter-only references (only when no chapter has been established yet)
+            if (!part.includes(":") && !part.includes("-") && !singleChapterBook && !passage.chapter) {
                 this.#parseChapterOnly(passage, part)
             } else if (part.includes(":")) {
                 this.#parseChapterVerse(passage, part, isFirstPart)
