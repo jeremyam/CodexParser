@@ -1,3 +1,5 @@
+const song = require("./versifications/song")
+
 const versified = {
     Genesis: require("./versifications/genesis"),
     Exodus: require("./versifications/exodus"),
@@ -8,14 +10,17 @@ const versified = {
     "1 Samuel": require("./versifications/1samuel"),
     "2 Samuel": require("./versifications/2samuel"),
     "1 Kings": require("./versifications/1kings"),
+    "2 Kings": require("./versifications/2kings"),
     "1 Chronicles": require("./versifications/1chronicles"),
     "2 Chronicles": require("./versifications/2chronicles"),
     Nehemiah: require("./versifications/nehemiah"),
+    Esther: require("./versifications/esther"),
     Job: require("./versifications/job"),
     Psalms: require("./versifications/psalms"),
     Proverbs: require("./versifications/proverbs"),
     Ecclesiastes: require("./versifications/ecclesiastes"),
-    "Song of Songs": require("./versifications/song"),
+    "Song of Songs": song,
+    "Song of Solomon": song,
     Isaiah: require("./versifications/isaiah"),
     Jeremiah: require("./versifications/jeremiah"),
     Ezekiel: require("./versifications/ezekiel"),

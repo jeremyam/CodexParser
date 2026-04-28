@@ -32,6 +32,39 @@ class ReferenceParser {
     }
 
     /**
+     * Parses a versification value string into one or more {chapter, verse, suffix?} entries.
+     * Accepts:
+     *   - "ch:v"       → [{chapter, verse}]
+     *   - "ch:v1-v2"   → expanded to one entry per verse in range
+     *   - "ch:v[a-z]"  → [{chapter, verse, suffix}]
+     * Returns [] for unparseable input.
+     */
+    static expandVersificationValue(value) {
+        if (typeof value !== "string" || !value.includes(":")) return []
+        const [chPart, vPart] = value.split(":")
+        const chapter = Number(chPart)
+        if (!Number.isFinite(chapter)) return []
+
+        // Range form "v1-v2" (no letter suffixes inside ranges)
+        if (vPart.includes("-")) {
+            const [a, b] = vPart.split("-").map((s) => Number(s.trim()))
+            if (!Number.isFinite(a) || !Number.isFinite(b) || b < a) return []
+            const out = []
+            for (let v = a; v <= b; v++) out.push({ chapter, verse: v })
+            return out
+        }
+
+        // Letter-suffix form "19b"
+        const match = vPart.match(/^(\d+)([a-zA-Z]+)?$/)
+        if (!match) return []
+        const verse = Number(match[1])
+        if (!Number.isFinite(verse)) return []
+        const entry = { chapter, verse }
+        if (match[2]) entry.suffix = match[2]
+        return [entry]
+    }
+
+    /**
      * Parses found references into structured passage objects
      * @param {Array} foundReferences - Array of found references from scanner
      * @param {string} currentVersion - Current Bible version
@@ -53,6 +86,7 @@ class ReferenceParser {
                 endIndex: reference.endIndex,
                 originalText: reference.originalText,
                 version: VersionHandler.getVersion(reference.version || currentVersion, testament),
+                edition: this.#config.edition || "auto",
                 passages: [],
                 scripture: null,
                 valid: true,
@@ -128,19 +162,65 @@ class ReferenceParser {
      */
     #attachVersionHelpers(passage) {
         const self = this
-        const computeConverted = (srcPassage, targetAbbr) => {
+        const computeConverted = (srcPassage, targetAbbr, options = {}) => {
             const versionObj = VersionHandler.getVersionObject(targetAbbr)
             const cloned = JSON.parse(JSON.stringify(srcPassage))
             cloned.version = versionObj
 
-            // Remap chapters/verses according to versification, if present
-            cloned.passages.forEach((sub) => {
-                if (sub.versification && sub.versification[targetAbbr]) {
-                    const [ch, v] = sub.versification[targetAbbr].split(":").map(Number)
-                    sub.chapter = ch
-                    sub.verse = v
+            // Resolve which LXX edition to consult. "rahlfs" prefers
+            // versification.lxxRahlfs when present; "auto" (default) uses the
+            // canonical lxx field, which by convention holds Göttingen where
+            // attested and Rahlfs elsewhere (see src/data/lxx-editions.js).
+            const edition =
+                options.edition != null
+                    ? String(options.edition).toLowerCase()
+                    : srcPassage.edition || "auto"
+
+            const resolveTargetKey = (versification) => {
+                if (targetAbbr === "lxx" && edition === "rahlfs" && versification.lxxRahlfs !== undefined) {
+                    return "lxxRahlfs"
                 }
+                return targetAbbr
+            }
+
+            // Remap chapters/verses according to versification, if present.
+            // Versification values may be strict "ch:v", a range "ch:v1-v2",
+            // a letter-suffixed verse "ch:v[a-z]", or "" / null when the verse
+            // does not exist in the target version. We expand ranges and split
+            // missing verses into cloned.missingPassages so summary fields
+            // never contain NaN.
+            const remapped = []
+            const missing = []
+            cloned.passages.forEach((sub) => {
+                if (!sub.versification) {
+                    remapped.push(sub)
+                    return
+                }
+                const key = resolveTargetKey(sub.versification)
+                if (!(key in sub.versification)) {
+                    remapped.push(sub)
+                    return
+                }
+                const target = sub.versification[key]
+                if (target == null || target === "") {
+                    missing.push({ ...sub, missingIn: targetAbbr })
+                    return
+                }
+                const expanded = ReferenceParser.expandVersificationValue(target)
+                if (expanded.length === 0) {
+                    remapped.push(sub)
+                    return
+                }
+                expanded.forEach((entry, idx) => {
+                    const next = idx === 0 ? sub : JSON.parse(JSON.stringify(sub))
+                    next.chapter = entry.chapter
+                    next.verse = entry.verse
+                    if (entry.suffix) next.verseSuffix = entry.suffix
+                    remapped.push(next)
+                })
             })
+            cloned.passages = remapped
+            if (missing.length > 0) cloned.missingPassages = missing
 
             // Sort and recompute summary fields
             cloned.passages.sort((a, b) => a.chapter - b.chapter || a.verse - b.verse)
@@ -158,13 +238,13 @@ class ReferenceParser {
                 }
             }
 
-            const chapterVersesMap = {}
+            const chapterEntries = {}
             cloned.passages.forEach((p) => {
-                if (!chapterVersesMap[p.chapter]) chapterVersesMap[p.chapter] = new Set()
-                chapterVersesMap[p.chapter].add(p.verse)
+                if (!chapterEntries[p.chapter]) chapterEntries[p.chapter] = []
+                chapterEntries[p.chapter].push({ verse: p.verse, suffix: p.verseSuffix || "" })
             })
 
-            const sortedChs = Object.keys(chapterVersesMap)
+            const sortedChs = Object.keys(chapterEntries)
                 .map(Number)
                 .sort((a, b) => a - b)
             const chapterStrs = []
@@ -187,13 +267,32 @@ class ReferenceParser {
                 return merged
             }
 
+            const formatChapterVerses = (entries) => {
+                const usable = entries.filter((e) => e.verse > 0)
+                if (usable.length === 0) return []
+                const sorted = [...usable].sort(
+                    (a, b) => a.verse - b.verse || a.suffix.localeCompare(b.suffix)
+                )
+                if (sorted.some((e) => e.suffix)) {
+                    // Letter-suffixed verses (Esther additions, Isa 63:19b, Dan 3:24a):
+                    // do not range-merge - emit each as "<verse><suffix>" individually.
+                    const seen = new Set()
+                    const out = []
+                    for (const e of sorted) {
+                        const tag = `${e.verse}${e.suffix}`
+                        if (seen.has(tag)) continue
+                        seen.add(tag)
+                        out.push(tag)
+                    }
+                    return out
+                }
+                return mergeRanges([...new Set(sorted.map((e) => e.verse))])
+            }
+
             sortedChs.forEach((ch) => {
-                const vs = Array.from(chapterVersesMap[ch])
-                    .filter((v) => v > 0)
-                    .sort((a, b) => a - b)
-                if (vs.length > 0) {
-                    const merged = mergeRanges(vs)
-                    chapterStrs.push(`${ch}:${merged.join(",")}`)
+                const formatted = formatChapterVerses(chapterEntries[ch])
+                if (formatted.length > 0) {
+                    chapterStrs.push(`${ch}:${formatted.join(",")}`)
                 }
             })
 
@@ -205,20 +304,21 @@ class ReferenceParser {
             const lastCh = sortedChs[sortedChs.length - 1]
             cloned.chapter = firstCh
 
-            const mergedFirst = mergeRanges(chapterVersesMap[firstCh] || new Set())
-            cloned.verses = mergedFirst
+            const formattedFirst = formatChapterVerses(chapterEntries[firstCh] || [])
+            cloned.verses = formattedFirst
 
             if (firstCh !== lastCh) {
                 cloned.type = ReferenceParser.REFERENCE_TYPES.MULTI_CHAPTER_RANGE
                 cloned.to = {
                     book: cloned.book,
                     chapter: lastCh,
-                    verses: mergeRanges(chapterVersesMap[lastCh] || new Set()),
+                    verses: formatChapterVerses(chapterEntries[lastCh] || []),
                 }
                 cloned.original = `${cloned.book} ${chapterStrs.join("; ")}`
             } else {
                 const hasRangeOrMultiple =
-                    mergedFirst.length > 1 || (mergedFirst.length === 1 && mergedFirst[0].includes("-"))
+                    formattedFirst.length > 1 ||
+                    (formattedFirst.length === 1 && formattedFirst[0].includes("-"))
                 cloned.type = hasRangeOrMultiple
                     ? ReferenceParser.REFERENCE_TYPES.CHAPTER_VERSE_RANGE
                     : ReferenceParser.REFERENCE_TYPES.CHAPTER_VERSE
@@ -251,12 +351,15 @@ class ReferenceParser {
             return cloned
         }
 
-        passage.getVersion = function (targetVersion) {
+        passage.getVersion = function (targetVersion, options = {}) {
             const targetAbbr = targetVersion.toLowerCase() === "bhs" ? "mt" : targetVersion.toLowerCase()
-            return computeConverted(this, targetAbbr)
+            return computeConverted(this, targetAbbr, options)
         }
-        passage.getLXX = function () {
-            return this.getVersion("lxx")
+        passage.getLXX = function (options = {}) {
+            return this.getVersion("lxx", options)
+        }
+        passage.getLXXRahlfs = function () {
+            return this.getVersion("lxx", { edition: "rahlfs" })
         }
         passage.getMT = function () {
             return this.getVersion("mt")
@@ -267,7 +370,7 @@ class ReferenceParser {
         passage.getEnglish = function () {
             return this.getVersion("eng")
         }
-        passage.convertVersion = function (targetVersion) {
+        passage.convertVersion = function (targetVersion, options = {}) {
             const targetAbbr = targetVersion.toLowerCase() === "bhs" ? "mt" : targetVersion.toLowerCase()
 
             // Check if any passages have versification data
@@ -281,7 +384,7 @@ class ReferenceParser {
             }
 
             // Has versification, use the full conversion
-            return computeConverted(this, targetAbbr)
+            return computeConverted(this, targetAbbr, options)
         }
     }
 

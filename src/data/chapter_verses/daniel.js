@@ -11,4 +11,8 @@ module.exports = {
     10: Array.from({ length: 21 }, (_, i) => i + 1), // Daniel 10 has 21 verses
     11: Array.from({ length: 45 }, (_, i) => i + 1), // Daniel 11 has 45 verses
     12: Array.from({ length: 13 }, (_, i) => i + 1), // Daniel 12 has 13 verses
+    // Greek (deuterocanonical) Daniel: Susanna and Bel & the Dragon, present
+    // in LXX (both Theodotion and Old Greek) and absent from MT.
+    13: Array.from({ length: 64 }, (_, i) => i + 1), // Susanna (Theodotion)
+    14: Array.from({ length: 42 }, (_, i) => i + 1), // Bel and the Dragon (Theodotion)
 }

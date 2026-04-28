@@ -39,6 +39,7 @@ class CodexParser {
             booksOnly: config.booksOnly ?? false,
             invalid_sequence_strategy: config.invalid_sequence_strategy ?? "include",
             invalid_passage_strategy: config.invalid_passage_strategy ?? "include",
+            edition: CodexParser.#normalizeEdition(config.edition),
         }
 
         this.#scanner = new ScriptureScanner(this.#config)
@@ -134,6 +135,7 @@ class CodexParser {
             booksOnly: config.booksOnly ?? this.#config.booksOnly,
             invalid_sequence_strategy: config.invalid_sequence_strategy ?? this.#config.invalid_sequence_strategy,
             invalid_passage_strategy: config.invalid_passage_strategy ?? this.#config.invalid_passage_strategy,
+            edition: config.edition !== undefined ? CodexParser.#normalizeEdition(config.edition) : this.#config.edition,
         }
 
         // Update scanner and parser configs
@@ -141,6 +143,25 @@ class CodexParser {
         this.#parser = new ReferenceParser(this.#config)
 
         return this
+    }
+
+    /**
+     * Sets the LXX edition preference. "auto" (default) uses Göttingen where
+     * attested per src/data/lxx-editions.js and falls back to Rahlfs elsewhere.
+     * "rahlfs" forces Rahlfs versification universally.
+     * @param {string} edition - "auto" | "rahlfs"
+     * @returns {CodexParser}
+     */
+    edition(edition) {
+        this.#config.edition = CodexParser.#normalizeEdition(edition)
+        this.#parser = new ReferenceParser(this.#config)
+        return this
+    }
+
+    static #normalizeEdition(value) {
+        if (value == null) return "auto"
+        const v = String(value).toLowerCase()
+        return v === "rahlfs" ? "rahlfs" : "auto"
     }
 
     /**

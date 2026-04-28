@@ -174,13 +174,11 @@ module.exports = {
         mt: "32:32",
         eng: "32:32",
     },
-    "35:16": {
-        lxx: "35:16",
-        mt: "35:16",
-        eng: "35:16",
-    },
+    // Gen 35:16-21 verse split differs slightly between traditions: LXX
+    // condenses the Migdal-eder note so MT/ENG 35:21 has no distinct LXX
+    // counterpart and MT/ENG 35:22 = LXX 35:21.
     "35:21": {
-        lxx: "35:16",
+        lxx: "",
         mt: "35:21",
         eng: "35:21",
     },

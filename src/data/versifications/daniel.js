@@ -1,3 +1,24 @@
+// LXX-only chapter helper for the Greek additions. Generates a versification
+// entry per verse where the LXX (Theodotion) numbers the verse identically
+// to the Vulgate/deuterocanonical ENG reference. mt is null because the
+// chapter is absent from the Hebrew text.
+//
+// Edition note: Göttingen Ziegler-Munnich (1999) and Rahlfs-Hanhart (2006)
+// both PRINT Susanna and Bel & the Dragon as standalone books titled
+// ΣΟΥΣΑΝΝΑ and ΒΗΛ ΚΑΙ ΔΡΑΚΩΝ rather than as Daniel chapters 13 and 14.
+// The Vulgate / NRSV-with-Apocrypha / NABRE traditions append them as Daniel
+// 13 and 14, which is what we model here so user input like "Daniel 13:1"
+// can be parsed canonically. The verse counts (64 Susanna, 42 Bel) and
+// numbering match Hanhart's printed Theodotion text.
+const lxxOnlyChapter = (chapter, verseCount) => {
+    const out = {}
+    for (let v = 1; v <= verseCount; v++) {
+        const ref = `${chapter}:${v}`
+        out[ref] = { lxx: ref, mt: null, eng: ref }
+    }
+    return out
+}
+
 module.exports = {
     // Chapter 3: Include all LXX verses, with mt/eng set to null where no correspondence exists
     "3:1": {
@@ -834,4 +855,11 @@ module.exports = {
         mt: "6:29",
         eng: "6:28",
     },
+
+    // Daniel 13: Susanna (Theodotion). 64 verses, LXX-only, identical numbering
+    // in Rahlfs and Göttingen Ziegler-Munnich (1999).
+    ...lxxOnlyChapter(13, 64),
+
+    // Daniel 14: Bel and the Dragon (Theodotion). 42 verses, LXX-only.
+    ...lxxOnlyChapter(14, 42),
 }
