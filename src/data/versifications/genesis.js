@@ -1,4 +1,12 @@
 module.exports = {
+    // LXX/Göttingen Genesis 5 has only 31 verses. The content of ENG/MT 5:32
+    // ("Noah was 500 years old, and he fathered Shem, Ham, and Japheth")
+    // is folded into LXX 6:1, which then continues with the start of ENG/MT 6:1.
+    "5:32": {
+        lxx: "",
+        mt: "5:32",
+        eng: "5:32",
+    },
     "31:55": {
         lxx: "32:1",
         mt: "32:1",

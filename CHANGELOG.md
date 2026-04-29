@@ -2,6 +2,12 @@
 
 All notable changes to this project are documented here. For full details, see the Release Notes in README and the GitHub Releases page.
 
+## 0.4.1 — 2026-04-28
+
+### Fixed
+
+- **Genesis 5:32 LXX missing entry.** ENG/MT Gen 5:32 ("Noah was 500 years old, and he fathered Shem, Ham, and Japheth") is folded into LXX Göttingen Gen 6:1, so LXX Genesis 5 has only 31 verses. The previous data left ENG Gen 5:32 unmapped, so `convertVersion("lxx")` returned 32 verses for Gen 5 and downstream lookups against an LXX corpus 404'd. Now correctly emits `missingPassages: [{ verse: 32 }]` and `verses: ["1-31"]`.
+
 ## 0.4.0 — 2026-04-28
 
 LXX versification audit + structural fixes. Major data-correctness pass against authoritative sources (Hanhart's Göttingen Esther, Rahlfs-Hanhart 2006, Göttingen Theodotion Daniel/Susanna/Bel) verified via Logos library.
