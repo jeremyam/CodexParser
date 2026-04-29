@@ -10,10 +10,12 @@ Built with precision and passion, CodexParser handles single verses, ranges, mul
 
 ## Features 🌟
 
--   **Parse Any Reference**: From "Jn 3:16" to "Psalm 115:5,7,10", it’s got you covered.
+-   **Parse Any Reference**: From "Jn 3:16" to "Psalm 115:5,7,10", it's got you covered.
 -   **Structured Output**: Get book, chapter, verses, testament, start/end points, SBL abbreviations, and versification data in a clean object.
 -   **SBL Abbreviations**: Formatted references (e.g., "Ps. 115:5, 7, 10", "Gen. 1:1–3") with periods, en dashes for ranges, and commas with spaces for separated verses.
--   **Versification Support**: Handles differences between English, LXX, and MT texts, with mappings like Psalm 115 (LXX) to Psalm 116 (MT/ENG).
+-   **Versification Support**: Handles differences between English, LXX, and MT texts — including the Greek additions to Esther (A–F) and Daniel (Susanna ch 13, Bel ch 14).
+-   **Göttingen vs. Rahlfs Editions**: Default to Göttingen where attested, fall back to Rahlfs elsewhere; switch with `parser.edition("rahlfs")`.
+-   **Letter-Suffixed Verses**: Hanhart's Esther additions (`1:1a`–`1:1s`, `4:17a`–`4:17z`, etc.) round-trip through `convertVersion` with `verseSuffix` carried through `scripture.cv`.
 -   **Validation**: Checks if verses exist, with detailed error messages for invalid references.
 -   **Combine Passages**: Merge multiple references into a single, cohesive range.
 -   **Chainable API**: Fluent, intuitive method chaining for a smooth workflow.
@@ -157,6 +159,55 @@ Notes:
 - `getVersion("eng"|"lxx"|"mt"|"bhs")` is available; `getBHS()` aliases `MT`.
 - `.scripture.hash` is OSIS textual (e.g., `John.3.16`), `.osisNumeric` uses pythonbible-style integer IDs.
 
+### Editions: Göttingen vs. Rahlfs
+
+CodexParser defaults to **Göttingen** versification where the critical edition exists and falls back to **Rahlfs** where it doesn't (per `src/data/lxx-editions.js`). Switch with `.edition()`:
+
+```javascript
+const parser = new CodexParser()
+
+// Default: "auto" (Göttingen-where-attested, Rahlfs-elsewhere)
+const [a] = parser.parse("Genesis 31:55").getPassages()
+console.log(a.getLXX().scripture.cv)               // "32:1" (Wevers Genesis)
+
+// Force Rahlfs across the whole parser
+parser.edition("rahlfs")
+const [b] = parser.parse("Genesis 31:55").getPassages()
+console.log(b.getLXX().scripture.cv)               // same here; would differ in books with `lxxRahlfs` overrides
+
+// Per-call override (no need to switch the whole parser)
+const [c] = parser.parse("Esther 1:1").getPassages()
+console.log(c.convertVersion("lxx", { edition: "rahlfs" }).scripture.cv)
+console.log(c.getLXXRahlfs().scripture.cv)         // helper equivalent
+```
+
+### Greek additions: Esther A–F and Daniel 13/14
+
+`Esther 11:2`–`16:24` (Vulgate / RSV-Apocrypha numbering) and `Daniel 13`/`14` (Susanna, Bel & the Dragon) parse and convert. Hanhart's letter-suffixed positions (`1:1a`, `4:17a`, `8:12x`, …) are carried through `verseSuffix`.
+
+```javascript
+const parser = new CodexParser()
+
+// Esther Addition A: ENG 11:2 -> LXX 1:1a
+const [e] = parser.parse("Esther 11:2").getPassages()
+const eLxx = e.convertVersion("lxx")
+console.log(eLxx.scripture.cv)                     // "1:1a"
+console.log(eLxx.passages[0].verseSuffix)          // "a"
+console.log(eLxx.passages[0].chapter, eLxx.passages[0].verse) // 1, 1
+
+// Susanna (Daniel 13) parses canonically
+const [s] = parser.parse("Daniel 13:1").getPassages()
+console.log(s.valid)                               // true
+const sMt = s.convertVersion("mt")
+console.log(sMt.missingPassages?.length)           // 1 (LXX-only chapter)
+
+// Range / missing-in-target verses don't NaN-out
+const [g] = parser.parse("Genesis 31:48").getPassages()
+console.log(g.getLXX().scripture.cv)               // "31:47-48" (range)
+const [k] = parser.parse("1 Kings 4:21").getPassages()
+console.log(k.getLXX().missingPassages[0].missingIn) // "lxx"
+```
+
 ---
 
 ## API: Your Codex Arsenal 🛠️
@@ -188,6 +239,24 @@ Here’s the breakdown of CodexParser’s key methods—your tools for mastering
 -   **Args**: `version` (string) - Version code ("lxx", "mt", "eng", etc.).
 -   **Returns**: The parser instance for chaining.
 -   **Example**: `parser.bibleVersion("lxx").parse("Psalm 115:5,7,10");`
+
+### `.edition(edition)`
+
+-   **What it does**: Selects the LXX edition. `"auto"` (default) uses Göttingen where attested per `src/data/lxx-editions.js` and Rahlfs elsewhere. `"rahlfs"` forces Rahlfs versification universally and consults `lxxRahlfs` overrides where present.
+-   **Args**: `edition` (string) - `"auto"` or `"rahlfs"`.
+-   **Returns**: The parser instance for chaining.
+-   **Example**: `parser.edition("rahlfs").parse("Esther 11:2");`
+
+### `passage.convertVersion(target, options?)` / `passage.getLXXRahlfs()`
+
+-   **What it does**: Converts a parsed passage to another versification. `target` is `"eng"`, `"lxx"`, `"mt"`, or `"bhs"`. The optional `options.edition` (`"rahlfs"` or `"auto"`) overrides the parser-level edition for this single call. `getLXXRahlfs()` is a shortcut for `convertVersion("lxx", { edition: "rahlfs" })`.
+-   **Returns**: A cloned passage with `chapter` / `verse` / `verseSuffix` remapped, plus `cloned.missingPassages` listing any sub-passages that don't exist in the target version.
+-   **Example**:
+    ```javascript
+    const [p] = parser.parse("Esther 11:2").getPassages()
+    p.convertVersion("lxx").scripture.cv          // "1:1a"
+    p.convertVersion("mt").missingPassages.length // 1 (Add A is LXX-only)
+    ```
 
 ### `.getPassages()`
 
@@ -303,6 +372,29 @@ Let’s parse the scriptures together—happy coding! ✝️📚
 ---
 
 ## Release Notes
+
+### 0.4.0 (2026-04-28)
+
+LXX versification audit + structural fixes. Major data-correctness pass against authoritative sources (Hanhart's Göttingen Esther, Rahlfs-Hanhart 2006, Göttingen Theodotion Susanna/Daniel/Bel) verified against a Logos library extract.
+
+- New `parser.edition("rahlfs"|"auto")` setter and `passage.convertVersion(target, { edition })` per-call override; `passage.getLXXRahlfs()` helper.
+- `ReferenceParser.expandVersificationValue()` parses `"ch:v"`, `"ch:v1-v2"`, `"ch:v[a-z]"`, and rejects empty/malformed input cleanly. The previously-broken cases (Gen 31:48 LXX `"31:47-48"`, 1 Kgs 4:21 LXX `""`, Isa 64:1 MT `"63:19b"`, Dan 3:24a) all parse correctly.
+- `verseSuffix` is now carried through `scripture.cv`, `verses[]`, `original`, and `abbr` so `Esther 11:2 ENG → LXX` produces `Esther 1:1a` (not `1:1`).
+- `cloned.missingPassages` is populated when a verse doesn't exist in the conversion target (e.g., 1 Kgs 4:21 LXX, Daniel 13 in MT).
+- New `src/data/lxx-editions.js` registry; new `versifications/2kings.js`, `versifications/esther.js` (Hanhart-verified Vulgate ↔ Rahlfs Add A–F mapping); `chapter_verses` extended for Daniel 13/14 (Susanna + Bel) and Esther 10–16 (Vulgate apocrypha layout); `Song of Solomon` aliased to `Song of Songs`.
+- **116 MT-side bugs fixed** across Genesis 31:55–32:32, 1 Samuel 23:29, 2 Samuel 18:33–19:43, Psalms 92:0, Ezekiel 20:45–21:32 — entries that incorrectly left `mt = eng` when MT actually shifts. Verified against BHS data.
+- `numbers.js` corrupted final entry replaced + Num 30 added; `micah.js` rewritten; `psalms.js` Ps 147 boundary corrected from 9/10 to 11/12; `genesis.js` 35:16 no-op removed.
+- 77 assertion-based tests in `tests/lxx-versification-audit.test.js`. All passing.
+- Published to npm as `codexparser@0.4.0`.
+
+### 0.3.0 (2026-01-10)
+
+- Added `convertVersion(targetVersion)` method on passage objects for versification conversion.
+- Accepts version string: `"eng"`, `"lxx"`, `"mt"`, or `"bhs"` (alias for MT).
+- Automatically converts chapter/verse references between versifications when versification data exists.
+- Returns same reference with updated version metadata if no versification exists.
+- Tested with Psalms, Zechariah, and NT passages.
+- Published to npm as `codexparser@0.3.0`.
 
 ### 0.2.0 (2026-01-10)
 

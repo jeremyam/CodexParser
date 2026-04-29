@@ -25,6 +25,10 @@ dist/
 
 tests/
 
+# One-off audit and repair tooling (Mongo backups, repair scripts with
+# hardcoded credentials, generated audit reports). Kept out of the package.
+audit/
+
 # JetBrains IDE
 .idea/
 
