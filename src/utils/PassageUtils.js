@@ -46,6 +46,16 @@ class PassageUtils {
                 for (let i = start; i <= end && i <= chapterVerses[chapterVerses.length - 1]; i++) {
                     passages.push({ book, chapter, verse: i })
                 }
+            } else if (typeof verse === "string") {
+                const match = verse.trim().match(/^(\d+)([a-eA-E])?$/)
+                if (match) {
+                    const verseNum = Number(match[1])
+                    if (verseNum > 0) {
+                        const entry = { book, chapter, verse: verseNum }
+                        if (match[2]) entry.verseSuffix = match[2].toLowerCase()
+                        passages.push(entry)
+                    }
+                }
             } else {
                 const verseNum = Number(verse)
                 if (!isNaN(verseNum) && verseNum > 0) {

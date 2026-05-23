@@ -92,10 +92,13 @@ class VersificationHandler {
             const hasVersification = this.#versificationDifferences[passage.book]
 
             passage.passages.forEach((subPassage) => {
+                const verseRef = subPassage.verseSuffix
+                    ? `${subPassage.chapter}:${subPassage.verse}${subPassage.verseSuffix}`
+                    : `${subPassage.chapter}:${subPassage.verse}`
+
                 if (hasVersification) {
-                    const key = `${subPassage.chapter}:${subPassage.verse}`
-                    if (this.#versificationDifferences[passage.book][key]) {
-                        subPassage.versification = this.#versificationDifferences[passage.book][key]
+                    if (this.#versificationDifferences[passage.book][verseRef]) {
+                        subPassage.versification = this.#versificationDifferences[passage.book][verseRef]
                     }
                 }
 
@@ -105,11 +108,9 @@ class VersificationHandler {
                         versionAbbreviation === "lxx" ? "lxx" : versionAbbreviation === "mt" ? "mt" : null
 
                     if (versionType) {
-                        const versionReference = `${subPassage.chapter}:${subPassage.verse}`
                         for (const versification in this.#versificationDifferences[passage.book]) {
                             if (
-                                this.#versificationDifferences[passage.book][versification][versionType] ===
-                                versionReference
+                                this.#versificationDifferences[passage.book][versification][versionType] === verseRef
                             ) {
                                 subPassage.versification = this.#versificationDifferences[passage.book][versification]
                                 break

@@ -169,6 +169,54 @@ module.exports = {
         mt: "5:32",
         eng: "5:18",
     },
+    // Chapter 6: LXX 3 Reigns adds material between 6:1 and 6:14 (6:1a-d) and
+    // omits MT/Eng 6:11-14 (the divine promise speech) and 6:18 (cedar carving).
+    // Reference: Rahlfs, Septuaginta, ad loc.
+    "6:1a": {
+        lxx: "6:1a",
+        mt: "",
+        eng: "",
+    },
+    "6:1b": {
+        lxx: "6:1b",
+        mt: "",
+        eng: "",
+    },
+    "6:1c": {
+        lxx: "6:1c",
+        mt: "",
+        eng: "",
+    },
+    "6:1d": {
+        lxx: "6:1d",
+        mt: "",
+        eng: "",
+    },
+    "6:11": {
+        lxx: "",
+        mt: "6:11",
+        eng: "6:11",
+    },
+    "6:12": {
+        lxx: "",
+        mt: "6:12",
+        eng: "6:12",
+    },
+    "6:13": {
+        lxx: "",
+        mt: "6:13",
+        eng: "6:13",
+    },
+    "6:14": {
+        lxx: "",
+        mt: "6:14",
+        eng: "6:14",
+    },
+    "6:18": {
+        lxx: "",
+        mt: "6:18",
+        eng: "6:18",
+    },
     "7:13": {
         lxx: "7:1",
         mt: "7:13",

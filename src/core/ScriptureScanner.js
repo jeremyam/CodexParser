@@ -82,7 +82,10 @@ class ScriptureScanner {
                 let refStartIndex = bookStartIndex
                 let originalRefStartIndex = bookStartIndex
 
-                while (i < normalizedText.length && this.#isValidChapterVerseChar(normalizedText[i])) {
+                while (
+                    i < normalizedText.length &&
+                    this.#isValidChapterVerseChar(normalizedText[i], normalizedText[i - 1])
+                ) {
                     if (this.#isNextBibleBook(i, lowerCaseText, lowercaseBibleFullNames, lowercaseBibleAbbreviations)) {
                         break
                     }
@@ -178,11 +181,15 @@ class ScriptureScanner {
     }
 
     /**
-     * Checks if character is valid for chapter/verse references
+     * Checks if character is valid for chapter/verse references.
+     * Letter suffixes (a-e) only count when they directly follow a digit, so
+     * "6:1a" continues the token but "6:1 Amos" still breaks at "A".
      * @private
      */
-    #isValidChapterVerseChar(char) {
-        return /[\d:,\-;\s]/.test(char)
+    #isValidChapterVerseChar(char, prevChar) {
+        if (/[\d:,\-;\s]/.test(char)) return true
+        if (/[a-eA-E]/.test(char) && prevChar && /\d/.test(prevChar)) return true
+        return false
     }
 
     /**
