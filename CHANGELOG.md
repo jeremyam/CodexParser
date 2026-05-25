@@ -2,6 +2,26 @@
 
 All notable changes to this project are documented here. For full details, see the Release Notes in README and the GitHub Releases page.
 
+## 0.5.2 — 2026-05-25
+
+### Fixed
+
+- **Minor Prophets LXX versification used Rahlfs instead of Göttingen.** Extending the 0.5.1 Zechariah fix to the other Göttingen-edition Minor Prophets the app reads. For each, `lxx` now carries the Göttingen number (verified against Göttingen *Duodecim Prophetae* XIII), not the Rahlfs/MT number:
+  - **Hosea** — `lxx=eng` for ch1–2 and ch11–12; ch13/14 follows MT (ESV 13:16 = Göttingen 14:1), and the previously missing ESV 14:1–9 → 14:2–10 entries were added.
+  - **Joel** — `lxx=eng` (Göttingen keeps ESV 2:28–32 in ch2 and ESV ch3 as ch3; MT uses 3:1–5 / ch4).
+  - **Micah** — `lxx=eng`; Göttingen 5:1 = ESV 5:1 (the file previously mapped it to 4:14).
+  - **Malachi** — `lxx=eng` with sequential `mt` 3:19–24; dropped the Rahlfs verse reorder (Göttingen ch4 is sequential).
+
+### Added
+
+- **Zephaniah** and **Haggai** versification files (new). Göttingen moves ESV/MT 2:15→3:1 (Zephaniah) and 1:15→2:1 (Haggai), each merging into the following verse.
+
+## 0.5.1 — 2026-05-25
+
+### Fixed
+
+- **Zechariah LXX versification used Rahlfs instead of Göttingen.** The app reads Zechariah from the Göttingen edition (Duodecim Prophetae XIII), where Zechariah is numbered the same as English — the lead verse number is Göttingen and the parenthetical is Rahlfs (e.g. `(14)10 τέρπου καὶ εὐφραίνου, θύγατερ Σιων` = Göttingen 2:10 / Rahlfs 2:14). The data wrongly set `lxx` equal to the MT/Rahlfs number, so `Zechariah 2:10 ENG` reported `lxx: "2:14"` and parsing the Göttingen reference `2:10` as LXX back-mapped to `eng: "2:6"`. `lxx` now equals the Göttingen (= English) number for all 1:18–2:13 entries; `mt` is unchanged.
+
 ## 0.4.1 — 2026-04-28
 
 ### Fixed

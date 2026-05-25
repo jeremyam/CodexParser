@@ -30,6 +30,8 @@ const versified = {
     Jonah: require("./versifications/jonah"),
     Micah: require("./versifications/micah"),
     Nahum: require("./versifications/nahum"),
+    Zephaniah: require("./versifications/zephaniah"),
+    Haggai: require("./versifications/haggai"),
     Zechariah: require("./versifications/zechariah"),
     Malachi: require("./versifications/malachi"),
 }
