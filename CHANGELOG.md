@@ -2,6 +2,16 @@
 
 All notable changes to this project are documented here. For full details, see the Release Notes in README and the GitHub Releases page.
 
+## 0.5.3 — 2026-05-25
+
+### Fixed
+
+- **Scan character offsets (`startIndex`/`endIndex`/`originalText`) were wrong for references following punctuation or another reference.** Normalization in `ScriptureScanner.scan` deleted the period after a book abbreviation (`Ps.` → `Ps`), which shortened `normalizedText` and shifted every subsequent index out of alignment with the source `text`. The downstream `indexOf(fullRefText)` remap (which also searched for a `:`→`.` mangled form) then drifted, so e.g. scanning `… John 3:16 (cf. Lamentations 3:1)` returned `originalText: " John 3:1"` (leading space, truncated verse). Both normalization substitutions are now **length-preserving** (`Ps.` → `Ps `), and spans are taken directly from the scanner's own tracked indices with leading/trailing separator trimming. `text.slice(startIndex, endIndex) === originalText` now holds exactly, including abbreviated and numbered books (`1 Cor. 13:4`), semicolon lists (`Isa 1:1; 2:2` → `2:2` → `Isa. 2:2`), and trailing-comma cases.
+
+### Added
+
+- **En-dash / em-dash range support.** `3:22–24` and `3:22—24` (U+2013 / U+2014) are now parsed as ranges (previously only ASCII `-` was recognized, so `Lamentations 3:22–24` captured only `3:22`). Implemented as a length-preserving `–|— → -` substitution in `scan` normalization, so range hashes/abbreviations are complete (`Lam.3.22-Lam.3.24`) while `originalText` preserves the source dash.
+
 ## 0.5.2 — 2026-05-25
 
 ### Fixed

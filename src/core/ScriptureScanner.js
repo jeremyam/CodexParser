@@ -33,8 +33,14 @@ class ScriptureScanner {
         const abbreviationKeys = Object.keys(this.#abbreviations)
         const found = []
 
-        // Minimal normalization: fix periods before numbers, remove trailing periods
-        const normalizedText = text.replace(/\.(?=\d)/g, ":").replace(/(\b[A-Za-z]+)\.(?=\s|$)/g, "$1")
+        // Minimal normalization: fix periods before numbers, neutralize trailing
+        // periods after book abbreviations.  Both substitutions are
+        // LENGTH-PRESERVING (1 char -> 1 char) so indices into normalizedText
+        // map 1:1 onto the original `text`, keeping startIndex/endIndex exact.
+        const normalizedText = text
+            .replace(/\.(?=\d)/g, ":")
+            .replace(/(\b[A-Za-z]+)\.(?=\s|$)/g, "$1 ")
+            .replace(/[–—]/g, "-")
 
         const lowercaseBibleFullNames = fullNames.map((book) => book.toLowerCase())
         const lowercaseBibleAbbreviations = abbreviationKeys.map((abbr) => abbr.toLowerCase())
@@ -122,45 +128,35 @@ class ScriptureScanner {
                     }
                 }
 
-                // Align indices with original text
-                const originalBookText = text.slice(bookStartIndex, bookStartIndex + matchedLength)
-                const originalBookStartIndex =
-                    text.indexOf(originalBookText, bookStartIndex) !== -1
-                        ? text.indexOf(originalBookText, bookStartIndex)
-                        : bookStartIndex
-
                 references.forEach(({ ref, start, end }) => {
                     const type = this.#determineReferenceType(ref)
-                    const fullRefText = `${originalBookText} ${ref.replace(":", ".")}`
                     const suffixData = this.#detectSuffix(normalizedText, end)
                     const suffix = suffixData ? suffixData.suffix : null
-                    let refEndIndex = end
 
-                    if (suffixData) {
-                        refEndIndex += suffixData.length
-                        i += suffixData.length
+                    // Normalization is length-preserving, so the tracked scan
+                    // indices map 1:1 onto the original text. Use them directly
+                    // instead of the old indexOf remapping (which drifted and
+                    // truncated references that followed punctuation).
+                    let originalStartIndex = start
+                    let originalEndIndex = suffixData ? end + suffixData.length : end
+                    if (suffixData) i += suffixData.length
+
+                    // Trim leading separators/whitespace (e.g. after "(", ";", ".")
+                    while (
+                        originalStartIndex < originalEndIndex &&
+                        /[\s.,;:()[\]—-]/.test(text[originalStartIndex])
+                    ) {
+                        originalStartIndex++
                     }
-
-                    // Map to original text
-                    let originalStartIndex =
-                        text.indexOf(fullRefText, originalRefStartIndex) !== -1
-                            ? text.indexOf(fullRefText, originalRefStartIndex)
-                            : originalBookStartIndex
-
-                    let originalEndIndex = originalStartIndex + fullRefText.length
-                    let originalText = text.slice(originalStartIndex, originalEndIndex)
-
-                    // Adjust for suffix in original text
-                    if (suffixData) {
-                        originalEndIndex += suffixData.length
-                        originalText = text.slice(originalStartIndex, originalEndIndex)
-                    }
-
-                    // Trim trailing whitespace from originalText
-                    while (originalEndIndex > originalStartIndex && /[\s]/.test(text[originalEndIndex - 1])) {
+                    // Trim trailing whitespace/punctuation
+                    while (
+                        originalEndIndex > originalStartIndex &&
+                        /[\s.,;]/.test(text[originalEndIndex - 1])
+                    ) {
                         originalEndIndex--
-                        originalText = text.slice(originalStartIndex, originalEndIndex)
                     }
+
+                    const originalText = text.slice(originalStartIndex, originalEndIndex)
 
                     found.push({
                         book: foundBook,
