@@ -71,7 +71,7 @@ class ReferenceParser {
      * @returns {Array} Array of parsed passage objects
      */
     parse(foundReferences, currentVersion = null) {
-        return foundReferences.map((reference) => {
+        return this.#splitChapterSwitchingRefs(foundReferences).map((reference) => {
             const book = this.#normalizeBookName(reference.book)
             const testament = bible.old.includes(book) ? "old" : "new"
 
@@ -134,6 +134,64 @@ class ReferenceParser {
 
             return parsedPassage
         })
+    }
+
+    /**
+     * Splits a chapter-switching comma reference (e.g. "Daniel 8:16-18,9:21,23,10:8-10")
+     * into one reference per chapter group, so each is parsed by the single-chapter path.
+     * Single-chapter comma lists ("9:21,23") and bare-verse lists ("1:1,2,3") are left as-is.
+     * @private
+     */
+    #splitChapterSwitchingRefs(foundReferences) {
+        const out = []
+        for (const reference of foundReferences) {
+            const groups = this.#chapterGroups(reference.reference)
+            if (!groups) {
+                out.push(reference)
+            } else {
+                for (const groupRef of groups) {
+                    // Force the general parse path; #parseReferenceParts re-derives the real type.
+                    out.push({
+                        ...reference,
+                        reference: groupRef,
+                        type: ReferenceParser.REFERENCE_TYPES.CHAPTER_VERSE_RANGE,
+                    })
+                }
+            }
+        }
+        return out
+    }
+
+    /**
+     * Groups a post-book reference string by chapter. Returns one ref string per chapter group
+     * (e.g. ["8:16-18", "9:21,23", "10:8-10"]) only when the list actually switches chapters;
+     * returns null otherwise (no comma, single chapter, or a leading bare verse).
+     * @private
+     */
+    #chapterGroups(reference) {
+        if (typeof reference !== "string" || !reference.includes(",")) return null
+        const parts = reference
+            .split(",")
+            .map((p) => p.trim())
+            .filter(Boolean)
+        const groups = []
+        let current = null
+        for (const part of parts) {
+            const match = part.match(/^(\d+)\s*[:.]/)
+            if (match) {
+                const chapter = match[1]
+                if (!current || current.chapter !== chapter) {
+                    current = { chapter, parts: [] }
+                    groups.push(current)
+                }
+                current.parts.push(part)
+            } else {
+                if (!current) return null // leading bare verse — leave to normal parsing
+                current.parts.push(part)
+            }
+        }
+        if (groups.length < 2) return null
+        return groups.map((g) => g.parts.join(","))
     }
 
     /**
