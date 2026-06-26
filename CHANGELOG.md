@@ -2,6 +2,18 @@
 
 All notable changes to this project are documented here. For full details, see the Release Notes in README and the GitHub Releases page.
 
+## 0.5.5 — 2026-06-26
+
+### Fixed
+
+- **Single-chapter books with a bare verse number were mis-parsed as a chapter.** `Jude 4`, `Philemon 6`, `Obadiah 15`, `2 John 7`, and `3 John 4` treated the number as a *chapter* (chapter 4, 6, 15, …) and were flagged invalid (code 102, "Chapter N does not exist"), instead of resolving to verse N of the book's single chapter. The bare number routed through `#handleEmptyReference` (chapter semantics) before reaching `#parseSingleChapterBook`, which already handled it correctly. `ReferenceParser.parse` now detects single-chapter books and routes their bare-number references to the single-chapter path, so `Jude 4` → `Jude 1:4` (`Jude.1.4`, valid). Unchanged: bare `1` still means the whole book (`Jude 1` → `Jude.1.1-Jude.1.25`), explicit `chapter:verse` (`Jude 1:4`), ranges (`Jude 4-7`), comma lists (`Jude 1,3,5`), and genuine out-of-range verses (`Obadiah 22` → invalid, code 104).
+
+## 0.5.4 — 2026-06-25
+
+### Fixed
+
+- **Comma references that switch chapters were forced into the first chapter.** A reference such as `Daniel 8:16-18,9:21,23,10:8-10` was parsed as a single passage that collapsed every segment onto chapter 8, so `9:21,23` and `10:8-10` were lost. `ReferenceParser.parse` now pre-splits a comma list by chapter group (`#splitChapterSwitchingRefs` / `#chapterGroups`), emitting one passage per chapter — `Daniel 8:16-18` (range), `Daniel 9:21,23` (comma list), and `Daniel 10:8-10` (range) — each re-typed by the normal single-chapter path. Single-chapter comma lists (`9:21,23`), bare-verse lists (`1:1,2,3`), and a leading bare verse are unchanged; the split only triggers when the list actually crosses chapters (two or more chapter groups).
+
 ## 0.5.3 — 2026-05-25
 
 ### Fixed

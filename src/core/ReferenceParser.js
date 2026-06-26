@@ -101,10 +101,21 @@ class ReferenceParser {
                 cleanReference = cleanReference.slice(0, -1).trim()
             }
 
+            // For single-chapter books (Jude, Philemon, Obadiah, 2-3 John) a bare number
+            // is a verse, not a chapter ("Jude 4" = Jude 1:4). Let those fall through to
+            // #parseReferenceParts → #parseSingleChapterBook, which interprets "1" as the
+            // whole book and any other number as a verse. Non-single-chapter books keep
+            // treating a bare number as a chapter via #handleEmptyReference.
+            const isSingleChapterBook = PassageUtils.SINGLE_CHAPTER_BOOKS.some((b) => Object.keys(b)[0] === book)
+            const isBareNumber = /^\d+$/.test(cleanReference)
+
             // Handle book-only or empty references
             if (!cleanReference && this.#config.booksOnly) {
                 parsedPassage.type = ReferenceParser.REFERENCE_TYPES.BOOK_ONLY
-            } else if (!cleanReference || cleanReference.match(/^\d+\s*[:;]?\s*$/)) {
+            } else if (
+                (!cleanReference || cleanReference.match(/^\d+\s*[:;]?\s*$/)) &&
+                !(isSingleChapterBook && isBareNumber)
+            ) {
                 this.#handleEmptyReference(parsedPassage, cleanReference)
             } else if (reference.type === ReferenceParser.REFERENCE_TYPES.COMMA_SEPARATED) {
                 this.#handleCommaSeparated(parsedPassage, cleanReference)
