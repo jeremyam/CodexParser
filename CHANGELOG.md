@@ -2,6 +2,12 @@
 
 All notable changes to this project are documented here. For full details, see the Release Notes in README and the GitHub Releases page.
 
+## 0.5.6 — 2026-08-10
+
+### Fixed
+
+- **Malachi 4:4–6 LXX mapping ignored the Göttingen verse reorder.** 0.5.2 set `lxx = eng` for Malachi 4, reading the edition's sequential parenthetical numbers ((19)1 … (24)6) as proof of MT order — but those are positional, not verse identities. The Göttingen text (Duodecim Prophetae XIII) follows the LXX manuscript tradition and places "Remember the law of Moses" (MT 3:22 / ESV 4:4) **last**. Matching content: Göttingen 4:4 = ESV 4:5 (Elijah), 4:5 = ESV 4:6, 4:6 = ESV 4:4. `lxx` now carries those identity-correct numbers, so fetching ESV 4:5–6 returns the Elijah/restore verses instead of a one-verse shift. 4:1–3 and all `mt` values unchanged.
+
 ## 0.5.5 — 2026-06-26
 
 ### Fixed
