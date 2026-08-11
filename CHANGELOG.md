@@ -2,6 +2,12 @@
 
 All notable changes to this project are documented here. For full details, see the Release Notes in README and the GitHub Releases page.
 
+## 0.5.7 — 2026-08-11
+
+### Fixed
+
+- **Ezekiel 20:45–49 / 21:1–32 LXX mapping used Rahlfs numbers, not Göttingen.** The `lxx` values carried the Rahlfs/MT-style chapter division (ENG 20:45 → 21:1 … ENG 21:32 → 21:37), but Ziegler's Göttingen Ezechiel (XVI,1) divides chapters 20/21 the English way — his ch. 20 runs 1–49 (Teman/Negeb oracle stays in ch. 20) and ch. 21 runs 1–32 (apparatus: the 21:2 lemma is the Jerusalem oracle and the last entry is 21:32 λελάληκα). Fetching LXX text for ENG Ezek 21 verses therefore looked up verses 5 higher than the edition has (e.g. ENG 21:31 → 21:36, which doesn't exist in the Göttingen chapter) and returned nothing or the wrong verse. `lxx` is now identity with `eng` for 20:45–49 and 21:1–32. All `mt` values and the ch. 7 LXX verse-order mapping are unchanged.
+
 ## 0.5.6 — 2026-08-10
 
 ### Fixed
