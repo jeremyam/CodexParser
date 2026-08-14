@@ -2,6 +2,12 @@
 
 All notable changes to this project are documented here. For full details, see the Release Notes in README and the GitHub Releases page.
 
+## 0.5.8 — 2026-08-14
+
+### Fixed
+
+- **Proverbs LXX mapping pointed MT 20:20–22 at a nonexistent verse and missed the ch. 15/16 seam.** The app stores Rahlfs for Proverbs (no Göttingen edition) with Rahlfs' lettered verses merged into their base verse. MT 20:20–22 = Rahlfs 20:9a–c, so `lxx` is now `20:9` for all three (was `20:20`, which the LXX text doesn't have — Rahlfs ch. 20 runs 1–13, 23–30 by number). Added the ch. 15/16 seam, where an unmapped lookup silently returned the wrong verse because LXX-only pluses occupy 16:7–9: MT 16:6–9 = Rahlfs 15:27a/28a/29a/29b → `15:27`/`15:28`/`15:29`/`15:29`, and MT 16:4 = the plus numbered LXX 16:9. Genuine LXX omissions (4:7; 8:33; 11:4; 15:31; 16:1, 3; 18:23–24; 19:1–2; 20:14–19; 21:5; 22:6; 23:23) remain unmapped by design. All `mt` values unchanged (Proverbs MT numbering = English).
+
 ## 0.5.7 — 2026-08-11
 
 ### Fixed
