@@ -73,7 +73,8 @@ class ReferenceParser {
     parse(foundReferences, currentVersion = null) {
         return this.#splitChapterSwitchingRefs(foundReferences).map((reference) => {
             const book = this.#normalizeBookName(reference.book)
-            const testament = bible.old.includes(book) ? "old" : "new"
+            // Deuterocanonical books count as "old" for versification purposes.
+            const testament = bible.new.includes(book) ? "new" : "old"
 
             const parsedPassage = {
                 original: `${reference.book} ${reference.reference}`,
@@ -221,7 +222,10 @@ class ReferenceParser {
         }
 
         return (
-            bible.new.find((b) => b.toLowerCase() === book) || bible.old.find((b) => b.toLowerCase() === book) || book
+            bible.new.find((b) => b.toLowerCase() === book) ||
+            bible.old.find((b) => b.toLowerCase() === book) ||
+            (bible.deuterocanonical || []).find((b) => b.toLowerCase() === book) ||
+            book
         )
     }
 
@@ -366,6 +370,7 @@ class ReferenceParser {
             })
 
             if (chapterStrs.length === 0) {
+                self.#attachVersionHelpers(cloned) // keep conversions chainable
                 return cloned // no verses, return as-is
             }
 
@@ -417,6 +422,7 @@ class ReferenceParser {
                 cloned.abbr = `${cloned.book} ${cloned.scripture.cv}${suffix}`
             }
 
+            self.#attachVersionHelpers(cloned) // keep conversions chainable
             return cloned
         }
 
@@ -449,6 +455,7 @@ class ReferenceParser {
                 // No versification exists, return a clone with updated version info only
                 const cloned = JSON.parse(JSON.stringify(this))
                 cloned.version = VersionHandler.getVersionObject(targetAbbr)
+                self.#attachVersionHelpers(cloned)
                 return cloned
             }
 

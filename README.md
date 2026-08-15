@@ -17,8 +17,11 @@ Built with precision and passion, CodexParser handles single verses, ranges, mul
 -   **Göttingen vs. Rahlfs Editions**: Default to Göttingen where attested, fall back to Rahlfs elsewhere; switch with `parser.edition("rahlfs")`.
 -   **Letter-Suffixed Verses**: Hanhart's Esther additions (`1:1a`–`1:1s`, `4:17a`–`4:17z`, etc.) round-trip through `convertVersion` with `verseSuffix` carried through `scripture.cv`.
 -   **Validation**: Checks if verses exist, with detailed error messages for invalid references.
+-   **Deuterocanonical Books**: Tobit, Judith, Wisdom, Sirach, Baruch, Epistle of Jeremiah, 1 Esdras, 1–4 Maccabees, and Prayer of Manasseh parse, validate, and format like any other book.
+-   **Exact Source Positions**: Every passage carries `startIndex`/`endIndex`/`originalText`, so `text.slice(startIndex, endIndex) === originalText` holds exactly — great for highlighting and linking.
 -   **Combine Passages**: Merge multiple references into a single, cohesive range.
 -   **Chainable API**: Fluent, intuitive method chaining for a smooth workflow.
+-   **TypeScript & ESM Ready**: Ships with type definitions and both `require` and `import` entry points, dependency-free.
 
 ---
 
@@ -48,6 +51,8 @@ Here’s how to wield CodexParser’s might:
 
 ```javascript
 const CodexParser = require("codexparser")
+// or, in ESM / TypeScript:
+// import CodexParser from "codexparser"
 
 const parser = new CodexParser()
 
@@ -208,6 +213,24 @@ const [k] = parser.parse("1 Kings 4:21").getPassages()
 console.log(k.getLXX().missingPassages[0].missingIn) // "lxx"
 ```
 
+### Deuterocanonical books
+
+The Septuagint's deuterocanon parses, validates, and formats like any other book: **Tobit, Judith, Wisdom of Solomon, Sirach, Baruch, Epistle of Jeremiah, 1 Esdras, 1–4 Maccabees, and Prayer of Manasseh**. Common abbreviations are recognized (`Tob`, `Jdt`, `Wis`, `Sir`/`Ecclus`, `Bar`, `Ep Jer`, `1 Esd`, `1 Macc` … `4 Macc`, `Pr Man`).
+
+```javascript
+const parser = new CodexParser().bibleVersion("lxx")
+
+const [sir] = parser.parse("Sirach 24:1-4").getPassages()
+console.log(sir.abbr)                    // "Sir. 24:1-4 LXX"
+console.log(sir.scripture.hash)          // "Sir.24.1-Sir.24.4"
+console.log(sir.scripture.osisNumeric)   // "70024001-70024004"
+
+// Epistle of Jeremiah and Prayer of Manasseh are single-chapter books
+console.log(parser.parse("Ep Jer 5").first().scripture.hash) // "EpJer.1.5"
+```
+
+Chapter/verse counts follow the SWORD Project's LXX versification tables (Rahlfs-based). Numeric OSIS ids place these books after the protestant canon (Tobit = 67, …, Prayer of Manasseh = 78), so books 1–66 keep their stable numbers. ENG/MT versification mappings for the deuterocanon do not ship yet — `convertVersion` returns the reference unchanged with updated version metadata.
+
 ---
 
 ## API: Your Codex Arsenal 🛠️
@@ -289,6 +312,13 @@ Here’s the breakdown of CodexParser’s key methods—your tools for mastering
 -   **Returns**: Object mapping books to chapter/verse data.
 -   **Example**: `console.log(parser.getToc());`
 
+### `.replace(text, useAbbreviations?)`
+
+-   **What it does**: After `parse(text)`, returns the text with every found reference swapped for its formatted form, using the scanner's exact source positions (no stray spaces, parentheses preserved).
+-   **Args**: `text` (string) - The original text; `useAbbreviations` (boolean, default `true`) - SBL abbreviations (`Gen. 1:1`) vs. full names (`Genesis 1:1`).
+-   **Returns**: The rewritten string.
+-   **Example**: `parser.parse(text).replace(text) // "See Gen. 1:1 now."`
+
 ### Passage Object Structure
 
 Each parsed passage looks like this:
@@ -357,7 +387,7 @@ Want to enhance CodexParser? Fork it, tweak it, and send a pull request! Issues 
 
 ## License ⚖️
 
-[MIT License](LICENSE) - Free to use, modify, and share. Spread the Word!
+[ISC License](LICENSE) - Free to use, modify, and share. Spread the Word!
 
 ---
 
@@ -373,38 +403,4 @@ Let’s parse the scriptures together—happy coding! ✝️📚
 
 ## Release Notes
 
-### 0.4.0 (2026-04-28)
-
-LXX versification audit + structural fixes. Major data-correctness pass against authoritative sources (Hanhart's Göttingen Esther, Rahlfs-Hanhart 2006, Göttingen Theodotion Susanna/Daniel/Bel) verified against a Logos library extract.
-
-- New `parser.edition("rahlfs"|"auto")` setter and `passage.convertVersion(target, { edition })` per-call override; `passage.getLXXRahlfs()` helper.
-- `ReferenceParser.expandVersificationValue()` parses `"ch:v"`, `"ch:v1-v2"`, `"ch:v[a-z]"`, and rejects empty/malformed input cleanly. The previously-broken cases (Gen 31:48 LXX `"31:47-48"`, 1 Kgs 4:21 LXX `""`, Isa 64:1 MT `"63:19b"`, Dan 3:24a) all parse correctly.
-- `verseSuffix` is now carried through `scripture.cv`, `verses[]`, `original`, and `abbr` so `Esther 11:2 ENG → LXX` produces `Esther 1:1a` (not `1:1`).
-- `cloned.missingPassages` is populated when a verse doesn't exist in the conversion target (e.g., 1 Kgs 4:21 LXX, Daniel 13 in MT).
-- New `src/data/lxx-editions.js` registry; new `versifications/2kings.js`, `versifications/esther.js` (Hanhart-verified Vulgate ↔ Rahlfs Add A–F mapping); `chapter_verses` extended for Daniel 13/14 (Susanna + Bel) and Esther 10–16 (Vulgate apocrypha layout); `Song of Solomon` aliased to `Song of Songs`.
-- **116 MT-side bugs fixed** across Genesis 31:55–32:32, 1 Samuel 23:29, 2 Samuel 18:33–19:43, Psalms 92:0, Ezekiel 20:45–21:32 — entries that incorrectly left `mt = eng` when MT actually shifts. Verified against BHS data.
-- `numbers.js` corrupted final entry replaced + Num 30 added; `micah.js` rewritten; `psalms.js` Ps 147 boundary corrected from 9/10 to 11/12; `genesis.js` 35:16 no-op removed.
-- 77 assertion-based tests in `tests/lxx-versification-audit.test.js`. All passing.
-- Published to npm as `codexparser@0.4.0`.
-
-### 0.3.0 (2026-01-10)
-
-- Added `convertVersion(targetVersion)` method on passage objects for versification conversion.
-- Accepts version string: `"eng"`, `"lxx"`, `"mt"`, or `"bhs"` (alias for MT).
-- Automatically converts chapter/verse references between versifications when versification data exists.
-- Returns same reference with updated version metadata if no versification exists.
-- Tested with Psalms, Zechariah, and NT passages.
-- Published to npm as `codexparser@0.3.0`.
-
-### 0.2.0 (2026-01-10)
-
-- Refactored internal architecture into clear folders:
-  - `src/core` (parser, scanner, validator, collection, version/versification handlers)
-  - `src/utils` (helpers, regex, chapter-verse data loader)
-  - `src/format` (OSIS formatter, abbreviations)
-  - `src/data` (bible lists, chapter_verses, versifications, sbl abbreviations)
-- Adopted OSIS textual hashes (e.g., `John.3.16`, `Rev.1.8-Rev.2.17`).
-- Added numeric OSIS using pythonbible-style integer verse IDs (`book*1_000_000 + chapter*1_000 + verse`).
-- Attached per-passage version helpers: `getVersion()`, `getLXX()`, `getMT()`, `getBHS()`, `getEnglish()`.
-- Cleaned dependencies and removed vulnerable toolchain; `npm audit` is clean.
-- Published to npm as `codexparser@0.2.0`.
+See [CHANGELOG.md](CHANGELOG.md) for the full version history.

@@ -65,6 +65,20 @@ const sblAbbreviations = {
     "3 John": { value: "3 John", abbr: false },
     Jude: { value: "Jude", abbr: false },
     Revelation: { value: "Rev", abbr: true },
+
+    // Deuterocanonical books (SBL Handbook of Style)
+    Tobit: { value: "Tob", abbr: true },
+    Judith: { value: "Jdt", abbr: true },
+    "Wisdom of Solomon": { value: "Wis", abbr: true },
+    Sirach: { value: "Sir", abbr: true },
+    Baruch: { value: "Bar", abbr: true },
+    "Epistle of Jeremiah": { value: "Ep Jer", abbr: true },
+    "1 Esdras": { value: "1 Esd", abbr: true },
+    "1 Maccabees": { value: "1 Macc", abbr: true },
+    "2 Maccabees": { value: "2 Macc", abbr: true },
+    "3 Maccabees": { value: "3 Macc", abbr: true },
+    "4 Maccabees": { value: "4 Macc", abbr: true },
+    "Prayer of Manasseh": { value: "Pr Man", abbr: true },
 }
 
 module.exports = sblAbbreviations

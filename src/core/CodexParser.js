@@ -281,6 +281,12 @@ class CodexParser {
             }
         })
 
+        ;(bible.deuterocanonical || []).forEach((book) => {
+            if (chapter_verses[book]) {
+                toc[book] = chapter_verses[book]
+            }
+        })
+
         PassageUtils.SINGLE_CHAPTER_BOOKS.forEach((item) => {
             Object.keys(item).forEach((book) => {
                 if (!toc[book]) {
@@ -290,7 +296,7 @@ class CodexParser {
         })
 
         const orderedToc = {}
-        const canonicalOrder = [...bible.old, ...bible.new]
+        const canonicalOrder = [...bible.old, ...bible.new, ...(bible.deuterocanonical || [])]
         canonicalOrder.forEach((book) => {
             if (toc[book]) {
                 orderedToc[book] = toc[book]
@@ -311,30 +317,36 @@ class CodexParser {
             return text
         }
 
+        // Group passages by scan span — chapter-switching comma lists split into
+        // several passages that all share the same startIndex/endIndex.
+        const spans = new Map()
+        for (const passage of this.#passages) {
+            const key = `${passage.startIndex}:${passage.endIndex}`
+            if (!spans.has(key)) {
+                spans.set(key, {
+                    start: passage.startIndex,
+                    end: passage.endIndex,
+                    originalText: passage.originalText,
+                    refs: [],
+                })
+            }
+            spans.get(key).refs.push(useAbbreviations ? passage.abbr : passage.original)
+        }
+
+        // Replace right-to-left so earlier indices stay valid.
+        const ordered = [...spans.values()].sort((a, b) => b.start - a.start)
         let result = text
-        for (let i = this.#passages.length - 1; i >= 0; i--) {
-            const passage = this.#passages[i]
-            const { originalText, abbr, original } = passage
-            const newReference = useAbbreviations ? abbr : original
-
-            const regex = new RegExp(`${originalText.replace(/([.*+?^${}()|[\]\\])/g, "\\$1")}`, "g")
-
-            const matches = [...result.matchAll(regex)]
-            if (matches.length > 0) {
-                for (let j = matches.length - 1; j >= 0; j--) {
-                    const match = matches[j]
-                    const startIndex = match.index
-                    const endIndex = startIndex + match[0].length
-                    const leadingSpace = match[1] || ""
-                    const hasOpeningParen = match[2] === "("
-                    const hasClosingParen = match[3] === ")"
-                    const trailingSpace = match[4] || " "
-                    const replacement =
-                        hasOpeningParen && hasClosingParen
-                            ? `${leadingSpace}(${newReference})${trailingSpace}`
-                            : `${leadingSpace}${newReference}${trailingSpace}`
-                    result = result.slice(0, startIndex) + replacement + result.slice(endIndex)
-                }
+        for (const span of ordered) {
+            const replacement = span.refs.join("; ")
+            const hasIndices =
+                Number.isInteger(span.start) &&
+                Number.isInteger(span.end) &&
+                text.slice(span.start, span.end) === span.originalText
+            if (hasIndices) {
+                result = result.slice(0, span.start) + replacement + result.slice(span.end)
+            } else if (span.originalText) {
+                // `text` differs from the scanned text — fall back to literal search.
+                result = result.split(span.originalText).join(replacement)
             }
         }
 

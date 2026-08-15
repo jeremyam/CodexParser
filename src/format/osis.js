@@ -77,6 +77,20 @@ const OSIS_BOOKS = {
     "3 John": "3John",
     Jude: "Jude",
     Revelation: "Rev",
+
+    // Deuterocanonical books
+    Tobit: "Tob",
+    Judith: "Jdt",
+    "Wisdom of Solomon": "Wis",
+    Sirach: "Sir",
+    Baruch: "Bar",
+    "Epistle of Jeremiah": "EpJer",
+    "1 Esdras": "1Esd",
+    "1 Maccabees": "1Macc",
+    "2 Maccabees": "2Macc",
+    "3 Maccabees": "3Macc",
+    "4 Maccabees": "4Macc",
+    "Prayer of Manasseh": "PrMan",
 }
 
 function getOsisBook(book) {
@@ -94,7 +108,9 @@ const CANONICAL_OSIS_ORDER = (() => {
             order.push(osis)
         }
     }
-    ;[...bible.old, ...bible.new].forEach((name) => pushIfNew(name))
+    // Deuterocanonical books come AFTER the New Testament so the protestant
+    // canon keeps its stable 1-66 numbering (John stays 43, etc.).
+    ;[...bible.old, ...bible.new, ...(bible.deuterocanonical || [])].forEach((name) => pushIfNew(name))
     return order
 })()
 
@@ -139,8 +155,9 @@ function formatOsis(passage) {
                 ? Number(String(verses[0]).split("-")[0])
                 : Number(verses[0]) || 1
         const endChapter = Number(passage.to.chapter)
-        const endFirst = passage.to.verses?.[0] || "1"
-        const endVerse = String(endFirst).includes("-") ? Number(String(endFirst).split("-")[1]) : Number(endFirst) || 1
+        const endEntries = passage.to.verses || []
+        const endLast = endEntries.length ? endEntries[endEntries.length - 1] : "1"
+        const endVerse = String(endLast).includes("-") ? Number(String(endLast).split("-")[1]) : Number(endLast) || 1
         return `${book}.${chapter}.${startVerse}-${book}.${endChapter}.${endVerse}`
     }
 
@@ -183,8 +200,9 @@ function formatOsisNumeric(passage) {
                 ? Number(String(verses[0]).split("-")[0])
                 : Number(verses[0]) || 1
         const endChapter = Number(passage.to.chapter)
-        const endFirst = passage.to.verses?.[0] || "1"
-        const endVerse = String(endFirst).includes("-") ? Number(String(endFirst).split("-")[1]) : Number(endFirst) || 1
+        const endEntries = passage.to.verses || []
+        const endLast = endEntries.length ? endEntries[endEntries.length - 1] : "1"
+        const endVerse = String(endLast).includes("-") ? Number(String(endLast).split("-")[1]) : Number(endLast) || 1
         const startId = toVerseId(passage.book, chapter, startVerse)
         const endId = toVerseId(passage.book, endChapter, endVerse)
         return startId != null && endId != null ? `${startId}-${endId}` : ""

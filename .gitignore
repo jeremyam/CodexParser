@@ -27,6 +27,9 @@ dist/
 # hardcoded credentials, generated audit reports). Kept out of the package.
 audit/
 
+# Large Bible JSON extracts used only by local audit tooling
+bibles/
+
 # JetBrains IDE
 .idea/
 

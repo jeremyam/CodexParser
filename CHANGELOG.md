@@ -2,6 +2,32 @@
 
 All notable changes to this project are documented here. For full details, see the Release Notes in README and the GitHub Releases page.
 
+## 0.6.0 — 2026-08-15
+
+### Added
+
+- **Deuterocanonical books.** Tobit, Judith, Wisdom of Solomon, Sirach, Baruch, Epistle of Jeremiah, 1 Esdras, 1–4 Maccabees, and Prayer of Manasseh now parse, validate, abbreviate (SBL style: `Sir. 24:1 LXX`), and format as OSIS (`Sir.24.1`). Common abbreviations are recognized (`Sir`, `Ecclus`, `Tob`, `Jdt`, `Wis`, `Bar`, `Ep Jer`, `1 Esd`, `1 Macc` … `4 Macc`, `Pr Man`). Chapter/verse counts follow the SWORD Project's LXX versification tables (Rahlfs-based; a compromise system, so a few chapter maxima are permissive across editions). Numeric OSIS ids place them after the protestant canon (Tobit = 67 …) so books 1–66 keep their stable numbers. Epistle of Jeremiah and Prayer of Manasseh behave as single-chapter books (`Ep Jer 5` → `EpJer.1.5`). These books report `testament: "old"` and default to the LXX version when parsed with `bibleVersion("lxx")`; no ENG/MT versification mappings ship yet.
+- **TypeScript definitions** (`index.d.ts`) covering `CodexParser`, the passage object, `PassageCollection`, validation results, and version helpers.
+- **ESM entry point** (`index.mjs`) with a proper `exports` map — `import CodexParser from "codexparser"` now works alongside `require`.
+- **Dual CJS export.** `require("codexparser")` returns the class directly again (as the README always showed), while `require("codexparser").CodexParser` keeps working.
+- **CI.** GitHub Actions workflow running the test suite on Node 18/20/22/24, plus a `.prettierrc` codifying the existing style.
+
+### Fixed
+
+- **`replace()` injected stray spaces** (`"See John 3:16."` became `"See John 3:16 ."`). It is now index-based using the scanner's exact `startIndex`/`endIndex` spans, with a literal-text fallback when the input differs from the scanned text. Chapter-switching comma lists replace their shared span once, joined with `"; "`.
+- **"Song of Solomon" references were flagged invalid** (chapter data was only registered under "Song of Songs").
+- **Combined multi-chapter hashes dropped the final comma verse.** `combine({ book: true, chapter: false })` over `Matt 1:1-5; 12:16,19` produced `Matt.1.1-Matt.12.16`; the OSIS end verse now uses the last verse entry (`Matt.1.1-Matt.12.19`).
+- **`combine()` of a single range passage was typed `chapter_verse`** instead of `chapter_verse_range`.
+- **Converted passages lost their helper methods**, so `p.getLXX().getEnglish()` threw. Version helpers are re-attached to every conversion result.
+- **`Ez` abbreviation resolves to Ezra again** (`Ezek`/`Eze` still win for Ezekiel via longest-match).
+
+### Changed
+
+- **Tests.** The ~20 ad-hoc scripts in `tests/` were converted into proper `node:test` suites (60 tests) covering collections, conversions, scanning/replacement, parsing, and the LXX versification audit; `npm test` now runs everything.
+- **Book regexes are generated from the canonical data** in `bible.js`/`abbr.js` instead of a hand-maintained alternation (legacy `bookRegex`/`scripturesRegex` exports preserved).
+- **Packaging metadata:** `repository`, `keywords`, `engines`, `types`, and `exports` added; stale release-notes files removed from the package (`CHANGELOG.md` is the single history); dead local-only scripts (`src/data/toc.js`, `src/data/esv.js`, `passage-generator.js`) moved out of the published tree — `toc.js` read a JSON file that was never shipped and would have crashed if required from the package.
+- **`bibles/` is no longer tracked in git** (17 MB of local audit data; the files remain on disk and are gitignored).
+
 ## 0.5.8 — 2026-08-14
 
 ### Fixed

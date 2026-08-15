@@ -1,0 +1,20 @@
+module.exports = {
+    1: Array.from({ length: 35 }, (_, i) => i + 1), // 4 Maccabees 1 has 35 verses
+    2: Array.from({ length: 24 }, (_, i) => i + 1), // 4 Maccabees 2 has 24 verses
+    3: Array.from({ length: 21 }, (_, i) => i + 1), // 4 Maccabees 3 has 21 verses
+    4: Array.from({ length: 26 }, (_, i) => i + 1), // 4 Maccabees 4 has 26 verses
+    5: Array.from({ length: 38 }, (_, i) => i + 1), // 4 Maccabees 5 has 38 verses
+    6: Array.from({ length: 35 }, (_, i) => i + 1), // 4 Maccabees 6 has 35 verses
+    7: Array.from({ length: 25 }, (_, i) => i + 1), // 4 Maccabees 7 has 25 verses
+    8: Array.from({ length: 29 }, (_, i) => i + 1), // 4 Maccabees 8 has 29 verses
+    9: Array.from({ length: 32 }, (_, i) => i + 1), // 4 Maccabees 9 has 32 verses
+    10: Array.from({ length: 21 }, (_, i) => i + 1), // 4 Maccabees 10 has 21 verses
+    11: Array.from({ length: 27 }, (_, i) => i + 1), // 4 Maccabees 11 has 27 verses
+    12: Array.from({ length: 20 }, (_, i) => i + 1), // 4 Maccabees 12 has 20 verses
+    13: Array.from({ length: 27 }, (_, i) => i + 1), // 4 Maccabees 13 has 27 verses
+    14: Array.from({ length: 20 }, (_, i) => i + 1), // 4 Maccabees 14 has 20 verses
+    15: Array.from({ length: 32 }, (_, i) => i + 1), // 4 Maccabees 15 has 32 verses
+    16: Array.from({ length: 25 }, (_, i) => i + 1), // 4 Maccabees 16 has 25 verses
+    17: Array.from({ length: 24 }, (_, i) => i + 1), // 4 Maccabees 17 has 24 verses
+    18: Array.from({ length: 24 }, (_, i) => i + 1), // 4 Maccabees 18 has 24 verses
+}

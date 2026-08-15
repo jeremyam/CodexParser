@@ -71,4 +71,18 @@ module.exports = {
         "Jude",
         "Revelation",
     ],
+    deuterocanonical: [
+        "Tobit",
+        "Judith",
+        "Wisdom of Solomon",
+        "Sirach",
+        "Baruch",
+        "Epistle of Jeremiah",
+        "1 Esdras",
+        "1 Maccabees",
+        "2 Maccabees",
+        "3 Maccabees",
+        "4 Maccabees",
+        "Prayer of Manasseh",
+    ],
 }

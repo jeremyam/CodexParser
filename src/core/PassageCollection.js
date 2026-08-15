@@ -260,7 +260,10 @@ class PassageCollection extends Array {
             }
             combined.original = `${combined.book} ${chapterStrings.join("; ")}`
         } else {
-            combined.type = combined.verses.length > 1 ? "chapter_verse_range" : "chapter_verse"
+            const hasRangeOrMultiple =
+                combined.verses.length > 1 ||
+                (combined.verses.length === 1 && String(combined.verses[0]).includes("-"))
+            combined.type = hasRangeOrMultiple ? "chapter_verse_range" : "chapter_verse"
             combined.original = `${combined.book} ${chapterStrings[0]}`
         }
 

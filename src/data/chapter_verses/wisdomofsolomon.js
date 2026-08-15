@@ -1,0 +1,21 @@
+module.exports = {
+    1: Array.from({ length: 16 }, (_, i) => i + 1), // Wisdom of Solomon 1 has 16 verses
+    2: Array.from({ length: 25 }, (_, i) => i + 1), // Wisdom of Solomon 2 has 25 verses
+    3: Array.from({ length: 19 }, (_, i) => i + 1), // Wisdom of Solomon 3 has 19 verses
+    4: Array.from({ length: 20 }, (_, i) => i + 1), // Wisdom of Solomon 4 has 20 verses
+    5: Array.from({ length: 24 }, (_, i) => i + 1), // Wisdom of Solomon 5 has 24 verses
+    6: Array.from({ length: 27 }, (_, i) => i + 1), // Wisdom of Solomon 6 has 27 verses
+    7: Array.from({ length: 30 }, (_, i) => i + 1), // Wisdom of Solomon 7 has 30 verses
+    8: Array.from({ length: 21 }, (_, i) => i + 1), // Wisdom of Solomon 8 has 21 verses
+    9: Array.from({ length: 19 }, (_, i) => i + 1), // Wisdom of Solomon 9 has 19 verses
+    10: Array.from({ length: 21 }, (_, i) => i + 1), // Wisdom of Solomon 10 has 21 verses
+    11: Array.from({ length: 27 }, (_, i) => i + 1), // Wisdom of Solomon 11 has 27 verses
+    12: Array.from({ length: 27 }, (_, i) => i + 1), // Wisdom of Solomon 12 has 27 verses
+    13: Array.from({ length: 19 }, (_, i) => i + 1), // Wisdom of Solomon 13 has 19 verses
+    14: Array.from({ length: 31 }, (_, i) => i + 1), // Wisdom of Solomon 14 has 31 verses
+    15: Array.from({ length: 19 }, (_, i) => i + 1), // Wisdom of Solomon 15 has 19 verses
+    16: Array.from({ length: 29 }, (_, i) => i + 1), // Wisdom of Solomon 16 has 29 verses
+    17: Array.from({ length: 21 }, (_, i) => i + 1), // Wisdom of Solomon 17 has 21 verses
+    18: Array.from({ length: 25 }, (_, i) => i + 1), // Wisdom of Solomon 18 has 25 verses
+    19: Array.from({ length: 22 }, (_, i) => i + 1), // Wisdom of Solomon 19 has 22 verses
+}

@@ -29,7 +29,7 @@ class ScriptureScanner {
      * @returns {Array} Array of found references
      */
     scan(text) {
-        const fullNames = [...this.#bible.old, ...this.#bible.new]
+        const fullNames = [...this.#bible.old, ...this.#bible.new, ...(this.#bible.deuterocanonical || [])]
         const abbreviationKeys = Object.keys(this.#abbreviations)
         const found = []
 

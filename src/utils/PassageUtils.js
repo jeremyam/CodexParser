@@ -16,6 +16,8 @@ class PassageUtils {
         sch("3 John", 15),
         sch("Obadiah", 21),
         sch("Philemon", 25),
+        sch("Epistle of Jeremiah", 73),
+        sch("Prayer of Manasseh", 15),
     ]
 
     /**
