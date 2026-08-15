@@ -2,6 +2,12 @@
 
 All notable changes to this project are documented here. For full details, see the Release Notes in README and the GitHub Releases page.
 
+## 0.6.1 — 2026-08-15
+
+### Fixed
+
+- **`require("codexparser/package.json")` threw `ERR_PACKAGE_PATH_NOT_EXPORTED`.** The `exports` map added in 0.6.0 declared only the `"."` entry, which turns off every other subpath — including the `package.json` that consumers read to log or assert the installed version (a working import in 0.5.8 and earlier). The map now also exposes `"./package.json": "./package.json"`, the conventional escape hatch. No other subpaths are exported; internal `src/` modules remain private.
+
 ## 0.6.0 — 2026-08-15
 
 ### Added

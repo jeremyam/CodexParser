@@ -1,6 +1,6 @@
 {
     "name": "codexparser",
-    "version": "0.6.0",
+    "version": "0.6.1",
     "description": "A Javascript Bible parser and text scanner. It will search through texts and collate all scripture references into an array and parse them into objects, and it will parse passages into objects by book, chapter, verse, and testament.",
     "main": "index.js",
     "types": "index.d.ts",
@@ -9,7 +9,8 @@
             "types": "./index.d.ts",
             "import": "./index.mjs",
             "require": "./index.js"
-        }
+        },
+        "./package.json": "./package.json"
     },
     "files": [
         "index.js",
