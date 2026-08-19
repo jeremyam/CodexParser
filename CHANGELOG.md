@@ -2,6 +2,18 @@
 
 All notable changes to this project are documented here. For full details, see the Release Notes in README and the GitHub Releases page.
 
+## 0.6.4 — 2026-08-19
+
+### Fixed
+
+- **Jeremiah MT→LXX table aligned with the Göttingen (Ziegler) numbering across the oracles-against-the-nations block.** Several ranges followed Swete's or Rahlfs' arrangements instead, sending consumers to wrong-chapter or wrong-verse Greek:
+  - MT 49:1-5 (Ammon) → 30:1-5 (was Swete's 30:17-21); MT 49:7-22 (Edom) → 29:8-23 (was 30:1-16, which is Ammon/Kedar/Damascus in Ziegler); MT 49:23-27 (Damascus) → 30:12-16 (was unmapped); MT 49:28-33 (Kedar) → 30:6-11 (was a typo'd 20:23-28). MT 49:6 keeps the 30:22 sentinel for its θ′ supplement (Ziegler leaves it unnumbered between 30:5 and 30:6).
+  - MT 25:15-38 (cup of wrath) → 32:1-24 (was Rahlfs' MT-keeping 32:15-38 — off by 14 against Ziegler's continuous renumbering).
+  - MT 27 → ch 34 per-verse map (Ziegler renumbers continuously 1-18; the old uniform 27:v→34:v was off by one for the whole chapter). The five OG-minus verses (27:1, 7, 13, 17, 21) park at unoccupied sentinels 34:19-23.
+  - MT 34 → ch 41 (was ch 44, colliding with MT 37 — served the wrong chapter's text); MT 42 → ch 49 (was ch 48, colliding with MT 41).
+  - MT 46:1 (OG-minus superscription) → sentinel 26:29 (26:1 is the Elam superscription, not MT 46:1).
+- Removed literal duplicate entries for 36:1, 38:1, and 49:36.
+
 ## 0.6.3 — 2026-08-19
 
 ### Fixed
