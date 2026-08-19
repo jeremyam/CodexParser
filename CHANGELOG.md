@@ -2,6 +2,12 @@
 
 All notable changes to this project are documented here. For full details, see the Release Notes in README and the GitHub Releases page.
 
+## 0.6.3 — 2026-08-19
+
+### Fixed
+
+- **Remaining Old Greek minuses in renumbered Jeremiah chapters now map to their hexaplaric LXX positions:** MT 39:4-13 → LXX 46:4-13, MT 48:45-47 → LXX 31:45-47, MT 49:6 → LXX 30:22. Same defect class as 0.6.2's Jeremiah 33:14-26 fix: these verses are absent from the OG, and the unmapped references passed through `convertVersion("lxx")` unchanged — but their MT chapter numbers point at *different* LXX chapters (LXX 39 = MT 32, LXX 48 = MT 41, LXX 49 = MT 42), so consumers fetched wrong-chapter text. Every known OG minus in Jeremiah now either maps to its true LXX coordinates or already shares its chapter number with the LXX.
+
 ## 0.6.2 — 2026-08-19
 
 ### Fixed
