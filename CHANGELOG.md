@@ -2,6 +2,12 @@
 
 All notable changes to this project are documented here. For full details, see the Release Notes in README and the GitHub Releases page.
 
+## 0.6.2 — 2026-08-19
+
+### Fixed
+
+- **Jeremiah MT 33:14-26 now maps to LXX 40:14-26.** The Old Greek lacks these verses (Ziegler's Göttingen main text of ch. 40 ends at v. 13; vv. 14-26 survive only as the Theodotion supplement printed sub ※ in the apparatus), so the versification table stopped at 33:13. But an unmapped reference passed through `convertVersion("lxx")` unchanged, and LXX "Jeremiah 33:15" is a *different verse* (MT 26:15) — consumers querying an LXX-numbered text store silently fetched the wrong passage. The verses now carry the hexaplaric 40:14-26 numbering so lookups land where any Greek text for them (θ′) actually lives.
+
 ## 0.6.1 — 2026-08-15
 
 ### Fixed
