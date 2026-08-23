@@ -2,6 +2,12 @@
 
 All notable changes to this project are documented here. For full details, see the Release Notes in README and the GitHub Releases page.
 
+## 0.6.5 — 2026-08-23
+
+### Fixed
+
+- **Psalms superscription offsets corrected across 16 psalms.** Psalms whose MT/LXX number the title as verse 1 were mapped with no verse shift (80, 81, 83, 84, 85, 88, 92, 140: e.g. Eng 81:16 now → MT 81:17 / LXX 80:17, honey from the rock — previously fetched nothing or the wrong verse), Ps 60 used +1 where its two-verse title requires +2, and Ps 66 used +1 where the title is fused into v. 1 (no shift). LXX chapter targets fixed for Eng 12 (→ LXX 11, was 12) and Eng 54 (→ LXX 53, was 54); LXX verse offsets fixed for 75-77; the `:0` title entries for 75, 76, 92 pointed at a nonexistent LXX verse 0. Ps 13 head stays +1 but its tail entry now respects the MT/LXX merge (Eng 13:5-6 = MT 13:6 / LXX 12:6, was mapped to a nonexistent v. 7). Ground truth: per-verse alignment of the BHS and Rahlfs texts. 220 entries corrected, 7 added; regression tests in `tests/psalms-versification.test.js`.
+
 ## 0.6.4 — 2026-08-19
 
 ### Fixed
