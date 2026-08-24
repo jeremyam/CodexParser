@@ -829,6 +829,170 @@ module.exports = {
         mt: "39:43",
         eng: "39:43",
     },
+    // Chapter 40: Wevers' Göttingen edition renumbers the chapter continuously
+    // 1-32 (verified against the printed text, art. GSII02EX). MT 40:1-6 map
+    // identically; the LXX lacks MT 40:7-8 (laver placement, court), 40:11
+    // (anoint the laver), and 40:28 (screen of the door), so everything from
+    // MT 40:9 on shifts (MT 40:9 -> 40:7 ... MT 40:34 cloud -> 40:28 ...
+    // MT 40:38 -> 40:32). G 40:9 is MT 40:10b (consecration clause split off).
+    // MT 40:30-32 (laver washing) have no ch-40 counterpart; their content is
+    // merged into Wevers 38:27 ("he made the laver, that Moses and Aaron and
+    // his sons might wash..."), so all three map there like the existing 40:32.
+    "40:7": {
+        lxx: null,
+        mt: "40:7",
+        eng: "40:7",
+    },
+    "40:8": {
+        lxx: null,
+        mt: "40:8",
+        eng: "40:8",
+    },
+    "40:9": {
+        lxx: "40:7",
+        mt: "40:9",
+        eng: "40:9",
+    },
+    "40:10": {
+        lxx: "40:8",
+        mt: "40:10",
+        eng: "40:10",
+    },
+    "40:11": {
+        lxx: null,
+        mt: "40:11",
+        eng: "40:11",
+    },
+    "40:12": {
+        lxx: "40:10",
+        mt: "40:12",
+        eng: "40:12",
+    },
+    "40:13": {
+        lxx: "40:11",
+        mt: "40:13",
+        eng: "40:13",
+    },
+    "40:14": {
+        lxx: "40:12",
+        mt: "40:14",
+        eng: "40:14",
+    },
+    "40:15": {
+        lxx: "40:13",
+        mt: "40:15",
+        eng: "40:15",
+    },
+    "40:16": {
+        lxx: "40:14",
+        mt: "40:16",
+        eng: "40:16",
+    },
+    "40:17": {
+        lxx: "40:15",
+        mt: "40:17",
+        eng: "40:17",
+    },
+    "40:18": {
+        lxx: "40:16",
+        mt: "40:18",
+        eng: "40:18",
+    },
+    "40:19": {
+        lxx: "40:17",
+        mt: "40:19",
+        eng: "40:19",
+    },
+    "40:20": {
+        lxx: "40:18",
+        mt: "40:20",
+        eng: "40:20",
+    },
+    "40:21": {
+        lxx: "40:19",
+        mt: "40:21",
+        eng: "40:21",
+    },
+    "40:22": {
+        lxx: "40:20",
+        mt: "40:22",
+        eng: "40:22",
+    },
+    "40:23": {
+        lxx: "40:21",
+        mt: "40:23",
+        eng: "40:23",
+    },
+    "40:24": {
+        lxx: "40:22",
+        mt: "40:24",
+        eng: "40:24",
+    },
+    "40:25": {
+        lxx: "40:23",
+        mt: "40:25",
+        eng: "40:25",
+    },
+    "40:26": {
+        lxx: "40:24",
+        mt: "40:26",
+        eng: "40:26",
+    },
+    "40:27": {
+        lxx: "40:25",
+        mt: "40:27",
+        eng: "40:27",
+    },
+    "40:28": {
+        lxx: null,
+        mt: "40:28",
+        eng: "40:28",
+    },
+    "40:29": {
+        lxx: "40:26",
+        mt: "40:29",
+        eng: "40:29",
+    },
+    "40:30": {
+        lxx: "38:27",
+        mt: "40:30",
+        eng: "40:30",
+    },
+    "40:31": {
+        lxx: "38:27",
+        mt: "40:31",
+        eng: "40:31",
+    },
+    "40:33": {
+        lxx: "40:27",
+        mt: "40:33",
+        eng: "40:33",
+    },
+    "40:34": {
+        lxx: "40:28",
+        mt: "40:34",
+        eng: "40:34",
+    },
+    "40:35": {
+        lxx: "40:29",
+        mt: "40:35",
+        eng: "40:35",
+    },
+    "40:36": {
+        lxx: "40:30",
+        mt: "40:36",
+        eng: "40:36",
+    },
+    "40:37": {
+        lxx: "40:31",
+        mt: "40:37",
+        eng: "40:37",
+    },
+    "40:38": {
+        lxx: "40:32",
+        mt: "40:38",
+        eng: "40:38",
+    },
     "40:32": {
         lxx: "38:27",
         mt: "40:32",

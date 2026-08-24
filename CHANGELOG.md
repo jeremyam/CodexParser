@@ -2,6 +2,12 @@
 
 All notable changes to this project are documented here. For full details, see the Release Notes in README and the GitHub Releases page.
 
+## 0.6.7 — 2026-08-24
+
+### Fixed
+
+- **Exodus 40 MT→LXX map completed against Wevers' Göttingen numbering.** Wevers renumbers the chapter continuously 1-32; the map previously carried only 40:32 → 38:27 and let every other verse fall through as identity, so consumers fetched the wrong verse from MT 40:9 onward (e.g. Eng 40:34, the cloud covering the tent, fetched Göttingen 40:34 = nothing, and Eng 40:20 fetched 40:20 = MT 40:22's text). Now: MT 40:1-6 identity; MT 40:7-8, 11, 28 recorded as LXX minuses; MT 40:9-10 → 40:7-8; MT 40:12-27 → 40:10-25; MT 40:29 → 40:26; MT 40:30-32 (laver washing) → Wevers 38:27, where the edition merges their content ("he made the laver, that Moses and Aaron and his sons might wash…", printed with the (32) alternative); MT 40:33-38 → 40:27-32. Verified against the printed Göttingen text (chapter alignment by content). Regression tests added.
+
 ## 0.6.6 — 2026-08-24
 
 ### Fixed

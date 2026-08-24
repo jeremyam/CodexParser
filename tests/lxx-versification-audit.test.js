@@ -717,3 +717,45 @@ group("Esther addition verses produce verseSuffix on conversion", () => {
 // --- Summary ---
 console.log(`\n${passed} passed, ${failed} failed`)
 process.exit(failed === 0 ? 0 : 1)
+
+// --- Exodus 40 — Wevers renumbers the chapter 1-32 (0.6.7) ---
+
+group("Exodus 40 LXX follows Wevers' continuous 1-32 numbering", () => {
+    const parser = new CodexParser()
+
+    test("Exodus 40:34 (cloud covered the tent) -> LXX 40:28", () => {
+        const [p] = parser.parse("Exodus 40:34").getPassages()
+        const lxx = p.convertVersion("lxx")
+        assert.equal(lxx.passages[0].chapter, 40)
+        assert.equal(lxx.passages[0].verse, 28)
+    })
+
+    test("Exodus 40:38 (last verse) -> LXX 40:32", () => {
+        const [p] = parser.parse("Exodus 40:38").getPassages()
+        const lxx = p.convertVersion("lxx")
+        assert.equal(lxx.passages[0].verse, 32)
+    })
+
+    test("Exodus 40:17 -> LXX 40:15 (MT 40:7-8, 11 are LXX minuses)", () => {
+        const [p] = parser.parse("Exodus 40:17").getPassages()
+        const lxx = p.convertVersion("lxx")
+        assert.equal(lxx.passages[0].verse, 15)
+    })
+
+    test("Exodus 40:7 is recorded as missing in the LXX", () => {
+        const [p] = parser.parse("Exodus 40:7").getPassages()
+        const lxx = p.convertVersion("lxx")
+        assert.equal(lxx.passages.length, 0)
+        assert.ok(Array.isArray(lxx.missingPassages) && lxx.missingPassages.length === 1)
+    })
+
+    test("Exodus 40:30-32 (laver washing) -> merged Wevers 38:27", () => {
+        for (const v of [30, 31, 32]) {
+            const [p] = parser.parse("Exodus 40:" + v).getPassages()
+            const lxx = p.convertVersion("lxx")
+            assert.equal(lxx.passages[0].chapter, 38)
+            assert.equal(lxx.passages[0].verse, 27)
+        }
+    })
+})
+
