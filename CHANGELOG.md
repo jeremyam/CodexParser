@@ -2,6 +2,17 @@
 
 All notable changes to this project are documented here. For full details, see the Release Notes in README and the GitHub Releases page.
 
+## 0.6.8 — 2026-08-24
+
+### Added
+
+- **NA-style sequens suffixes.** "s" after a verse number means the verse and the one following, "ss" the two following — the notation the Nestle-Aland margins use. `"Psalms 118:25s"` now parses to 118:25-26 (cv, passages, and versification all cover both verses); `"Hosea 2:1ss MT"` → 2:1-3. A sequens directly before an explicit range end is redundant and dropped (`"72:10s-15"` → 72:10-15). Previously the "s" broke the token and the reference silently lost its following verse(s).
+
+### Fixed
+
+- **Exodus 20:13-15 / Deuteronomy 5:17-18 Decalogue maps.** BHS numbers the commandments exactly as English (murder 13/17, adultery 14/18, steal 15/19), but the Exodus map carried a permutation in the `mt` column — so an MT-tagged Ex 20:13 ("you shall not murder") resolved to Eng 20:15 ("you shall not steal"). `mt` is now identity; the swapped order belongs in `lxx`, following Wevers' Göttingen text (Ex: adultery 13, steal 14, murder 15; Dt: adultery 17, murder 18, steal 19 — verified against the stored LXX-G text). Deuteronomy previously had no ch. 5 entries at all.
+- **MT/LXX-tagged verses beyond the English chapter bounds validate.** "Malachi 3:19 MT" (Eng 4:1) was flagged `Verse number 19 does not exist in Malachi 3` because validation only knew English bounds. A tagged reference whose every verse reverse-maps through the versification table for that version is now `valid: true`; untagged or unmapped out-of-bounds verses still fail. Ranges wholly past the English chapter end ("Malachi 3:19-24 MT") also expand instead of being capped to nothing.
+
 ## 0.6.7 — 2026-08-24
 
 ### Fixed

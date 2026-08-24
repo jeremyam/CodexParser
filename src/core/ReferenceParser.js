@@ -32,6 +32,24 @@ class ReferenceParser {
     }
 
     /**
+     * Expands NA-style sequens suffixes into explicit ranges: "25s" means
+     * verse 25 and the following verse ("118:25s" → "118:25-26"), "25ss"
+     * the two following ("3:1ss" → "3:1-3"). A sequens directly before an
+     * explicit range end is redundant and dropped ("10s-15" → "10-15").
+     * @param {string} reference - Post-book reference string
+     * @returns {string} Reference with sequens suffixes expanded
+     */
+    static expandSequens(reference) {
+        if (typeof reference !== "string" || !/\d[sS]/.test(reference)) return reference
+        return reference.replace(/(\d+)(ss?)(?![a-zA-Z0-9:])/gi, (match, num, esses, offset, str) => {
+            const rest = str.slice(offset + match.length)
+            if (/^\s*[-–—]/.test(rest)) return num
+            const start = Number(num)
+            return `${start}-${start + esses.length}`
+        })
+    }
+
+    /**
      * Parses a versification value string into one or more {chapter, verse, suffix?} entries.
      * Accepts:
      *   - "ch:v"       → [{chapter, verse}]
@@ -101,6 +119,7 @@ class ReferenceParser {
             if (cleanReference.endsWith(",")) {
                 cleanReference = cleanReference.slice(0, -1).trim()
             }
+            cleanReference = ReferenceParser.expandSequens(cleanReference)
 
             // For single-chapter books (Jude, Philemon, Obadiah, 2-3 John) a bare number
             // is a verse, not a chapter ("Jude 4" = Jude 1:4). Let those fall through to

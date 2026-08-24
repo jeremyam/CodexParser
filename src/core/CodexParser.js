@@ -203,7 +203,32 @@ class CodexParser {
         this.scan(reference)
         this.#passages = this.#parser.parse(this.#found, this.#version)
         this.#passages = this.#versificationHandler.applyVersification(this.#passages)
+        this.#reconcileNativeValidity()
         return this
+    }
+
+    /**
+     * Upgrades validity for MT/LXX-tagged references whose verse numbers fall
+     * outside the English chapter bounds but are attested native numbering:
+     * every expanded verse must carry a versification entry that reverse-maps
+     * this exact native chapter:verse (e.g. "Malachi 3:19 MT" → eng 4:1).
+     * @private
+     */
+    #reconcileNativeValidity() {
+        for (const passage of this.#passages) {
+            if (passage.valid === true) continue
+            const abbr = passage.version?.abbreviation
+            if (abbr !== "mt" && abbr !== "lxx") continue
+            if (!passage.passages.length) continue
+            const covered = passage.passages.every((sub) => {
+                if (!sub.versification) return false
+                const ref = sub.verseSuffix
+                    ? `${sub.chapter}:${sub.verse}${sub.verseSuffix}`
+                    : `${sub.chapter}:${sub.verse}`
+                return sub.versification[abbr] === ref
+            })
+            if (covered) passage.valid = true
+        }
     }
 
     /**

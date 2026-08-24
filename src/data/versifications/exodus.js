@@ -159,19 +159,21 @@ module.exports = {
         mt: "8:28",
         eng: "8:32",
     },
+    // Decalogue order: BHS matches English (murder 13, adultery 14, steal 15);
+    // Wevers' Göttingen text runs adultery (13), steal (14), murder (15).
     "20:13": {
-        lxx: "20:13",
-        mt: "20:14",
+        lxx: "20:15",
+        mt: "20:13",
         eng: "20:13",
     },
     "20:14": {
-        lxx: "20:14",
-        mt: "20:15",
+        lxx: "20:13",
+        mt: "20:14",
         eng: "20:14",
     },
     "20:15": {
-        lxx: "20:15",
-        mt: "20:13",
+        lxx: "20:14",
+        mt: "20:15",
         eng: "20:15",
     },
     "22:1": {

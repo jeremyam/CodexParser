@@ -45,7 +45,11 @@ class PassageUtils {
         verses.forEach((verse) => {
             if (typeof verse === "string" && verse.includes("-")) {
                 const [start, end] = verse.split("-").map(Number)
-                for (let i = start; i <= end && i <= chapterVerses[chapterVerses.length - 1]; i++) {
+                const last = chapterVerses[chapterVerses.length - 1]
+                // A range starting past the English chapter bounds is native
+                // (MT/LXX) numbering — trust the typed range instead of capping.
+                const cap = last !== undefined && start > last ? end : last
+                for (let i = start; i <= end && i <= cap; i++) {
                     passages.push({ book, chapter, verse: i })
                 }
             } else if (typeof verse === "string") {
