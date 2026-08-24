@@ -343,6 +343,38 @@ group("Daniel 13 (Susanna) and 14 (Bel & Dragon)", () => {
     })
 })
 
+// --- Daniel 5:31/6 — Göttingen numbers these the English way (0.6.6) ---
+
+group("Daniel 5:31 and chapter 6 LXX follow the Göttingen (English-style) numbering", () => {
+    const parser = new CodexParser()
+
+    test("Daniel 5:31 -> LXX 5:31 (Darius the Mede), MT 6:1", () => {
+        const [p] = parser.parse("Daniel 5:31").getPassages()
+        const lxx = p.convertVersion("lxx")
+        assert.equal(lxx.passages[0].chapter, 5)
+        assert.equal(lxx.passages[0].verse, 31)
+        const mt = p.convertVersion("mt")
+        assert.equal(mt.passages[0].chapter, 6)
+        assert.equal(mt.passages[0].verse, 1)
+    })
+
+    test("Daniel 6:22 -> LXX 6:22 (angel shut the lions' mouths), MT 6:23", () => {
+        const [p] = parser.parse("Daniel 6:22").getPassages()
+        const lxx = p.convertVersion("lxx")
+        assert.equal(lxx.passages[0].verse, 22)
+        const mt = p.convertVersion("mt")
+        assert.equal(mt.passages[0].verse, 23)
+    })
+
+    test("Daniel 6:28 (last verse) -> LXX 6:28, MT 6:29", () => {
+        const [p] = parser.parse("Daniel 6:28").getPassages()
+        const lxx = p.convertVersion("lxx")
+        assert.equal(lxx.passages[0].verse, 28)
+        const mt = p.convertVersion("mt")
+        assert.equal(mt.passages[0].verse, 29)
+    })
+})
+
 // --- Esther additions A-F ---
 
 group("Esther additions parse and convert", () => {

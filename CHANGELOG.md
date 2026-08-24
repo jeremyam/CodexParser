@@ -2,6 +2,12 @@
 
 All notable changes to this project are documented here. For full details, see the Release Notes in README and the GitHub Releases page.
 
+## 0.6.6 — 2026-08-24
+
+### Fixed
+
+- **Daniel 5:31/6 LXX targets follow the Göttingen numbering (English-style division).** Both Göttingen texts of Daniel (Munnich's Old Greek and the Theodotion text, XVI,2) print the Darius-the-Mede verse as 5:31 and number chapter 6 as 1-28 — the MT-style 6:1-29 appears only as the parenthetical alternative. The map sent `lxx` consumers to the MT-style coordinates (Eng 5:31 → 6:1, Eng 6:v → 6:v+1), fetching the *following* verse's Greek across all of chapter 6. `lxx` now follows the English numbering there; `mt` keeps the +1 offset. 29 entries corrected.
+
 ## 0.6.5 — 2026-08-23
 
 ### Fixed
