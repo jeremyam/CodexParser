@@ -715,8 +715,6 @@ group("Esther addition verses produce verseSuffix on conversion", () => {
 })
 
 // --- Summary ---
-console.log(`\n${passed} passed, ${failed} failed`)
-process.exit(failed === 0 ? 0 : 1)
 
 // --- Exodus 40 — Wevers renumbers the chapter 1-32 (0.6.7) ---
 
@@ -759,3 +757,110 @@ group("Exodus 40 LXX follows Wevers' continuous 1-32 numbering", () => {
     })
 })
 
+
+// --- Exodus 25, 28, 32 — remaining Göttingen renumberings (0.6.9) ---
+
+group("Exodus 25 LXX follows Wevers' continuous numbering (MT 25:6 minus)", () => {
+    const parser = new CodexParser()
+
+    test("Exodus 25:6 (oil and spices) is recorded as missing in the LXX", () => {
+        const [p] = parser.parse("Exodus 25:6").getPassages()
+        const lxx = p.convertVersion("lxx")
+        assert.equal(lxx.passages.length, 0)
+        assert.ok(Array.isArray(lxx.missingPassages) && lxx.missingPassages.length === 1)
+    })
+
+    test("Exodus 25:7 (onyx stones) -> LXX 25:6", () => {
+        const [p] = parser.parse("Exodus 25:7").getPassages()
+        const lxx = p.convertVersion("lxx")
+        assert.equal(lxx.passages[0].chapter, 25)
+        assert.equal(lxx.passages[0].verse, 6)
+    })
+
+    test("Exodus 25:31 (lampstand) -> LXX 25:30", () => {
+        const [p] = parser.parse("Exodus 25:31").getPassages()
+        const lxx = p.convertVersion("lxx")
+        assert.equal(lxx.passages[0].verse, 30)
+    })
+
+    test("Exodus 25:35 (last shifted verse) -> LXX 25:34", () => {
+        const [p] = parser.parse("Exodus 25:35").getPassages()
+        const lxx = p.convertVersion("lxx")
+        assert.equal(lxx.passages[0].verse, 34)
+    })
+
+    test("Exodus 25:36-40 realign after Wevers skips 35", () => {
+        for (const v of [36, 40]) {
+            const [p] = parser.parse("Exodus 25:" + v).getPassages()
+            const lxx = p.convertVersion("lxx")
+            assert.equal(lxx.passages[0].verse, v)
+        }
+    })
+})
+
+group("Exodus 28 LXX short text: transposed fastening verses, then shift of four", () => {
+    const parser = new CodexParser()
+
+    test("Exodus 28:23, 26-28 (rings and binding) are hexaplaric-only -> missing", () => {
+        for (const v of [23, 26, 27, 28]) {
+            const [p] = parser.parse("Exodus 28:" + v).getPassages()
+            const lxx = p.convertVersion("lxx")
+            assert.equal(lxx.passages.length, 0)
+            assert.ok(Array.isArray(lxx.missingPassages) && lxx.missingPassages.length === 1)
+        }
+    })
+
+    test("Exodus 28:24-25 (cords, shields) keep their numbers", () => {
+        for (const v of [24, 25]) {
+            const [p] = parser.parse("Exodus 28:" + v).getPassages()
+            const lxx = p.convertVersion("lxx")
+            assert.equal(lxx.passages[0].verse, v)
+        }
+    })
+
+    test("Exodus 28:29 (Aaron bears the names) -> LXX 28:23", () => {
+        const [p] = parser.parse("Exodus 28:29").getPassages()
+        const lxx = p.convertVersion("lxx")
+        assert.equal(lxx.passages[0].verse, 23)
+    })
+
+    test("Exodus 28:30 (Urim and Thummim) -> LXX 28:26", () => {
+        const [p] = parser.parse("Exodus 28:30").getPassages()
+        const lxx = p.convertVersion("lxx")
+        assert.equal(lxx.passages[0].verse, 26)
+    })
+
+    test("Exodus 28:31 (robe of the ephod) -> LXX 28:27", () => {
+        const [p] = parser.parse("Exodus 28:31").getPassages()
+        const lxx = p.convertVersion("lxx")
+        assert.equal(lxx.passages[0].verse, 27)
+    })
+
+    test("Exodus 28:43 (last verse) -> LXX 28:39", () => {
+        const [p] = parser.parse("Exodus 28:43").getPassages()
+        const lxx = p.convertVersion("lxx")
+        assert.equal(lxx.passages[0].verse, 39)
+    })
+})
+
+group("Exodus 32 LXX: MT 32:9 minus, Wevers splits 32:8 across 8-9", () => {
+    const parser = new CodexParser()
+
+    test("Exodus 32:9 (stiff-necked people) is recorded as missing in the LXX", () => {
+        const [p] = parser.parse("Exodus 32:9").getPassages()
+        const lxx = p.convertVersion("lxx")
+        assert.equal(lxx.passages.length, 0)
+        assert.ok(Array.isArray(lxx.missingPassages) && lxx.missingPassages.length === 1)
+    })
+
+    test("Exodus 32:8 and 32:10 keep their numbers", () => {
+        for (const v of [8, 10]) {
+            const [p] = parser.parse("Exodus 32:" + v).getPassages()
+            const lxx = p.convertVersion("lxx")
+            assert.equal(lxx.passages[0].verse, v)
+        }
+    })
+})
+
+console.log(`\n${passed} passed, ${failed} failed`)
+process.exit(failed === 0 ? 0 : 1)

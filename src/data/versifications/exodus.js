@@ -331,6 +331,277 @@ module.exports = {
         mt: "22:30",
         eng: "22:31",
     },
+    // Chapter 25: the LXX lacks MT 25:6 (oil for the light, spices, incense),
+    // and Wevers' Göttingen edition renumbers continuously after the minus
+    // (verified against the printed text, art. GSII02EX): MT 25:7 -> G 25:6,
+    // ... MT 25:31 lampstand -> G 25:30, ... MT 25:35 -> G 25:34. Wevers then
+    // skips 35 to resynchronize, so MT/G 25:36-40 align again (no entries).
+    // (Rahlfs instead keeps MT numbers and prints the chapter 1-5, 7-40.)
+    "25:6": {
+        lxx: null,
+        mt: "25:6",
+        eng: "25:6",
+    },
+    "25:7": {
+        lxx: "25:6",
+        mt: "25:7",
+        eng: "25:7",
+    },
+    "25:8": {
+        lxx: "25:7",
+        mt: "25:8",
+        eng: "25:8",
+    },
+    "25:9": {
+        lxx: "25:8",
+        mt: "25:9",
+        eng: "25:9",
+    },
+    "25:10": {
+        lxx: "25:9",
+        mt: "25:10",
+        eng: "25:10",
+    },
+    "25:11": {
+        lxx: "25:10",
+        mt: "25:11",
+        eng: "25:11",
+    },
+    "25:12": {
+        lxx: "25:11",
+        mt: "25:12",
+        eng: "25:12",
+    },
+    "25:13": {
+        lxx: "25:12",
+        mt: "25:13",
+        eng: "25:13",
+    },
+    "25:14": {
+        lxx: "25:13",
+        mt: "25:14",
+        eng: "25:14",
+    },
+    "25:15": {
+        lxx: "25:14",
+        mt: "25:15",
+        eng: "25:15",
+    },
+    "25:16": {
+        lxx: "25:15",
+        mt: "25:16",
+        eng: "25:16",
+    },
+    "25:17": {
+        lxx: "25:16",
+        mt: "25:17",
+        eng: "25:17",
+    },
+    "25:18": {
+        lxx: "25:17",
+        mt: "25:18",
+        eng: "25:18",
+    },
+    "25:19": {
+        lxx: "25:18",
+        mt: "25:19",
+        eng: "25:19",
+    },
+    "25:20": {
+        lxx: "25:19",
+        mt: "25:20",
+        eng: "25:20",
+    },
+    "25:21": {
+        lxx: "25:20",
+        mt: "25:21",
+        eng: "25:21",
+    },
+    "25:22": {
+        lxx: "25:21",
+        mt: "25:22",
+        eng: "25:22",
+    },
+    "25:23": {
+        lxx: "25:22",
+        mt: "25:23",
+        eng: "25:23",
+    },
+    "25:24": {
+        lxx: "25:23",
+        mt: "25:24",
+        eng: "25:24",
+    },
+    "25:25": {
+        lxx: "25:24",
+        mt: "25:25",
+        eng: "25:25",
+    },
+    "25:26": {
+        lxx: "25:25",
+        mt: "25:26",
+        eng: "25:26",
+    },
+    "25:27": {
+        lxx: "25:26",
+        mt: "25:27",
+        eng: "25:27",
+    },
+    "25:28": {
+        lxx: "25:27",
+        mt: "25:28",
+        eng: "25:28",
+    },
+    "25:29": {
+        lxx: "25:28",
+        mt: "25:29",
+        eng: "25:29",
+    },
+    "25:30": {
+        lxx: "25:29",
+        mt: "25:30",
+        eng: "25:30",
+    },
+    "25:31": {
+        lxx: "25:30",
+        mt: "25:31",
+        eng: "25:31",
+    },
+    "25:32": {
+        lxx: "25:31",
+        mt: "25:32",
+        eng: "25:32",
+    },
+    "25:33": {
+        lxx: "25:32",
+        mt: "25:33",
+        eng: "25:33",
+    },
+    "25:34": {
+        lxx: "25:33",
+        mt: "25:34",
+        eng: "25:34",
+    },
+    "25:35": {
+        lxx: "25:34",
+        mt: "25:35",
+        eng: "25:35",
+    },
+    // Chapter 28: the LXX's breastpiece-fastening text is a short, transposed
+    // version of MT 28:23-28 (verified against Wevers, art. GSII02EX). The
+    // Göttingen main text runs G 28:23 = MT 28:29 (Aaron bears the names),
+    // G 28:24 = MT 28:24 (cords on the breastpiece), G 28:25 = MT 28:25
+    // (shields on the shoulders), G 28:26 = MT 28:30 (Urim and Thummim), then
+    // G 28:27-39 = MT 28:31-43 (shift of four). MT 28:23 and 26-28 (the gold
+    // rings and the binding) survive only in the hexaplaric addition Wevers
+    // brackets between G 28:22 and 23, outside the native numbering -> null.
+    // MT 28:24-25 map identically, so they carry no entries.
+    "28:23": {
+        lxx: null,
+        mt: "28:23",
+        eng: "28:23",
+    },
+    "28:26": {
+        lxx: null,
+        mt: "28:26",
+        eng: "28:26",
+    },
+    "28:27": {
+        lxx: null,
+        mt: "28:27",
+        eng: "28:27",
+    },
+    "28:28": {
+        lxx: null,
+        mt: "28:28",
+        eng: "28:28",
+    },
+    "28:29": {
+        lxx: "28:23",
+        mt: "28:29",
+        eng: "28:29",
+    },
+    "28:30": {
+        lxx: "28:26",
+        mt: "28:30",
+        eng: "28:30",
+    },
+    "28:31": {
+        lxx: "28:27",
+        mt: "28:31",
+        eng: "28:31",
+    },
+    "28:32": {
+        lxx: "28:28",
+        mt: "28:32",
+        eng: "28:32",
+    },
+    "28:33": {
+        lxx: "28:29",
+        mt: "28:33",
+        eng: "28:33",
+    },
+    "28:34": {
+        lxx: "28:30",
+        mt: "28:34",
+        eng: "28:34",
+    },
+    "28:35": {
+        lxx: "28:31",
+        mt: "28:35",
+        eng: "28:35",
+    },
+    "28:36": {
+        lxx: "28:32",
+        mt: "28:36",
+        eng: "28:36",
+    },
+    "28:37": {
+        lxx: "28:33",
+        mt: "28:37",
+        eng: "28:37",
+    },
+    "28:38": {
+        lxx: "28:34",
+        mt: "28:38",
+        eng: "28:38",
+    },
+    "28:39": {
+        lxx: "28:35",
+        mt: "28:39",
+        eng: "28:39",
+    },
+    "28:40": {
+        lxx: "28:36",
+        mt: "28:40",
+        eng: "28:40",
+    },
+    "28:41": {
+        lxx: "28:37",
+        mt: "28:41",
+        eng: "28:41",
+    },
+    "28:42": {
+        lxx: "28:38",
+        mt: "28:42",
+        eng: "28:42",
+    },
+    "28:43": {
+        lxx: "28:39",
+        mt: "28:43",
+        eng: "28:43",
+    },
+    // Chapter 32: the LXX lacks MT 32:9 (the stiff-necked-people verse), and
+    // Wevers absorbs the freed number by splitting MT 32:8 across G 32:8-9
+    // ("These are your gods, Israel" is G 32:9), keeping the chapter 1-35
+    // (verified against the printed text, art. GSII02EX). MT 32:8 maps to the
+    // first Göttingen verse of the split, like the G 40:9 precedent, so only
+    // the minus needs an entry; MT 32:10-35 align.
+    "32:9": {
+        lxx: null,
+        mt: "32:9",
+        eng: "32:9",
+    },
     "35:9": {
         lxx: "35:8",
         mt: "35:9",

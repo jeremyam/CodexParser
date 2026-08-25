@@ -2,6 +2,13 @@
 
 All notable changes to this project are documented here. For full details, see the Release Notes in README and the GitHub Releases page.
 
+## 0.6.9 — 2026-08-25
+
+### Fixed
+
+- **Exodus 25, 28, and 32 MT→LXX maps added against Wevers' Göttingen numbering.** These were the last Exodus chapters where the Göttingen edition renumbers but the map fell through as identity, so consumers fetched the wrong Greek verse (e.g. Eng 25:31, the lampstand, fetched Göttingen 25:31 = the six-branches verse — MT 25:32's content). Chapter 25: MT 25:6 (oil and spices) is an LXX minus and the chapter renumbers continuously (MT 25:7-35 → G 25:6-34), resynchronizing at 36 where Wevers skips 35. Chapter 28: the LXX's breastpiece-fastening text is a short, transposed version of MT 28:23-28 — MT 28:23, 26-28 survive only in the bracketed hexaplaric addition (recorded as minuses), MT 28:24-25 keep their numbers, MT 28:29 → G 28:23, MT 28:30 → G 28:26, and MT 28:31-43 → G 28:27-39. Chapter 32: MT 32:9 (stiff-necked people) is a minus; Wevers splits MT 32:8 across G 32:8-9, so the rest of the chapter aligns. All verified against the printed Göttingen text (art. GSII02EX). Regression tests added.
+- **The `lxx-versification-audit` test file's summary block sat before the Exodus 40 group, so `process.exit` ran first and the tests appended in 0.6.7 never executed.** The summary now sits at the end of the file; the chapter 40 group runs (and passes) again.
+
 ## 0.6.8 — 2026-08-24
 
 ### Added
