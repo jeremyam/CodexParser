@@ -5,6 +5,7 @@
 
 const versified = require("../data/versified")
 const PassageUtils = require("../utils/PassageUtils")
+const ReferenceParser = require("./ReferenceParser")
 
 /**
  * Handles versification differences
@@ -83,6 +84,22 @@ class VersificationHandler {
     }
 
     /**
+     * True when a versification-table value (exact "ch:v", comma list "ch:v1,v2",
+     * or range "ch:v1-v2") covers this native chapter/verse.
+     * @private
+     */
+    #nativeCovers(native, chapter, verse, suffix) {
+        if (native == null || native === "") return false
+        const want = suffix ? `${chapter}:${verse}${suffix}` : `${chapter}:${verse}`
+        if (native === want) return true
+        const expanded = ReferenceParser.expandVersificationValue(native)
+        const ch = Number(chapter)
+        const v = Number(verse)
+        const s = suffix || ""
+        return expanded.some((e) => e.chapter === ch && e.verse === v && (e.suffix || "") === s)
+    }
+
+    /**
      * Applies versification differences to parsed passages
      * @param {Array} passages - Array of passage objects
      * @returns {Array} Updated passages with versification info
@@ -109,9 +126,9 @@ class VersificationHandler {
 
                     if (versionType) {
                         for (const versification in this.#versificationDifferences[passage.book]) {
-                            if (
-                                this.#versificationDifferences[passage.book][versification][versionType] === verseRef
-                            ) {
+                            const native =
+                                this.#versificationDifferences[passage.book][versification][versionType]
+                            if (this.#nativeCovers(native, subPassage.chapter, subPassage.verse, subPassage.verseSuffix)) {
                                 subPassage.versification = this.#versificationDifferences[passage.book][versification]
                                 break
                             }

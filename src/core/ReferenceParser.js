@@ -63,8 +63,18 @@ class ReferenceParser {
         const chapter = Number(chPart)
         if (!Number.isFinite(chapter)) return []
 
+        const parseToken = (token) => {
+            const match = String(token).trim().match(/^(\d+)([a-zA-Z]+)?$/)
+            if (!match) return null
+            const verse = Number(match[1])
+            if (!Number.isFinite(verse)) return null
+            const entry = { chapter, verse }
+            if (match[2]) entry.suffix = match[2]
+            return entry
+        }
+
         // Range form "v1-v2" (no letter suffixes inside ranges)
-        if (vPart.includes("-")) {
+        if (vPart.includes("-") && !vPart.includes(",")) {
             const [a, b] = vPart.split("-").map((s) => Number(s.trim()))
             if (!Number.isFinite(a) || !Number.isFinite(b) || b < a) return []
             const out = []
@@ -72,14 +82,20 @@ class ReferenceParser {
             return out
         }
 
-        // Letter-suffix form "19b"
-        const match = vPart.match(/^(\d+)([a-zA-Z]+)?$/)
-        if (!match) return []
-        const verse = Number(match[1])
-        if (!Number.isFinite(verse)) return []
-        const entry = { chapter, verse }
-        if (match[2]) entry.suffix = match[2]
-        return [entry]
+        // Comma list "v1,v2" (two-verse psalm titles, 1 Chr 12:4, etc.)
+        if (vPart.includes(",")) {
+            const out = []
+            for (const token of vPart.split(",")) {
+                const entry = parseToken(token)
+                if (!entry) return []
+                out.push(entry)
+            }
+            return out
+        }
+
+        // Letter-suffix form "19b" or a single verse
+        const entry = parseToken(vPart)
+        return entry ? [entry] : []
     }
 
     /**
@@ -360,7 +376,8 @@ class ReferenceParser {
             }
 
             const formatChapterVerses = (entries) => {
-                const usable = entries.filter((e) => e.verse > 0)
+                // Verse 0 is the English psalm-title address; keep it in cv/hash.
+                const usable = entries.filter((e) => Number.isFinite(e.verse) && e.verse >= 0)
                 if (usable.length === 0) return []
                 const sorted = [...usable].sort(
                     (a, b) => a.verse - b.verse || a.suffix.localeCompare(b.suffix)
@@ -728,10 +745,16 @@ class ReferenceParser {
 
         if (type === ReferenceParser.REFERENCE_TYPES.MULTI_CHAPTER_RANGE) {
             const passages = []
-            const startVerse = verses[0]?.includes("-") ? Number(verses[0].split("-")[0]) : Number(verses[0]) || 1
+            const asVerseNum = (value, fallback) => {
+                const n = Number(value)
+                return Number.isFinite(n) ? n : fallback
+            }
+            const startVerse = verses[0]?.includes("-")
+                ? asVerseNum(verses[0].split("-")[0], 1)
+                : asVerseNum(verses[0], 1)
             const endVerse = to?.verses?.[0]?.includes("-")
-                ? Number(to.verses[0].split("-")[1])
-                : Number(to?.verses?.[0]) || 1
+                ? asVerseNum(to.verses[0].split("-")[1], 1)
+                : asVerseNum(to?.verses?.[0], 1)
             const endChapter = to?.chapter || chapter
 
             for (let ch = chapter; ch <= endChapter; ch++) {

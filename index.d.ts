@@ -26,8 +26,9 @@ declare namespace CodexParser {
 
     /**
      * Cross-version verse mapping. Values are "chapter:verse" strings
-     * (optionally a range "ch:v1-v2" or letter-suffixed "ch:19b"), or
-     * null/"" when the verse does not exist in that version.
+     * (optionally a range "ch:v1-v2", a comma list "ch:v1,v2", or
+     * letter-suffixed "ch:19b"), or null/"" when the verse does not exist
+     * in that version. English "ch:0" is a psalm superscription.
      */
     interface Versification {
         eng?: string | null

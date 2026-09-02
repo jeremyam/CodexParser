@@ -76,7 +76,24 @@ class PassageValidator {
                 : [Number(verseRange)]
 
             for (const v of verseNumbers) {
-                if (isNaN(v) || v <= 0 || !chapterVerses.includes(v)) {
+                if (isNaN(v) || v < 0) {
+                    return PassageValidator.#createError(
+                        PassageValidator.ERROR_CODES.VERSE_NOT_EXIST,
+                        `Verse number ${v} does not exist in ${book} ${chapter}`
+                    )
+                }
+                // English ":0" is a real address for psalm superscriptions
+                // attested in the versification table (MT/LXX verse 1).
+                if (v === 0) {
+                    if (!PassageUtils.isTitleVerse(book, chapter, v)) {
+                        return PassageValidator.#createError(
+                            PassageValidator.ERROR_CODES.VERSE_NOT_EXIST,
+                            `Verse number ${v} does not exist in ${book} ${chapter}`
+                        )
+                    }
+                    continue
+                }
+                if (!chapterVerses.includes(v)) {
                     return PassageValidator.#createError(
                         PassageValidator.ERROR_CODES.VERSE_NOT_EXIST,
                         `Verse number ${v} does not exist in ${book} ${chapter}`

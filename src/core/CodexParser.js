@@ -225,7 +225,16 @@ class CodexParser {
                 const ref = sub.verseSuffix
                     ? `${sub.chapter}:${sub.verse}${sub.verseSuffix}`
                     : `${sub.chapter}:${sub.verse}`
-                return sub.versification[abbr] === ref
+                const native = sub.versification[abbr]
+                if (native === ref) return true
+                // Comma/range natives (e.g. mt "54:1,2" for a two-verse title)
+                const expanded = ReferenceParser.expandVersificationValue(native)
+                return expanded.some(
+                    (e) =>
+                        e.chapter === Number(sub.chapter) &&
+                        e.verse === Number(sub.verse) &&
+                        (e.suffix || "") === (sub.verseSuffix || "")
+                )
             })
             if (covered) passage.valid = true
         }

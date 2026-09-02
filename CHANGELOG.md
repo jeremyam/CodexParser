@@ -2,6 +2,14 @@
 
 All notable changes to this project are documented here. For full details, see the Release Notes in README and the GitHub Releases page.
 
+## 0.6.10 — 2026-09-02
+
+### Fixed
+
+- **Psalm superscriptions (English `:0`) now parse.** The versification table already mapped titles as `18:0` → MT `18:1` / LXX `17:1`, but `PassageValidator` rejected verse 0 (`v <= 0`) and `expandVerses` dropped it, so `"Psalm 18:0"` produced an empty passage list and `"Psalm 18:1"` (English) could only fetch MT/LXX verse 2 — the ESV "I love you" verse, not the Hebrew superscription. Titles now validate when the table has a `:0` entry; `convertVersion` keeps verse 0 in `scripture.cv` / OSIS (`Ps.18.0`); unattested `:0` (e.g. Genesis 1:0) is still invalid.
+- **Two-verse psalm titles expand.** `51:0` / `52:0` / `54:0` / `60:0` map to `mt: "51:1,2"` etc., but `expandVersificationValue` only understood hyphen ranges, so converting the title kept verse 0 instead of fetching MT/LXX verses 1–2. Comma lists now expand. Reverse-lookup of an MT-tagged `"Psalm 54:1 MT"` also matches the `"54:1,2"` native value.
+- **Psalm 89 title entry added.** Eng 89:1 already shifted to MT 89:2 / LXX 88:2 (Maskil of Ethan) but had no `89:0` row, so the superscription was unreachable from English.
+
 ## 0.6.9 — 2026-08-25
 
 ### Fixed

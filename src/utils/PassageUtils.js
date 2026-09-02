@@ -38,6 +38,24 @@ class PassageUtils {
      * @param {Array<string|number>} verses - Array of verses or ranges
      * @returns {Object[]} Array of verse objects
      */
+    /**
+     * English ":0" is the conventional address for a psalm superscription
+     * (unnumbered in English, verse 1 in MT/LXX). True when the versification
+     * table has a title entry for this book and chapter.
+     */
+    static isTitleVerse(book, chapter, verse) {
+        if (Number(verse) !== 0) return false
+        const table = require("../data/versified")[book]
+        return Boolean(table && table[`${Number(chapter)}:0`])
+    }
+
+    /**
+     * Expands verse references into individual verse objects
+     * @param {string} book - The book name
+     * @param {number} chapter - The chapter number
+     * @param {Array<string|number>} verses - Array of verses or ranges
+     * @returns {Object[]} Array of verse objects
+     */
     static expandVerses(book, chapter, verses) {
         const passages = []
         const chapterVerses = PassageUtils.getChapterVerses(book, chapter)
@@ -56,7 +74,9 @@ class PassageUtils {
                 const match = verse.trim().match(/^(\d+)([a-eA-E])?$/)
                 if (match) {
                     const verseNum = Number(match[1])
-                    if (verseNum > 0) {
+                    // Verse 0 is the English psalm-title address; keep it so
+                    // validation / versification can accept attested superscriptions.
+                    if (verseNum >= 0) {
                         const entry = { book, chapter, verse: verseNum }
                         if (match[2]) entry.verseSuffix = match[2].toLowerCase()
                         passages.push(entry)
@@ -64,7 +84,7 @@ class PassageUtils {
                 }
             } else {
                 const verseNum = Number(verse)
-                if (!isNaN(verseNum) && verseNum > 0) {
+                if (!isNaN(verseNum) && verseNum >= 0) {
                     passages.push({ book, chapter, verse: verseNum })
                 }
             }

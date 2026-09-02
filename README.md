@@ -163,6 +163,7 @@ console.log(z.getLXX().scripture.hash)     // "Zech.2.12" (LXX mapping)
 Notes:
 - `getVersion("eng"|"lxx"|"mt"|"bhs")` is available; `getBHS()` aliases `MT`.
 - `.scripture.hash` is OSIS textual (e.g., `John.3.16`), `.osisNumeric` uses pythonbible-style integer IDs.
+- **Psalm titles.** English Bibles leave the superscription unnumbered; MT/LXX count it as verse 1. Address it as `:0` (`"Psalm 18:0"` → MT `18:1` / LXX `17:1`) or tag the native number (`"Psalm 18:1 MT"`). `"Psalm 18:1"` without a suffix is still the first *numbered* English verse (MT `18:2`).
 
 ### Editions: Göttingen vs. Rahlfs
 

@@ -42,6 +42,13 @@ group("expandVersificationValue parses every shape used in data files", () => {
         ])
     })
 
+    test("comma list ch:v1,v2 expands to one entry per verse", () => {
+        assert.deepEqual(expand("54:1,2"), [
+            { chapter: 54, verse: 1 },
+            { chapter: 54, verse: 2 },
+        ])
+    })
+
     test("letter suffix retains numeric verse and exposes suffix", () => {
         assert.deepEqual(expand("63:19b"), [{ chapter: 63, verse: 19, suffix: "b" }])
         assert.deepEqual(expand("3:24a"), [{ chapter: 3, verse: 24, suffix: "a" }])
@@ -610,8 +617,10 @@ group("MT-side versification correctly shifts when LXX shifts", () => {
     })
 
     test("Psalms 92:0 (title) -> MT 92:1 (MT counts superscription as v1)", () => {
-        const versified = require("../src/data/versified")
-        assert.equal(versified.Psalms["92:0"].mt, "92:1")
+        const [p] = parser.parse("Psalms 92:0").getPassages()
+        assert.equal(p.valid, true)
+        const mt = p.convertVersion("mt")
+        assert.equal(mt.scripture.cv, "92:1")
     })
 
     test("Ezekiel 20:45 ENG -> MT 21:1 (chapter-end pulled into next ch)", () => {

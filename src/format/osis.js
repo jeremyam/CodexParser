@@ -153,11 +153,17 @@ function formatOsis(passage) {
         const startVerse =
             verses[0] && String(verses[0]).includes("-")
                 ? Number(String(verses[0]).split("-")[0])
-                : Number(verses[0]) || 1
+                : Number.isFinite(Number(verses[0]))
+                ? Number(verses[0])
+                : 1
         const endChapter = Number(passage.to.chapter)
         const endEntries = passage.to.verses || []
         const endLast = endEntries.length ? endEntries[endEntries.length - 1] : "1"
-        const endVerse = String(endLast).includes("-") ? Number(String(endLast).split("-")[1]) : Number(endLast) || 1
+        const endVerse = String(endLast).includes("-")
+            ? Number(String(endLast).split("-")[1])
+            : Number.isFinite(Number(endLast))
+            ? Number(endLast)
+            : 1
         return `${book}.${chapter}.${startVerse}-${book}.${endChapter}.${endVerse}`
     }
 
@@ -169,7 +175,7 @@ function formatOsis(passage) {
             parts.push(`${book}.${chapter}.${s}-${book}.${chapter}.${e}`)
         } else {
             const num = Number(v)
-            if (!isNaN(num) && num > 0) {
+            if (!isNaN(num) && num >= 0) {
                 parts.push(`${book}.${chapter}.${num}`)
             }
         }
@@ -198,11 +204,17 @@ function formatOsisNumeric(passage) {
         const startVerse =
             verses[0] && String(verses[0]).includes("-")
                 ? Number(String(verses[0]).split("-")[0])
-                : Number(verses[0]) || 1
+                : Number.isFinite(Number(verses[0]))
+                ? Number(verses[0])
+                : 1
         const endChapter = Number(passage.to.chapter)
         const endEntries = passage.to.verses || []
         const endLast = endEntries.length ? endEntries[endEntries.length - 1] : "1"
-        const endVerse = String(endLast).includes("-") ? Number(String(endLast).split("-")[1]) : Number(endLast) || 1
+        const endVerse = String(endLast).includes("-")
+            ? Number(String(endLast).split("-")[1])
+            : Number.isFinite(Number(endLast))
+            ? Number(endLast)
+            : 1
         const startId = toVerseId(passage.book, chapter, startVerse)
         const endId = toVerseId(passage.book, endChapter, endVerse)
         return startId != null && endId != null ? `${startId}-${endId}` : ""
