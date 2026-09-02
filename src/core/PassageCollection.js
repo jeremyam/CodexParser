@@ -230,7 +230,7 @@ class PassageCollection extends Array {
         sortedChapters.forEach((chapter) => {
             const verses = Array.from(chapterVerses[chapter])
                 .map(Number)
-                .filter((verse) => verse > 0)
+                .filter((verse) => Number.isFinite(verse) && verse >= 0)
                 .sort((a, b) => a - b)
             if (verses.length > 0) {
                 const mergedVerses = PassageUtils.mergeRanges(verses)
@@ -254,7 +254,7 @@ class PassageCollection extends Array {
                 chapter: lastChapter,
                 verses: PassageUtils.mergeRanges(
                     Array.from(chapterVerses[lastChapter])
-                        .filter((verse) => verse > 0)
+                        .filter((verse) => Number.isFinite(verse) && verse >= 0)
                         .sort((a, b) => a - b)
                 ),
             }
@@ -278,18 +278,20 @@ class PassageCollection extends Array {
         combined.start = {
             book: combined.book,
             chapter: firstChapter,
-            verse:
-                firstVerse > 0
-                    ? firstVerse
-                    : Math.min(...Array.from(chapterVerses[firstChapter]).filter((verse) => verse > 0)),
+            verse: Number.isFinite(firstVerse)
+                ? firstVerse
+                : Math.min(
+                      ...Array.from(chapterVerses[firstChapter]).filter((verse) => Number.isFinite(verse) && verse >= 0)
+                  ),
         }
         combined.end = {
             book: combined.book,
             chapter: lastChapter,
-            verse:
-                lastVerse > 0
-                    ? lastVerse
-                    : Math.max(...Array.from(chapterVerses[lastChapter]).filter((verse) => verse > 0)),
+            verse: Number.isFinite(lastVerse)
+                ? lastVerse
+                : Math.max(
+                      ...Array.from(chapterVerses[lastChapter]).filter((verse) => Number.isFinite(verse) && verse >= 0)
+                  ),
         }
 
         if (combined.to === null) {

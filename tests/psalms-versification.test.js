@@ -122,3 +122,14 @@ test("Genesis 1:0 is still invalid (no title entry)", () => {
     assert.equal(p.valid.error, true)
     assert.equal(p.valid.code, 104)
 })
+
+test("combine() of a title passage keeps verse 0", () => {
+    const parser = new CodexParser()
+    const p = parser.parse("Psalm 18:0").getPassages()
+    const combined = parser.combine(p)
+    assert.equal(combined.scripture.cv, "18:0")
+    assert.deepEqual(
+        combined.passages.map((x) => x.verse),
+        [0]
+    )
+})

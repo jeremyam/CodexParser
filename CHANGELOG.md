@@ -2,6 +2,12 @@
 
 All notable changes to this project are documented here. For full details, see the Release Notes in README and the GitHub Releases page.
 
+## 0.6.11 — 2026-09-02
+
+### Fixed
+
+- **`combine()` kept dropping verse 0.** `PassageCollection.combinePassages` filtered `verse > 0` when rebuilding `scripture.cv`, so combining a title-only passage (or converting `"Psalm 18:1 MT"` back to English via `getVersifications`) threw `No valid verses found in passages`. Verse 0 now survives combine.
+
 ## 0.6.10 — 2026-09-02
 
 ### Fixed
