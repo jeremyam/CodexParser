@@ -2,6 +2,12 @@
 
 All notable changes to this project are documented here. For full details, see the Release Notes in README and the GitHub Releases page.
 
+## 0.6.12 — 2026-09-02
+
+### Fixed
+
+- **Proverbs LXX minuses are now mapped.** Rahlfs has no counterpart for MT 4:7, 8:33, 11:4, 15:31, 16:1, 16:3, 18:23-24, 19:1-2, 20:14-19, 21:5, 22:6, and 23:23. Those rows had no table entry, so `convertVersion("lxx")` fell through as identity and consumers queried a nonexistent LXX verse (empty GkOT). They now emit `missingPassages` with `missingIn: "lxx"`. `combine()` of a minus-only conversion keeps that list instead of throwing `No valid verses found`.
+
 ## 0.6.11 — 2026-09-02
 
 ### Fixed

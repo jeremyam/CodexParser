@@ -241,7 +241,26 @@ class PassageCollection extends Array {
             }
         })
 
+        const missingPassages = passages.flatMap((p) => p.missingPassages || [])
+        if (missingPassages.length) {
+            combined.missingPassages = missingPassages
+        }
+
         if (chapterStrings.length === 0) {
+            // All verses are target-version minuses (e.g. Prov 16:1 LXX).
+            if (missingPassages.length) {
+                combined.verses = []
+                combined.scripture = {
+                    passage: combined.book,
+                    cv: "",
+                    hash: "",
+                    osisNumeric: "",
+                }
+                combined.version = passages[0].version
+                PassageCollection.#setAbbreviation(combined)
+                if (combined.to === null) delete combined.to
+                return combined
+            }
             throw new Error("No valid verses found in passages.")
         }
 
