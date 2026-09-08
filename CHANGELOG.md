@@ -2,6 +2,12 @@
 
 All notable changes to this project are documented here. For full details, see the Release Notes in README and the GitHub Releases page.
 
+## 0.6.15 — 2026-09-08
+
+### Fixed
+
+- **Genesis verse seams now map to the covering Göttingen range.** Wevers ends 19:3, 22:3, 22:15, 24:18, 24:26 and 49:24 a few words later than Rahlfs/MT (the Hebrew verse's opening words — "before they lay down", "on the third day", "saying", "until he finished drinking", "and said", "by the God of your father" — close the previous Göttingen verse; he prints the Rahlfs number in parentheses at the seam). English 19:4, 22:4, 22:16, 24:19, 24:27 and 49:25 now map to `19:3-4` etc. on the Lamentations 4:18 pattern, with identity entries listed first so `Genesis 22:3 LXX` still reverse-maps to 22:3. Göttingen 31:46 likewise ends with the first half of MT 31:48, so English 31:48 now maps to `31:46-48` (was `31:47-48`, which matched the Tapestry rows' Rahlfs-side layout before they were restored to Wevers' boundaries). Regression tests added.
+
 ## 0.6.14 — 2026-09-08
 
 ### Fixed

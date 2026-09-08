@@ -311,6 +311,51 @@ group("Genesis 5:32 ENG -> Göttingen 6:1 (not missing)", () => {
     })
 })
 
+// --- Wevers/Rahlfs verse seams (Genesis) ---
+
+group("Genesis seams: English verse maps to the covering Göttingen range", () => {
+    const parser = new CodexParser()
+    const lxxParser = new CodexParser()
+    lxxParser.bibleVersion("lxx")
+    const seams = [
+        ["19:4", "19:3-4"],
+        ["22:4", "22:3-4"],
+        ["22:16", "22:15-16"],
+        ["24:19", "24:18-19"],
+        ["24:27", "24:26-27"],
+        ["49:25", "49:24-25"],
+        ["31:48", "31:46-48"],
+    ]
+    for (const [eng, range] of seams) {
+        test(`ENG ${eng} -> LXX ${range}`, () => {
+            const [p] = parser.parse(`Genesis ${eng}`).getPassages()
+            const lxx = p.convertVersion("lxx")
+            assert.equal(lxx.scripture.cv, range)
+            assert.equal(lxx.missingPassages, undefined)
+        })
+        const [ch, last] = [range.split(":")[0], range.split("-")[1]]
+        const first = range.split("-")[0]
+        test(`LXX ${first} and ${ch}:${last} reverse-map to themselves`, () => {
+            for (const ref of [first, `${ch}:${last}`]) {
+                const [p] = lxxParser.parse(`Genesis ${ref}`).getPassages()
+                const e = p.convertVersion("eng")
+                assert.equal(e.scripture.cv, ref === first && eng === "31:48" ? "31:46" : ref)
+            }
+        })
+    }
+
+    test("ENG 31:52 still maps to Göttingen 31:48", () => {
+        const [p] = parser.parse("Genesis 31:52").getPassages()
+        assert.equal(p.convertVersion("lxx").scripture.cv, "31:48")
+    })
+
+    test("ENG 22:3-4 range collapses onto Göttingen 22:3-4 without duplicates", () => {
+        const [p] = parser.parse("Genesis 22:3-4").getPassages()
+        const lxx = p.convertVersion("lxx")
+        assert.deepEqual(lxx.passages.map((q) => `${q.chapter}:${q.verse}`), ["22:3", "22:4"])
+    })
+})
+
 // --- Existing well-known mappings still work (regression guards) ---
 
 group("Existing mappings still work", () => {
@@ -358,11 +403,11 @@ group("verseSuffix flows through to scripture.cv", () => {
         assert.equal(mt.verses[0], "19b")
     })
 
-    test("Genesis 31:48 ENG -> LXX range outputs '31:47-48'", () => {
+    test("Genesis 31:48 ENG -> LXX range outputs '31:46-48'", () => {
         const parser = new CodexParser()
         const [p] = parser.parse("Genesis 31:48").getPassages()
         const lxx = p.convertVersion("lxx")
-        assert.equal(lxx.scripture.cv, "31:47-48")
+        assert.equal(lxx.scripture.cv, "31:46-48")
     })
 })
 

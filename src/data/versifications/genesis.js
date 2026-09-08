@@ -15,8 +15,22 @@ module.exports = {
         mt: "32:1",
         eng: "31:55",
     },
+    // Göttingen 31:46 ends with the first half of MT 31:48 (Laban: "this heap
+    // is a witness between me and you today"), 31:47 = MT 31:47, and Göttingen
+    // 31:48 holds MT 31:51-52 plus the second half of MT 31:48 ("therefore it
+    // was called Galeed"). So ENG 31:48 spans Göttingen 31:46-48.
+    "31:46": {
+        lxx: "31:46",
+        mt: "31:46",
+        eng: "31:46",
+    },
+    "31:47": {
+        lxx: "31:47",
+        mt: "31:47",
+        eng: "31:47",
+    },
     "31:48": {
-        lxx: "31:47-48",
+        lxx: "31:46-48",
         mt: "31:48",
         eng: "31:48",
     },
@@ -188,6 +202,71 @@ module.exports = {
     // Gen 35:16-21 verse split differs slightly between traditions: LXX
     // condenses the Migdal-eder note so MT/ENG 35:21 has no distinct LXX
     // counterpart and MT/ENG 35:22 = LXX 35:21.
+    // Seams where Wevers ends a verse a few words later than Rahlfs/MT: the
+    // opening words of the Hebrew verse ("on the third day", "before they lay
+    // down", …) close the previous Göttingen verse. The identity entry comes
+    // first so an LXX-tagged reference to that verse reverse-maps to itself;
+    // the English verse maps to the covering range (as Lamentations 4:18).
+    "19:3": {
+        lxx: "19:3",
+        mt: "19:3",
+        eng: "19:3",
+    },
+    "19:4": {
+        lxx: "19:3-4",
+        mt: "19:4",
+        eng: "19:4",
+    },
+    "22:3": {
+        lxx: "22:3",
+        mt: "22:3",
+        eng: "22:3",
+    },
+    "22:4": {
+        lxx: "22:3-4",
+        mt: "22:4",
+        eng: "22:4",
+    },
+    "22:15": {
+        lxx: "22:15",
+        mt: "22:15",
+        eng: "22:15",
+    },
+    "22:16": {
+        lxx: "22:15-16",
+        mt: "22:16",
+        eng: "22:16",
+    },
+    "24:18": {
+        lxx: "24:18",
+        mt: "24:18",
+        eng: "24:18",
+    },
+    "24:19": {
+        lxx: "24:18-19",
+        mt: "24:19",
+        eng: "24:19",
+    },
+    "24:26": {
+        lxx: "24:26",
+        mt: "24:26",
+        eng: "24:26",
+    },
+    "24:27": {
+        lxx: "24:26-27",
+        mt: "24:27",
+        eng: "24:27",
+    },
+    "49:24": {
+        lxx: "49:24",
+        mt: "49:24",
+        eng: "49:24",
+    },
+    "49:25": {
+        lxx: "49:24-25",
+        mt: "49:25",
+        eng: "49:25",
+    },
     "35:21": {
         lxx: "",
         mt: "35:21",
