@@ -198,12 +198,9 @@ class PassageCollection extends Array {
                     chapterVerses[chapter] = new Set()
                 }
                 chapterVerses[chapter].add(verse)
-                combined.passages.push({
-                    book: p.book,
-                    chapter: p.chapter,
-                    verse: p.verse,
-                    versification: p.versification,
-                })
+                const entry = { book: p.book, chapter: p.chapter, verse: p.verse }
+                if (p.versification !== undefined) entry.versification = p.versification
+                combined.passages.push(entry)
 
                 if (firstChapter === null || chapter < firstChapter) {
                     firstChapter = chapter
@@ -220,7 +217,16 @@ class PassageCollection extends Array {
             })
         })
 
-        combined.passages = Array.from(new Set(combined.passages.map(JSON.stringify))).map(JSON.parse)
+        // Dedupe by address, not by JSON: two source verses that converge on
+        // one target verse (ENG Gen 5:32 and 6:1 -> LXX 6:1, Ps 13:5-6 -> 12:6)
+        // carry different versification objects but are the same verse.
+        const seenAddresses = new Set()
+        combined.passages = combined.passages.filter((p) => {
+            const key = `${p.book}|${p.chapter}|${p.verse}|${p.verseSuffix || ""}`
+            if (seenAddresses.has(key)) return false
+            seenAddresses.add(key)
+            return true
+        })
 
         const chapterStrings = []
         const sortedChapters = Object.keys(chapterVerses)

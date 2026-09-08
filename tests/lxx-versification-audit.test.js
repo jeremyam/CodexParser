@@ -256,6 +256,61 @@ group("Genesis 35:21-22 (post-cleanup)", () => {
     })
 })
 
+// --- Genesis 5:32 folds into Göttingen 6:1 ---
+
+group("Genesis 5:32 ENG -> Göttingen 6:1 (not missing)", () => {
+    const parser = new CodexParser()
+
+    test("5:32 ENG maps to LXX 6:1 with no missingPassages", () => {
+        const [p] = parser.parse("Genesis 5:32").getPassages()
+        const lxx = p.convertVersion("lxx")
+        assert.equal(lxx.missingPassages, undefined)
+        assert.equal(lxx.passages.length, 1)
+        assert.equal(lxx.passages[0].chapter, 6)
+        assert.equal(lxx.passages[0].verse, 1)
+        assert.equal(lxx.scripture.cv, "6:1")
+    })
+
+    test("5:32 ENG keeps MT 5:32", () => {
+        const [p] = parser.parse("Genesis 5:32").getPassages()
+        const mt = p.convertVersion("mt")
+        assert.equal(mt.passages[0].chapter, 5)
+        assert.equal(mt.passages[0].verse, 32)
+    })
+
+    test("5:31-6:2 ENG -> LXX collapses 5:32 and 6:1 onto Göttingen 6:1", () => {
+        const [p] = parser.parse("Genesis 5:31-6:2").getPassages()
+        const lxx = p.convertVersion("lxx")
+        assert.equal(lxx.missingPassages, undefined)
+        assert.deepEqual(
+            lxx.passages.map((q) => `${q.chapter}:${q.verse}`),
+            ["5:31", "6:1", "6:2"]
+        )
+    })
+
+    test("combine() keeps one LXX 6:1 when 5:32 and 6:1 are listed separately", () => {
+        const eng = parser.parse("Genesis 5:31 // Genesis 5:32 // Genesis 6:1").getPassages()
+        const lxx = parser.combine(eng.map((p) => p.convertVersion("lxx")))
+        assert.deepEqual(
+            lxx.passages.map((q) => `${q.chapter}:${q.verse}`),
+            ["5:31", "6:1"]
+        )
+        const ps = parser.parse("Psalm 13:5 // Psalm 13:6").getPassages()
+        const psLxx = parser.combine(ps.map((p) => p.convertVersion("lxx")))
+        assert.deepEqual(psLxx.passages.map((q) => `${q.chapter}:${q.verse}`), ["12:6"])
+    })
+
+    test("6:1 LXX reverse-maps to ENG 5:32, the first Hebrew verse it holds (as Exodus 38:27 LXX -> 40:30)", () => {
+        const lxxParser = new CodexParser()
+        lxxParser.bibleVersion("lxx")
+        const [p] = lxxParser.parse("Genesis 6:1").getPassages()
+        const eng = p.convertVersion("eng")
+        assert.equal(eng.passages.length, 1)
+        assert.equal(eng.passages[0].chapter, 5)
+        assert.equal(eng.passages[0].verse, 32)
+    })
+})
+
 // --- Existing well-known mappings still work (regression guards) ---
 
 group("Existing mappings still work", () => {

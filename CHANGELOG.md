@@ -2,6 +2,13 @@
 
 All notable changes to this project are documented here. For full details, see the Release Notes in README and the GitHub Releases page.
 
+## 0.6.14 — 2026-09-08
+
+### Fixed
+
+- **Genesis 5:32 is no longer reported as missing from the LXX.** 0.4.1 set `lxx: ""` because Göttingen Genesis 5 ends at verse 31, but the verse is not absent from the Greek: Wevers prints "Noah was 500 years old…" as the opening of Göttingen 6:1 and continues the same verse with the text of Hebrew 6:1 (apparatus I: `6:1 om init—(2) fin 31txt`); only Rahlfs keeps the Hebrew number 5:32. The empty mapping made the portal show "no counterpart in the LXX" for a verse whose Greek is one verse away. ENG/MT 5:32 now maps to LXX `6:1`, alongside ENG 6:1, on the many-to-one pattern already used for Psalm 13:5-6 → 12:6 and Exodus 40:30-32 → 38:27; `Genesis 5:31-6:2` converts to `5:31; 6:1-2` with no `missingPassages`, and `Genesis 6:1 LXX` reverse-maps to English 5:32, the first Hebrew verse its text holds. Regression tests added.
+- **`combine()` no longer duplicates a target verse that two source verses converge on.** Its dedupe compared whole passage objects, so converging verses (which carry different `versification` entries) survived as duplicates: `Psalm 13:5 // Psalm 13:6` converted to LXX gave `passages` `[12:6, 12:6]`, and likewise Exodus 40:30-32 → 38:27. Passages are now deduped by book/chapter/verse/suffix.
+
 ## 0.6.13 — 2026-09-07
 
 ### Fixed
