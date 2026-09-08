@@ -2,6 +2,12 @@
 
 All notable changes to this project are documented here. For full details, see the Release Notes in README and the GitHub Releases page.
 
+## 0.6.13 — 2026-09-07
+
+### Fixed
+
+- **Lamentations now has a versification map against Ziegler's Göttingen Threni.** The edition divides 1:15-16, 2:1-2 and 4:17-19 by Greek stichs, one stich off the Hebrew acrostic verses (Rahlfs keeps the Hebrew numbering), and the Old Greek lacks MT 3:22-24 and 3:29. With no table the book fell through as identity, so English/MT 4:18 (`ἤγγικεν ὁ καιρὸς ἡμῶν`, the Mark 1:15 parallel) fetched Ziegler 4:18 — the wrong half-verse — and 3:22-24/3:29 queried nonexistent Greek. A Hebrew verse that spans two Ziegler verses now maps to the covering range (`4:18` → `4:18-19`, `1:16` → `1:15-16`, `2:1` → `2:1-2`), the minuses emit `missingPassages`, and LXX-tagged references (`Lamentations 4:19 LXX`, Hübner's `4:18,19LXX`) reverse-map to the Hebrew verse whose text they hold. Regression tests added.
+
 ## 0.6.12 — 2026-09-02
 
 ### Fixed

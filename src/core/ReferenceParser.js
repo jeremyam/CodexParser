@@ -327,7 +327,16 @@ class ReferenceParser {
                     remapped.push(next)
                 })
             })
-            cloned.passages = remapped
+            // Neighbouring source verses can map onto overlapping target ranges
+            // (Lamentations 4:17 -> 4:17-18 and 4:18 -> 4:18-19), so drop repeats
+            // of the same target chapter:verse(+suffix), keeping the first.
+            const seenTargets = new Set()
+            cloned.passages = remapped.filter((sub) => {
+                const key = `${sub.chapter}:${sub.verse}${sub.verseSuffix || ""}`
+                if (seenTargets.has(key)) return false
+                seenTargets.add(key)
+                return true
+            })
             if (missing.length > 0) cloned.missingPassages = missing
 
             // Sort and recompute summary fields

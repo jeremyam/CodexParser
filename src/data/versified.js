@@ -23,6 +23,7 @@ const versified = {
     "Song of Solomon": song,
     Isaiah: require("./versifications/isaiah"),
     Jeremiah: require("./versifications/jeremiah"),
+    Lamentations: require("./versifications/lamentations"),
     Ezekiel: require("./versifications/ezekiel"),
     Daniel: require("./versifications/daniel"),
     Hosea: require("./versifications/hosea"),
