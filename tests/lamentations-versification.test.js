@@ -72,15 +72,18 @@ test("MT numbering equals English throughout Lamentations", () => {
     }
 })
 
-test("LXX-tagged references reverse-map to the Hebrew verse whose text they hold", () => {
+// A Ziegler verse can hold the text of two Hebrew verses, so its reverse map is the
+// range covering both — the mirror of the forward direction, where a Hebrew verse
+// split across two Ziegler verses maps to the range that holds all of it.
+test("LXX-tagged references reverse-map to every Hebrew verse whose text they hold", () => {
     const cases = {
-        "1:15": "1:15",
+        "1:15": "1:15-16",
         "1:16": "1:16",
         "2:1": "2:1",
-        "2:2": "2:2",
+        "2:2": "2:1-2",
         "4:17": "4:17",
-        "4:18": "4:18",
-        "4:19": "4:19",
+        "4:18": "4:17-18",
+        "4:19": "4:18-19",
         "4:20": "4:20",
     }
     for (const [lxx, eng] of Object.entries(cases)) {
@@ -92,8 +95,18 @@ test("LXX-tagged references reverse-map to the Hebrew verse whose text they hold
     }
 })
 
-test("Hübner-style 'Lamentations 4:18,19 LXX' covers English 4:18-19", () => {
+// Ziegler 4:18 opens with the last stich of MT 4:17, so the pair covers 4:17 too.
+test("Hübner-style 'Lamentations 4:18,19 LXX' covers English 4:17-19", () => {
     const p = parse("Lamentations 4:18,19 LXX")
-    assert.deepEqual(verses(p.convertVersion("eng")), ["4:18", "4:19"])
-    assert.equal(p.convertVersion("eng").scripture.cv, "4:18-19")
+    assert.deepEqual(verses(p.convertVersion("eng")), ["4:17", "4:18", "4:19"])
+    assert.equal(p.convertVersion("eng").scripture.cv, "4:17-19")
+})
+
+// The queried Greek verse stays itself: reverse-mapping must not widen the reference
+// the editor asked for, only report the Hebrew verses it covers.
+test("a reverse lookup keeps its own LXX verse", () => {
+    const p = parse("Lamentations 4:19 LXX")
+    assert.equal(p.passages[0].versification.lxx, "4:19")
+    assert.equal(p.passages[0].versification.eng, "4:18-19")
+    assert.equal(p.convertVersion("lxx").scripture.cv, "4:19")
 })

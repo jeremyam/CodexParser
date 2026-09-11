@@ -2,6 +2,19 @@
 
 All notable changes to this project are documented here. For full details, see the Release Notes in README and the GitHub Releases page.
 
+## 0.6.18
+
+### Fixed
+
+- **Reverse versification lookups report every verse the native verse holds.** A reference
+  tagged LXX or MT took the first table entry whose native value covered it, so Ziegler's
+  Lamentations 4:19 — the tail of MT 4:18 plus all of MT 4:19 — reported English 4:19 alone
+  and dropped the clause Mark 1:15 echoes. Covering entries now merge when they form a
+  contiguous run within one chapter; Jeremiah's reordered chapters and Esther's Greek
+  additions keep the first match, and the queried verse keeps its own number so converting
+  back is a no-op. `Lamentations 4:19 LXX` maps to English 4:18-19, `4:18 LXX` to 4:17-18,
+  `1:15 LXX` to 1:15-16 and `2:2 LXX` to 2:1-2.
+
 ## 0.6.15 — 2026-09-08
 
 ### Fixed
