@@ -77,7 +77,7 @@ test("MT numbering equals English throughout Lamentations", () => {
 // split across two Ziegler verses maps to the range that holds all of it.
 test("LXX-tagged references reverse-map to every Hebrew verse whose text they hold", () => {
     const cases = {
-        "1:15": "1:15-16",
+        "1:15": "1:15",
         "1:16": "1:16",
         "2:1": "2:1",
         "2:2": "2:1-2",

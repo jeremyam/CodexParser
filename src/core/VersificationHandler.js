@@ -100,13 +100,15 @@ class VersificationHandler {
     }
 
     /**
-     * Merges the entries a native verse falls in, so a reverse lookup reports every
-     * verse whose text that native verse holds. Only a run contiguous within one
-     * chapter merges — the "one verse split across two" case (Lamentations 4:19,
-     * Psalms 12:6, Joshua 9:2). Anything else keeps the first entry, which is what
-     * the tables' order encodes: Jeremiah's reordered chapters and Esther's Greek
-     * additions must not collapse into a range. The queried version keeps the verse
-     * as asked, so converting back is a no-op rather than a widened range.
+     * Merges the entries a native verse falls in, so a reverse lookup reports the verses
+     * whose text it actually opens with. Only an entry whose own text begins BEFORE this
+     * native verse merges: Ziegler's Lamentations 4:19 starts inside MT 4:18 (it carries
+     * that verse's closing stich) and so reports 4:18-19. An entry that merely spills its
+     * opening words into the END of this verse does not, which is why Wevers' Genesis 19:3
+     * still reverse-maps to 19:3 though it closes with the first words of MT 19:4. The run
+     * must also be contiguous within one chapter, so Jeremiah's reordered chapters and
+     * Esther's Greek additions keep the first match, and the queried version keeps the
+     * verse as asked, so converting back is a no-op rather than a widened range.
      * @private
      */
     static #mergeCovering(entries, versionType, subPassage) {
@@ -116,6 +118,24 @@ class VersificationHandler {
         if (entries.length === 1) {
             return { ...entries[0], [versionType]: asked }
         }
+
+        // Keep the first match, plus only those entries whose native text starts earlier
+        // than this verse — the ones whose closing words this verse carries.
+        const startsEarlier = (entry) => {
+            const expanded = ReferenceParser.expandVersificationValue(entry[versionType])
+            if (!expanded.length) return false
+            const first = expanded[0]
+            return (
+                Number(first.chapter) < Number(subPassage.chapter) ||
+                (Number(first.chapter) === Number(subPassage.chapter) &&
+                    Number(first.verse) < Number(subPassage.verse))
+            )
+        }
+        const kept = entries.filter((entry, index) => index === 0 || startsEarlier(entry))
+        if (kept.length === 1) {
+            return { ...kept[0], [versionType]: asked }
+        }
+        entries = kept
 
         const merged = { ...entries[0], [versionType]: asked }
         for (const key of ["eng", "mt", "lxx"]) {

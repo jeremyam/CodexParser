@@ -10,10 +10,23 @@ All notable changes to this project are documented here. For full details, see t
   tagged LXX or MT took the first table entry whose native value covered it, so Ziegler's
   Lamentations 4:19 — the tail of MT 4:18 plus all of MT 4:19 — reported English 4:19 alone
   and dropped the clause Mark 1:15 echoes. Covering entries now merge when they form a
-  contiguous run within one chapter; Jeremiah's reordered chapters and Esther's Greek
-  additions keep the first match, and the queried verse keeps its own number so converting
-  back is a no-op. `Lamentations 4:19 LXX` maps to English 4:18-19, `4:18 LXX` to 4:17-18,
-  `1:15 LXX` to 1:15-16 and `2:2 LXX` to 2:1-2.
+  contiguous run within one chapter, and only where the covering entry's own text begins
+  before this native verse — the verses whose closing words it carries. An entry that merely
+  spills its opening words into the end of this verse does not merge, so Wevers' Genesis 19:3
+  still reverse-maps to 19:3 and Ziegler's Lamentations 1:15 to 1:15. Jeremiah's reordered
+  chapters and Esther's Greek additions keep the first match, and the queried verse keeps its
+  own number so converting back is a no-op. `Lamentations 4:19 LXX` now maps to English
+  4:18-19, `4:18 LXX` to 4:17-18 and `2:2 LXX` to 2:1-2.
+- **0.6.17 was published from a stale checkout** (0.6.13 plus the Lamentations fix) and is
+  superseded by this release, which carries the 0.6.14-0.6.16 work as well.
+
+## 0.6.16 — 2026-09-09
+
+### Fixed
+
+- **Deuteronomy's LXX column no longer copies the MT.** The 12:32//13, 22:30//23 and 28:69//29 seams had `lxx` filled in with the MT value, but Wevers' Göttingen keeps the English chapter divisions at all three — English versification follows the Greek here (via the Vulgate) and it is the MT that shifts. Reported from the portal: Luke 6:34-35 // Deuteronomy 23:19-20 pasted Göttingen 23:20-21, the usury verses' MT numbers. Verified against the Göttingen text itself: 12:32 is `Πᾶν ῥῆμα…`, 22:30 is `Οὐ λήμψεται ἄνθρωπος τὴν γυναῖκα τοῦ πατρὸς αὐτοῦ`, 29:1 is `Οὗτοι οἱ λόγοι τῆς διαθήκης`, and chapters 13/23/28/29 carry the English verse totals (18/25/68/29) against the MT's 19/26/69/28. `lxx` is now identity across all three blocks; only `mt` moves.
+- **Deuteronomy 23:24-25 are transposed in the Greek.** Wevers prints the standing-grain law as 23:24 (`Ἐὰν δὲ εἰσέλθῃς εἰς ἀμητὸν τοῦ πλησίον σου`) and the vineyard law as 23:25 (`ἐὰν δὲ εἰσέλθῃς εἰς τὸν ἀμπελῶνα`), the reverse of the Hebrew order; the chapter's verse totals match English either way, so the swap was invisible to a count-based audit. English 23:24 now maps to `23:25` and 23:25 to `23:24`, on the Decalogue pattern at 5:17-18, and both reverse-map to the English verse whose text they hold. Luke 6:1 // Deuteronomy 23:25 had been reporting "no counterpart in the LXX".
+- **Three gaps in the Deuteronomy table filled.** English 14:28 had no entry, so Göttingen 14:27 (`Μετὰ τρία ἔτη ἐξοίσεις πᾶν τὸ ἐπιδέκατον`) was unreachable and 14:28 was mapped from two English verses; English 23:12 had no entry, leaving MT 23:13 unreachable; and the chapter 29 block stopped at English 29:25, so 29:26-29 fell through as identity instead of mapping to MT 29:25-28. Regression tests added.
 
 ## 0.6.15 — 2026-09-08
 
