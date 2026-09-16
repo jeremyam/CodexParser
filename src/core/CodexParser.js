@@ -221,7 +221,14 @@ class CodexParser {
             if (abbr !== "mt" && abbr !== "lxx") continue
             if (!passage.passages.length) continue
             const covered = passage.passages.every((sub) => {
-                if (!sub.versification) return false
+                // A verse with no table entry at all reads the same natively as in
+                // English, so English bounds decide. This lets a list mix identity
+                // verses with remapped ones ("Malachi 3:1,23 MT": 3:1 has no entry,
+                // 3:23 → eng 4:5). A verse whose English address IS in the table
+                // (e.g. "Malachi 4:4 MT") has versification set and is judged below.
+                if (!sub.versification) {
+                    return PassageUtils.getChapterVerses(passage.book, sub.chapter).includes(Number(sub.verse))
+                }
                 const ref = sub.verseSuffix
                     ? `${sub.chapter}:${sub.verse}${sub.verseSuffix}`
                     : `${sub.chapter}:${sub.verse}`

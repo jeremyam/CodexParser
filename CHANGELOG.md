@@ -2,6 +2,26 @@
 
 All notable changes to this project are documented here. For full details, see the Release Notes in README and the GitHub Releases page.
 
+## 0.6.19
+
+### Fixed
+
+- **A native verse list may mix identity verses with remapped ones.** A reference tagged MT or
+  LXX whose verses fell outside the English chapter was upgraded to valid only when every
+  verse carried its own versification entry, so a list that also held a verse numbered the
+  same in both systems failed as a whole: `Malachi 3:1,23,24 MT` (3:1 has no entry; 3:23-24
+  are English 4:5-6) and `Job 40:11,17,19,25 MT` were reported invalid although each verse is
+  valid alone. A verse with no table entry at all now falls back to the English bounds, which
+  is what identity numbering means. A verse whose English address is in the table keeps the
+  strict check. Found by validating every row of the Tapestry masterlist against the parser;
+  across 41,973 rows exactly two change from invalid to valid, none from valid to invalid.
+- **LXX Jeremiah 38:38-40 filled in.** The chapter 31 block stopped at English 31:37, so English
+  31:38-40 (the rebuilt city) fell through as identity and converted to LXX 31:38-40, which in
+  the Greek order is the Moab oracle (MT 48). They now map to Göttingen 38:38-40, and
+  `Jeremiah 38:38 LXX` (stored as `ἰδοὺ ἡμέραι ἔρχονται … οἰκοδομηθήσεται πόλις`) is valid.
+  Every English reference spanning Jeremiah 31:38-40 now loads the right Greek; in the Tapestry
+  masterlist that is 18 rows, among them the new-covenant connections on Hebrews 8 and 10.
+
 ## 0.6.18
 
 ### Fixed
