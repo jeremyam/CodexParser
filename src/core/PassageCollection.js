@@ -197,8 +197,11 @@ class PassageCollection extends Array {
                 if (!chapterVerses[chapter]) {
                     chapterVerses[chapter] = new Set()
                 }
-                chapterVerses[chapter].add(verse)
+                // A lettered verse (3 Kingdoms 2:46a) is its own address: keep the
+                // letter, or the combined reference collapses onto the bare verse.
+                chapterVerses[chapter].add(`${verse}${p.verseSuffix || ""}`)
                 const entry = { book: p.book, chapter: p.chapter, verse: p.verse }
+                if (p.verseSuffix) entry.verseSuffix = p.verseSuffix
                 if (p.versification !== undefined) entry.versification = p.versification
                 combined.passages.push(entry)
 
@@ -228,18 +231,40 @@ class PassageCollection extends Array {
             return true
         })
 
+        // Plain verses merge into ranges; lettered verses stand as their own tokens
+        // ("46a,46b,46g") in verse order.
+        const mergeChapterVerses = (chapter) => {
+            const entries = Array.from(chapterVerses[chapter])
+                .map((token) => String(token).match(/^(\d+)([a-zA-Z]*)$/))
+                .filter(Boolean)
+                .map((m) => ({ verse: Number(m[1]), suffix: m[2] }))
+                .sort((a, b) => a.verse - b.verse || a.suffix.localeCompare(b.suffix))
+            const merged = []
+            let run = []
+            const flush = () => {
+                if (run.length) merged.push(...PassageUtils.mergeRanges(run))
+                run = []
+            }
+            entries.forEach(({ verse, suffix }) => {
+                if (suffix) {
+                    flush()
+                    merged.push(`${verse}${suffix}`)
+                } else {
+                    run.push(verse)
+                }
+            })
+            flush()
+            return merged
+        }
+
         const chapterStrings = []
         const sortedChapters = Object.keys(chapterVerses)
             .map(Number)
             .sort((a, b) => a - b)
 
         sortedChapters.forEach((chapter) => {
-            const verses = Array.from(chapterVerses[chapter])
-                .map(Number)
-                .filter((verse) => Number.isFinite(verse) && verse >= 0)
-                .sort((a, b) => a - b)
-            if (verses.length > 0) {
-                const mergedVerses = PassageUtils.mergeRanges(verses)
+            const mergedVerses = mergeChapterVerses(chapter)
+            if (mergedVerses.length > 0) {
                 chapterStrings.push(`${chapter}:${mergedVerses.join(",")}`)
                 if (chapter === firstChapter) {
                     combined.verses = mergedVerses
@@ -277,11 +302,7 @@ class PassageCollection extends Array {
             combined.to = {
                 book: combined.book,
                 chapter: lastChapter,
-                verses: PassageUtils.mergeRanges(
-                    Array.from(chapterVerses[lastChapter])
-                        .filter((verse) => Number.isFinite(verse) && verse >= 0)
-                        .sort((a, b) => a - b)
-                ),
+                verses: mergeChapterVerses(lastChapter),
             }
             combined.original = `${combined.book} ${chapterStrings.join("; ")}`
         } else {

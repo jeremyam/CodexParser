@@ -90,7 +90,7 @@ class ScriptureScanner {
 
                 while (
                     i < normalizedText.length &&
-                    this.#isValidChapterVerseChar(normalizedText[i], normalizedText[i - 1])
+                    this.#isValidChapterVerseChar(normalizedText[i], normalizedText[i - 1], normalizedText, i)
                 ) {
                     if (this.#isNextBibleBook(i, lowerCaseText, lowercaseBibleFullNames, lowercaseBibleAbbreviations)) {
                         break
@@ -182,11 +182,20 @@ class ScriptureScanner {
      * "6:1a" continues the token but "6:1 Amos" still breaks at "A".
      * NA-style sequens markers keep the token going too: "s" after a digit
      * ("25s") or after another "s" ("25ss").
+     * Rahlfs letters his long additions past "e" (3 Kingdoms 2:46a-l, 12:24a-z),
+     * but a bare "f" after a verse is also the German "and following" ("22:2f."),
+     * so the letters f-z (never "s", the sequens) count only in a reference
+     * that carries an LXX tag, and only as a single letter.
      * @private
      */
-    #isValidChapterVerseChar(char, prevChar) {
+    #isValidChapterVerseChar(char, prevChar, text, index) {
         if (/[\d:,\-;\s]/.test(char)) return true
         if (/[a-eA-E]/.test(char) && prevChar && /\d/.test(prevChar)) return true
+        if (/[f-rt-zF-RT-Z]/.test(char) && prevChar && /\d/.test(prevChar) && text) {
+            const rest = text.slice(index + 1)
+            if (/^[a-zA-Z.]/.test(rest)) return false
+            return /^[\d:,\-;\sa-z]*LXX\b/i.test(rest)
+        }
         if (/[sS]/.test(char) && prevChar && /[\dsS]/.test(prevChar)) return true
         return false
     }

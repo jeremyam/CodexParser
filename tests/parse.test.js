@@ -281,20 +281,20 @@ test("multiple distinct references in prose are each captured", () => {
 // Versification
 // ---------------------------------------------------------------------------
 test("parsing as LXX records the cross-version mapping", () => {
-    const p = new CodexParser().bibleVersion("lxx").parse("Genesis 32:1").first()
+    const p = new CodexParser().bibleVersion("lxx").parse("Numbers 13:1").first()
     assert.equal(p.version.value, "LXX")
     assert.deepEqual(p.passages[0].versification, {
-        lxx: "32:1",
-        mt: "32:1",
-        eng: "31:55",
+        lxx: "13:1",
+        mt: "12:16",
+        eng: "12:16",
     })
 })
 
-test("convertVersion remaps ENG → LXX (Genesis 31:55 → 32:1)", () => {
-    const eng = first("Genesis 31:55")
+test("convertVersion remaps ENG → LXX (Numbers 12:16 → 13:1)", () => {
+    const eng = first("Numbers 12:16")
     assert.equal(typeof eng.convertVersion, "function")
     const lxx = eng.convertVersion("lxx")
-    assert.equal(lxx.chapter, 32)
+    assert.equal(lxx.chapter, 13)
     assert.deepEqual(lxx.verses, ["1"])
     assert.equal(lxx.version.value, "LXX")
 })

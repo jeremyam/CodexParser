@@ -82,10 +82,10 @@ group("convertVersion handles range/empty/letter values without NaN", () => {
         })
     })
 
-    test("1 Kings 4:21 ENG -> LXX is recorded as missing in target", () => {
-        const [p] = parser.parse("1 Kings 4:21").getPassages()
+    test("1 Kings 7:31 ENG -> LXX is recorded as missing in target", () => {
+        const [p] = parser.parse("1 Kings 7:31").getPassages()
         const lxx = p.convertVersion("lxx")
-        // 4:21 has lxx: "" so the verse should not appear in cloned.passages
+        // 7:31 has lxx: "" so the verse should not appear in cloned.passages
         assert.equal(lxx.passages.length, 0)
         assert.ok(Array.isArray(lxx.missingPassages))
         assert.equal(lxx.missingPassages.length, 1)
@@ -344,9 +344,11 @@ group("Genesis seams: English verse maps to the covering Göttingen range", () =
         })
     }
 
-    test("ENG 31:52 still maps to Göttingen 31:48", () => {
-        const [p] = parser.parse("Genesis 31:52").getPassages()
+    test("ENG 31:51 maps to Göttingen 31:48; ENG 31:52 spans 31:48 and Wevers' own 31:52", () => {
+        const [p] = parser.parse("Genesis 31:51").getPassages()
         assert.equal(p.convertVersion("lxx").scripture.cv, "31:48")
+        const [q] = parser.parse("Genesis 31:52").getPassages()
+        assert.equal(q.convertVersion("lxx").scripture.cv, "31:48,52")
     })
 
     test("ENG 22:3-4 range collapses onto Göttingen 22:3-4 without duplicates", () => {
@@ -361,11 +363,11 @@ group("Genesis seams: English verse maps to the covering Göttingen range", () =
 group("Existing mappings still work", () => {
     const parser = new CodexParser()
 
-    test("Genesis 31:55 ENG -> LXX 32:1", () => {
+    test("Genesis 31:55 ENG -> LXX 31:55 (Wevers closes chapter 31 as the English does)", () => {
         const [p] = parser.parse("Genesis 31:55").getPassages()
         const lxx = p.convertVersion("lxx")
-        assert.equal(lxx.passages[0].chapter, 32)
-        assert.equal(lxx.passages[0].verse, 1)
+        assert.equal(lxx.passages[0].chapter, 31)
+        assert.equal(lxx.passages[0].verse, 55)
     })
 
     test("Joel 2:28 ENG -> MT 3:1, LXX 2:28 (Göttingen numbers like English)", () => {
@@ -771,10 +773,11 @@ group("MT-side versification correctly shifts when LXX shifts", () => {
         assert.equal(lxx.scripture.cv, "7:3")
     })
 
-    test("Genesis 31:55 LXX still 32:1 (no regression)", () => {
+    test("Genesis 31:55 LXX is 31:55 and Genesis 32:1 LXX is 32:1 (Göttingen numbers like English)", () => {
         const [p] = parser.parse("Genesis 31:55").getPassages()
-        const lxx = p.convertVersion("lxx")
-        assert.equal(lxx.scripture.cv, "32:1")
+        assert.equal(p.convertVersion("lxx").scripture.cv, "31:55")
+        const [q] = parser.parse("Genesis 32:1").getPassages()
+        assert.equal(q.convertVersion("lxx").scripture.cv, "32:1")
     })
 })
 

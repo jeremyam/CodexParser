@@ -2,6 +2,39 @@
 
 All notable changes to this project are documented here. For full details, see the Release Notes in README and the GitHub Releases page.
 
+## 0.6.20 — 2026-09-21
+
+### Fixed
+
+Every change below was read against the edition the Tapestry stores for that book
+(Rahlfs for 1-4 Kingdoms; Göttingen elsewhere) and against the stored text itself.
+
+- **1 Kings 4:20-28 no longer reads as LXX minuses.** Rahlfs prints this material in the
+  second miscellany and names the place of each verse in his apparatus: MT 4:20 → `2:46a`
+  ("cf. M 4:20"), MT 5:1 → `2:46b,46k`, MT 5:5 → `2:46g` ("46f, 46g = M 5:4, 5"), MT 5:6 →
+  `2:46i`, MT 5:8 → `5:1` ("= M 7, 8"). Likewise MT 3:1 → `5:14a`, 8:12-13 → `8:53a`,
+  9:15-22 → `10:22a-c`, 9:16 → `5:14b`, 9:23 → `2:35h`, 9:24 → `9:9a`, 9:25 → `2:35g`,
+  5:31 → `6:1a`, 6:37-38 → `6:1c,1d`, and MT 4:17 → `4:19`.
+- **1 Kings 20 and 21 trade places in the LXX.** 3 Kingdoms sets Naboth's vineyard (MT 21)
+  before the Aramean wars (MT 20); neither chapter had entries, so every reference in them
+  drew the other chapter's Greek. 7:46 and 7:47 were also transposed (Rahlfs 7:32 = M 47,
+  7:33 = M 46).
+- **Göttingen volumes that number as the English does.** Leviticus (Wevers: 5:1-19;
+  6:1-40 = Eng 6:1-7:10; 7:1-28 = Eng 7:11-38), Numbers 13 (Wevers 13:1 = Eng 12:16) and
+  16-17, 2 Chronicles 2 and 14, Nehemiah 4 and 9-10, Genesis 31:55-32:32 and Jeremiah 9 had
+  `lxx` values copied from the Hebrew numbering, so they drew the wrong Greek verse or none.
+  Also Genesis 2:25 → `3:1` (Wevers opens 3:1 with it), Genesis 31:51 → `31:48`, 31:52 →
+  `31:48,52`, Numbers 6:27 → `6:24`, 1 Samuel 20:42 → `20:42`.
+- **`combine()` keeps lettered verses.** It rebuilt the reference from bare verse numbers, so
+  `2:46a,46b,46g` collapsed to `2:46` and the sub-passages lost `verseSuffix`.
+
+### Added
+
+- **Verse letters f-z in LXX-tagged references** (`1 Kings 2:46g LXX`, `12:24n LXX`). Rahlfs
+  letters his long additions through z. Outside an LXX tag the old a-e rule stands, because
+  a bare "f" is also the German "and following" (`22:2f.`), and "s" remains the NA sequens
+  everywhere — so `12:24s`, Esther `4:17s` and `8:12s` cannot be typed, only reached by map.
+
 ## 0.6.19
 
 ### Fixed

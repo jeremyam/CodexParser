@@ -1,6 +1,8 @@
 module.exports = {
+    // Rahlfs 20:42 is Jonathan's farewell; "David rose and departed" (the close of
+    // Eng 20:42) opens his chapter 21 as 21:1, where the Hebrew also puts it.
     "20:42": {
-        lxx: "20:41",
+        lxx: "20:42",
         mt: "20:42",
         eng: "20:42",
     },

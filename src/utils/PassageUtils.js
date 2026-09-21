@@ -71,7 +71,7 @@ class PassageUtils {
                     passages.push({ book, chapter, verse: i })
                 }
             } else if (typeof verse === "string") {
-                const match = verse.trim().match(/^(\d+)([a-eA-E])?$/)
+                const match = verse.trim().match(/^(\d+)([a-rt-zA-RT-Z])?$/)
                 if (match) {
                     const verseNum = Number(match[1])
                     // Verse 0 is the English psalm-title address; keep it so
