@@ -2,6 +2,21 @@
 
 All notable changes to this project are documented here. For full details, see the Release Notes in README and the GitHub Releases page.
 
+## 0.6.21 — 2026-09-24
+
+### Fixed
+
+- **`combine()` merges passages from different numberings.** A connection built from two
+  masterlist rows for the same verse, ESV Deuteronomy 23:25 and `23:26 MT`, threw "Cannot
+  combine passages from different versions" when the MT tag was kept. Passages not in the
+  English numbering now convert to English through their own versification first, so the
+  pair combines to Deuteronomy 23:25 (LXX 23:24, MT 23:26).
+- **`combine()` no longer reports a phantom English verse as valid.** With the MT tag lost,
+  "Deuteronomy 23:26" parsed as an English verse the chapter does not have; `combine()`
+  merged it into "Deuteronomy 23:25-26" with `valid: true`, and the LXX side then asked for
+  a Göttingen 23:26 that does not exist. Such verses are now dropped, as parsing
+  "23:25-26" already does, and the combined passage carries the parse error.
+
 ## 0.6.20 — 2026-09-21
 
 ### Fixed

@@ -168,9 +168,38 @@ class PassageCollection extends Array {
             throw new Error("Passages must be from the same book to combine.")
         }
 
+        // Masterlist rows arrive in mixed numbering (ESV Deut 23:25 beside "23:26 MT",
+        // the same verse). Bring every passage to English through its own
+        // versification before merging, or the MT number is read as an English one.
+        if (new Set(passages.map((p) => p.version.abbreviation)).size > 1) {
+            passages = passages.map((p) =>
+                p.version.abbreviation !== "eng" && typeof p.convertVersion === "function"
+                    ? p.convertVersion("eng")
+                    : p
+            )
+        }
+
         const versions = new Set(passages.map((p) => p.version.abbreviation))
         if (versions.size > 1) {
             throw new Error("Cannot combine passages from different versions.")
+        }
+
+        // An English verse the chapter does not have ("Deuteronomy 23:26") parses with
+        // an error but keeps its verse; merging it would report a valid range that
+        // reaches a phantom verse. Drop it, as parsing "23:25-26" already does, and
+        // carry the error forward.
+        let invalid = null
+        if (versions.has("eng")) {
+            passages = passages.map((p) => {
+                const kept = p.passages.filter((sub) => {
+                    if (sub.versification || sub.verseSuffix || !(Number(sub.verse) > 0)) return true
+                    const chapterVerses = PassageUtils.getChapterVerses(sub.book || p.book, sub.chapter)
+                    return !chapterVerses.length || chapterVerses.includes(Number(sub.verse))
+                })
+                if (kept.length === p.passages.length) return p
+                if (!invalid) invalid = p.valid !== true ? p.valid : true
+                return { ...p, passages: kept }
+            })
         }
 
         const combined = {
@@ -345,6 +374,7 @@ class PassageCollection extends Array {
         }
 
         combined.version = passages[0].version
+        if (invalid) combined.valid = invalid
 
         // Set abbr with version suffix
         PassageCollection.#setAbbreviation(combined)

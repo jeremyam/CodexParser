@@ -103,3 +103,41 @@ test("collection combine({book: true, chapter: false}) groups whole books", () =
     assert.equal(combined[1].original, "Matthew 1:1-5; 12:16,19")
     assert.deepEqual(combined[1].end, { book: "Matthew", chapter: 12, verse: 19 })
 })
+
+// ---------------------------------------------------------------------------
+// combine() across numberings (masterlist rows: ESV Deut 23:25 + "23:26 MT")
+// ---------------------------------------------------------------------------
+const oldTestament = (parser, ref) => Array.from(parser.parse(ref).getPassages()).filter((p) => p.testament === "old")
+
+test("combine() brings an MT-numbered passage to English before merging", () => {
+    const parser = new CodexParser()
+    const passages = [...oldTestament(parser, "Deuteronomy 23:25"), ...oldTestament(parser, "Deuteronomy 23:26 MT")]
+    const combined = parser.combine(passages)
+    assert.equal(combined.version.abbreviation, "eng")
+    assert.equal(combined.original, "Deuteronomy 23:25")
+    assert.equal(combined.valid, true)
+    assert.equal(combined.convertVersion("lxx").scripture.cv, "23:24")
+    assert.equal(combined.convertVersion("mt").scripture.cv, "23:26")
+})
+
+test("combine() drops an English verse the chapter does not have and keeps the error", () => {
+    const parser = new CodexParser()
+    const passages = [...oldTestament(parser, "Deuteronomy 23:25"), ...oldTestament(parser, "Deuteronomy 23:26")]
+    const combined = parser.combine(passages)
+    assert.equal(combined.original, "Deuteronomy 23:25")
+    assert.deepEqual(
+        combined.passages.map((p) => `${p.chapter}:${p.verse}`),
+        ["23:25"]
+    )
+    assert.equal(combined.valid.code, 104)
+    const lxx = combined.convertVersion("lxx")
+    assert.deepEqual(
+        lxx.passages.map((p) => `${p.chapter}:${p.verse}`),
+        ["23:24"]
+    )
+})
+
+test("combine() still throws when every verse is a phantom", () => {
+    const parser = new CodexParser()
+    assert.throws(() => parser.combine(oldTestament(parser, "Deuteronomy 23:26")), /No valid verses/)
+})
