@@ -6,6 +6,7 @@
 const versified = require("../data/versified")
 const PassageUtils = require("../utils/PassageUtils")
 const ReferenceParser = require("./ReferenceParser")
+const { theodotionValue } = require("../data/theodotion")
 
 /**
  * Handles versification differences
@@ -185,8 +186,7 @@ class VersificationHandler {
 
                 if (passage.version) {
                     const versionAbbreviation = passage.version.abbreviation
-                    const versionType =
-                        versionAbbreviation === "lxx" ? "lxx" : versionAbbreviation === "mt" ? "mt" : null
+                    const versionType = ["lxx", "mt", "th"].includes(versionAbbreviation) ? versionAbbreviation : null
 
                     if (versionType) {
                         // A native verse can hold the text of more than one verse in the other
@@ -195,7 +195,13 @@ class VersificationHandler {
                         // Collect every entry this verse falls in, not just the first one.
                         const covering = []
                         for (const versification in this.#versificationDifferences[passage.book]) {
-                            const entry = this.#versificationDifferences[passage.book][versification]
+                            let entry = this.#versificationDifferences[passage.book][versification]
+                            // Theodotion reads the MT or LXX column (src/data/theodotion.js);
+                            // project that value onto a th key so the lookup and merge below
+                            // treat it like any other native column.
+                            if (versionType === "th") {
+                                entry = { ...entry, th: theodotionValue(passage.book, entry) }
+                            }
                             if (
                                 this.#nativeCovers(
                                     entry[versionType],

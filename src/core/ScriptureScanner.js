@@ -213,11 +213,12 @@ class ScriptureScanner {
     }
 
     /**
-     * Detects version suffix (LXX, MT)
+     * Detects version suffix (LXX-Th, LXX, MT). LXX-Th is tried first so the
+     * Theodotion tag is not read as a bare LXX.
      * @private
      */
     #detectSuffix(text, startIndex) {
-        const suffixMatch = text.substring(startIndex).match(/\b(LXX|MT)\b/i)
+        const suffixMatch = text.substring(startIndex).match(/\b(LXX-Th|LXX|MT)\b/i)
         return suffixMatch ? { suffix: suffixMatch[0].toUpperCase(), length: suffixMatch[0].length } : null
     }
 

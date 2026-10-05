@@ -5,7 +5,7 @@
  */
 
 declare namespace CodexParser {
-    type VersionAbbreviation = "eng" | "lxx" | "mt" | "bhs"
+    type VersionAbbreviation = "eng" | "lxx" | "mt" | "bhs" | "th"
 
     type Edition = "auto" | "rahlfs"
 
@@ -35,6 +35,12 @@ declare namespace CodexParser {
         lxx?: string | null
         lxxRahlfs?: string | null
         mt?: string | null
+        /**
+         * Theodotion (LXX-Th) number. Not stored in the tables: it is read from
+         * the mt column in Daniel 3-4 and the lxx column elsewhere, and appears
+         * here only on a Theodotion-native reference.
+         */
+        th?: string | null
     }
 
     interface VersePassage {
@@ -118,6 +124,8 @@ declare namespace CodexParser {
         getMT(): Passage
         getBHS(): Passage
         getEnglish(): Passage
+        /** Converts to Theodotion (LXX-Th) numbering; same as getVersion("th"). */
+        getTheodotion(): Passage
         convertVersion(targetVersion: string, options?: { edition?: Edition }): Passage
     }
 
@@ -149,6 +157,7 @@ declare namespace CodexParser {
         getMT(): PassageCollection
         getBHS(): PassageCollection
         getEnglish(): PassageCollection
+        getTheodotion(): PassageCollection
         static combinePassages(passages: Passage[]): Passage
     }
 }
@@ -168,7 +177,7 @@ declare class CodexParser {
     options(config: CodexParser.Config): this
     /** Sets the LXX edition preference ("auto" or "rahlfs"). */
     edition(edition: CodexParser.Edition): this
-    /** Sets the Bible version used for parsing ("eng", "lxx", "mt", "bhs"). */
+    /** Sets the Bible version used for parsing ("eng", "lxx", "mt", "bhs", "lxx-th"). */
     bibleVersion(version: string): this
     /** Scans text for scripture references without parsing them. */
     scan(text: string): this

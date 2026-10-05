@@ -113,7 +113,7 @@ console.log(parser.parse("Genesis 1:1-5, 10; 2:1-3").getPassages().combine())
 
 ## Versions & Versification 🔁
 
-CodexParser supports English (`ENG`), Septuagint (`LXX`), and Masoretic (`MT`/`BHS`) versifications. You can set a default via `.bibleVersion()` or use per-passage helpers to convert.
+CodexParser supports English (`ENG`), Septuagint (`LXX`), Masoretic (`MT`/`BHS`), and Theodotion (`LXX-Th`) versifications. You can set a default via `.bibleVersion()` or use per-passage helpers to convert.
 
 - Set default version for parsing:
 
@@ -161,9 +161,25 @@ console.log(z.getLXX().scripture.hash)     // "Zech.2.12" (LXX mapping)
 ```
 
 Notes:
-- `getVersion("eng"|"lxx"|"mt"|"bhs")` is available; `getBHS()` aliases `MT`.
+- `getVersion("eng"|"lxx"|"mt"|"bhs"|"th")` is available; `getBHS()` aliases `MT`, and `"LXX-Th"` aliases `"th"`.
 - `.scripture.hash` is OSIS textual (e.g., `John.3.16`), `.osisNumeric` uses pythonbible-style integer IDs.
 - **Psalm titles.** English Bibles leave the superscription unnumbered; MT/LXX count it as verse 1. Address it as `:0` (`"Psalm 18:0"` → MT `18:1` / LXX `17:1`) or tag the native number (`"Psalm 18:1 MT"`). `"Psalm 18:1"` without a suffix is still the first *numbered* English verse (MT `18:2`).
+
+### Theodotion (LXX-Th)
+
+Tag a reference with `LXX-Th` (or set `.bibleVersion("lxx-th")`) to read it in Theodotion's numbering, and convert into it with `getTheodotion()`, `getVersion("th")` or `convertVersion("LXX-Th")`.
+
+```javascript
+const parser = new CodexParser()
+const [dan] = parser.parse("Daniel 3:31 LXX-Th").getPassages()
+console.log(dan.version.value)                // "LXX-Th"
+console.log(dan.getEnglish().scripture.cv)    // "4:1"
+
+const [jer] = parser.parse("Jeremiah 33:15").getPassages()
+console.log(jer.getTheodotion().scripture.cv) // "40:15" (θ′ supplement)
+```
+
+Theodotion has no column of its own in the tables; `src/data/theodotion.js` reads the MT column in Daniel 3-4 (Theodotion is numbered without the Greek additions, so English 4:1 = 3:31) and the LXX column everywhere else (Daniel 5:31/6 keep the English division; Jeremiah's θ′ supplements sit at Ziegler's coordinates). The Old Greek's additions in Daniel 3 have no Theodotion counterpart.
 
 ### Editions: Göttingen vs. Rahlfs
 

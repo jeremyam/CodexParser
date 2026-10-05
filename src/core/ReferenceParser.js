@@ -9,6 +9,7 @@ const sblAbbreviations = require("../data/abbr/sbl")
 const PassageUtils = require("../utils/PassageUtils")
 const PassageValidator = require("./PassageValidator")
 const VersionHandler = require("./VersionHandler")
+const { theodotionColumn } = require("../data/theodotion")
 const { formatOsis, formatOsisNumeric } = require("../format/osis")
 
 /**
@@ -131,7 +132,7 @@ class ReferenceParser {
             }
 
             // Clean reference for parsing
-            let cleanReference = reference.reference.replace(/\s*(LXX|MT)$/i, "").trim()
+            let cleanReference = reference.reference.replace(/\s*(LXX-Th|LXX|MT)$/i, "").trim()
             if (cleanReference.endsWith(",")) {
                 cleanReference = cleanReference.slice(0, -1).trim()
             }
@@ -287,6 +288,11 @@ class ReferenceParser {
             const resolveTargetKey = (versification) => {
                 if (targetAbbr === "lxx" && edition === "rahlfs" && versification.lxxRahlfs !== undefined) {
                     return "lxxRahlfs"
+                }
+                // Theodotion has no column of its own; it reads the MT or LXX column
+                // per src/data/theodotion.js unless a native th value was projected on.
+                if (targetAbbr === "th" && !("th" in versification)) {
+                    return theodotionColumn(srcPassage.book, versification)
                 }
                 return targetAbbr
             }
@@ -472,7 +478,7 @@ class ReferenceParser {
         }
 
         passage.getVersion = function (targetVersion, options = {}) {
-            const targetAbbr = targetVersion.toLowerCase() === "bhs" ? "mt" : targetVersion.toLowerCase()
+            const targetAbbr = VersionHandler.normalizeVersion(targetVersion)
             return computeConverted(this, targetAbbr, options)
         }
         passage.getLXX = function (options = {}) {
@@ -490,8 +496,11 @@ class ReferenceParser {
         passage.getEnglish = function () {
             return this.getVersion("eng")
         }
+        passage.getTheodotion = function () {
+            return this.getVersion("th")
+        }
         passage.convertVersion = function (targetVersion, options = {}) {
-            const targetAbbr = targetVersion.toLowerCase() === "bhs" ? "mt" : targetVersion.toLowerCase()
+            const targetAbbr = VersionHandler.normalizeVersion(targetVersion)
 
             // Check if any passages have versification data
             const hasVersification = this.passages.some((p) => p.versification)
@@ -829,7 +838,7 @@ class ReferenceParser {
 
         if (sblEntry) {
             const { value, abbr } = sblEntry[1]
-            const ref = reference.replace(/\s*(LXX|MT)$/i, "").trim()
+            const ref = reference.replace(/\s*(LXX-Th|LXX|MT)$/i, "").trim()
             const suffix = passage.version.value !== "ENG" ? " " + passage.version.value : ""
             passage.abbr = abbr ? `${value}. ${ref}${suffix}` : `${value} ${ref}${suffix}`
         } else {

@@ -12,6 +12,7 @@ class VersionHandler {
         LXX: { name: "Septuagint", value: "LXX", abbreviation: "lxx" },
         MT: { name: "Masoretic Text", value: "MT", abbreviation: "mt" },
         BHS: { name: "Masoretic Text", value: "MT", abbreviation: "mt" }, // BHS is alias for MT
+        TH: { name: "Theodotion", value: "LXX-Th", abbreviation: "th" },
     }
 
     /**
@@ -22,7 +23,9 @@ class VersionHandler {
     static normalizeVersion(version) {
         if (!version) return "eng"
         const lowerVersion = version.toLowerCase()
-        return lowerVersion === "bhs" ? "mt" : lowerVersion
+        if (lowerVersion === "bhs") return "mt"
+        if (lowerVersion === "lxx-th" || lowerVersion === "th") return "th"
+        return lowerVersion
     }
 
     /**
@@ -32,14 +35,12 @@ class VersionHandler {
      * @returns {Object} Version object
      */
     static getVersion(version, testament) {
-        const effectiveVersion = version || "eng"
-        const lowerVersion = effectiveVersion.toLowerCase()
+        const normalized = VersionHandler.normalizeVersion(version)
 
-        if (lowerVersion === "lxx" && testament === "old") {
-            return VersionHandler.VERSIONS.LXX
-        }
-        if ((lowerVersion === "mt" || lowerVersion === "bhs") && testament === "old") {
-            return VersionHandler.VERSIONS.MT
+        if (testament === "old") {
+            if (normalized === "lxx") return VersionHandler.VERSIONS.LXX
+            if (normalized === "mt") return VersionHandler.VERSIONS.MT
+            if (normalized === "th") return VersionHandler.VERSIONS.TH
         }
         return VersionHandler.VERSIONS.ENG
     }
@@ -51,7 +52,7 @@ class VersionHandler {
      */
     static isValidVersion(version) {
         const normalized = VersionHandler.normalizeVersion(version)
-        return ["eng", "lxx", "mt"].includes(normalized)
+        return ["eng", "lxx", "mt", "th"].includes(normalized)
     }
 
     /**
@@ -67,6 +68,8 @@ class VersionHandler {
                 return VersionHandler.VERSIONS.LXX
             case "mt":
                 return VersionHandler.VERSIONS.MT
+            case "th":
+                return VersionHandler.VERSIONS.TH
             case "eng":
             default:
                 return VersionHandler.VERSIONS.ENG

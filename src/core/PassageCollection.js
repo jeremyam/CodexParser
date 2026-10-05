@@ -5,6 +5,7 @@
 
 const PassageUtils = require("../utils/PassageUtils")
 const VersionHandler = require("./VersionHandler")
+const { theodotionValue } = require("../data/theodotion")
 const sblAbbreviations = require("../data/abbr/sbl")
 const { formatOsis, formatOsisNumeric } = require("../format/osis")
 
@@ -98,7 +99,7 @@ class PassageCollection extends Array {
      * @returns {PassageCollection} Converted passages
      */
     getVersion(targetVersion) {
-        const targetAbbr = targetVersion.toLowerCase() === "bhs" ? "mt" : targetVersion.toLowerCase()
+        const targetAbbr = VersionHandler.normalizeVersion(targetVersion)
         const versionObj = VersionHandler.getVersionObject(targetAbbr)
 
         const converted = this.map((passage) => {
@@ -106,8 +107,12 @@ class PassageCollection extends Array {
             cloned.version = versionObj
 
             cloned.passages.forEach((sub) => {
-                if (sub.versification && sub.versification[targetAbbr]) {
-                    const [ch, v] = sub.versification[targetAbbr].split(":").map(Number)
+                const target =
+                    targetAbbr === "th"
+                        ? theodotionValue(passage.book, sub.versification)
+                        : sub.versification?.[targetAbbr]
+                if (target) {
+                    const [ch, v] = target.split(":").map(Number)
                     sub.chapter = ch
                     sub.verse = v
                 }
@@ -144,6 +149,14 @@ class PassageCollection extends Array {
      */
     getBHS() {
         return this.getVersion("mt")
+    }
+
+    /**
+     * Converts passages to Theodotion (LXX-Th) numbering (shorthand for getVersion('th'))
+     * @returns {PassageCollection} Converted passages
+     */
+    getTheodotion() {
+        return this.getVersion("th")
     }
 
     /**

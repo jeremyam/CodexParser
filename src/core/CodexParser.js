@@ -186,7 +186,7 @@ class CodexParser {
 
     /**
      * Sets the Bible version for parsing
-     * @param {string} version - The version (e.g., "lxx", "mt", "eng")
+     * @param {string} version - The version (e.g., "lxx", "mt", "lxx-th", "eng")
      * @returns {CodexParser} The parser instance
      */
     bibleVersion(version) {
@@ -208,7 +208,7 @@ class CodexParser {
     }
 
     /**
-     * Upgrades validity for MT/LXX-tagged references whose verse numbers fall
+     * Upgrades validity for MT/LXX/LXX-Th-tagged references whose verse numbers fall
      * outside the English chapter bounds but are attested native numbering:
      * every expanded verse must carry a versification entry that reverse-maps
      * this exact native chapter:verse (e.g. "Malachi 3:19 MT" → eng 4:1).
@@ -218,7 +218,7 @@ class CodexParser {
         for (const passage of this.#passages) {
             if (passage.valid === true) continue
             const abbr = passage.version?.abbreviation
-            if (abbr !== "mt" && abbr !== "lxx") continue
+            if (abbr !== "mt" && abbr !== "lxx" && abbr !== "th") continue
             if (!passage.passages.length) continue
             const covered = passage.passages.every((sub) => {
                 // A verse with no table entry at all reads the same natively as in

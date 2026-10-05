@@ -2,6 +2,35 @@
 
 All notable changes to this project are documented here. For full details, see the Release Notes in README and the GitHub Releases page.
 
+## 0.7.0 — 2026-10-05
+
+### Added
+
+- **Theodotion (`LXX-Th`) as a version.** A trailing `LXX-Th` tags a reference as
+  Theodotion (`version: { name: "Theodotion", value: "LXX-Th", abbreviation: "th" }`), the
+  way `LXX` and `MT` already do, and `getTheodotion()` / `getVersion("th")` /
+  `convertVersion("LXX-Th")` convert into it on passages and collections.
+  `bibleVersion("lxx-th")` parses untagged input as Theodotion. Only the full token is
+  recognized; a bare `Th` would collide with Thessalonians abbreviations.
+- **Theodotion numbering is a rule over the existing columns, not a new column**
+  (`src/data/theodotion.js`), so stored `versification` objects keep their shape:
+  - Daniel 3-4 read the `mt` column. Theodotion is numbered without the Greek additions,
+    so English 3:24-30 stay 3:24-30 (the Old Greek's 3:91-97), English 4:1-3 are 3:31-33,
+    and English 4:4-37 are 4:1-34. The Old Greek's additions (LXX 3:24-90) have no
+    Theodotion counterpart.
+  - Everywhere else Theodotion reads the `lxx` column: Daniel 5:31 and chapter 6 keep the
+    English division, as both Göttingen Greek texts print them, and Jeremiah's θ′
+    supplements land at Ziegler's coordinates (MT 33:14-26 → 40:14-26, 39:4-13 → 46:4-13,
+    48:45-47 → 31:45-47, 49:6 → 30:22).
+  - Theodotion-native references ("Daniel 3:31 LXX-Th") reverse-map to English (4:1) and
+    count as valid outside the English chapter bounds, like MT- and LXX-tagged ones.
+
+### Changed
+
+- `getVersion` / `convertVersion` on passages and collections normalize the target through
+  `VersionHandler.normalizeVersion`, so `"BHS"`, `"LXX-Th"` and `"th"` resolve the same
+  way everywhere.
+
 ## 0.6.21 — 2026-09-24
 
 ### Fixed
