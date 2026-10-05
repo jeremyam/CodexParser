@@ -54,16 +54,22 @@ class PassageUtils {
      * @param {string} book - The book name
      * @param {number} chapter - The chapter number
      * @param {Array<string|number>} verses - Array of verses or ranges
+     * @param {number} [nativeLast] - Last verse of this chapter in a tagged reference's own
+     *     numbering, when it runs past the English chapter
      * @returns {Object[]} Array of verse objects
      */
-    static expandVerses(book, chapter, verses) {
+    static expandVerses(book, chapter, verses, nativeLast) {
         const passages = []
         const chapterVerses = PassageUtils.getChapterVerses(book, chapter)
 
         verses.forEach((verse) => {
             if (typeof verse === "string" && verse.includes("-")) {
                 const [start, end] = verse.split("-").map(Number)
-                const last = chapterVerses[chapterVerses.length - 1]
+                const englishLast = chapterVerses[chapterVerses.length - 1]
+                // A tagged (MT/LXX/LXX-Th) reference may run past the English chapter:
+                // Ziegler's Jeremiah 40 ends at 26 where English 40 ends at 16.
+                const last =
+                    englishLast !== undefined && nativeLast > englishLast ? nativeLast : englishLast
                 // A range starting past the English chapter bounds is native
                 // (MT/LXX) numbering — trust the typed range instead of capping.
                 const cap = last !== undefined && start > last ? end : last

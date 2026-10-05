@@ -25,6 +25,15 @@ All notable changes to this project are documented here. For full details, see t
   - Theodotion-native references ("Daniel 3:31 LXX-Th") reverse-map to English (4:1) and
     count as valid outside the English chapter bounds, like MT- and LXX-tagged ones.
 
+### Fixed
+
+- **A tagged range that straddles the English chapter end is no longer cut short.**
+  "Jeremiah 40:14-26 LXX" expanded to 40:14-16 because English Jeremiah 40 ends at v. 16,
+  though Ziegler's chapter runs to 26; "Daniel 3:24-33 MT" stopped at 3:30 and
+  "Psalms 51:1-21 MT" at 51:19 the same way. MT-, LXX- and LXX-Th-tagged ranges now run to
+  the last verse the versification table gives that chapter in the tagged numbering.
+  Untagged ranges are still capped at the English chapter.
+
 ### Changed
 
 - `getVersion` / `convertVersion` on passages and collections normalize the target through

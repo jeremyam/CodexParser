@@ -9,7 +9,8 @@ const sblAbbreviations = require("../data/abbr/sbl")
 const PassageUtils = require("../utils/PassageUtils")
 const PassageValidator = require("./PassageValidator")
 const VersionHandler = require("./VersionHandler")
-const { theodotionColumn } = require("../data/theodotion")
+const { theodotionColumn, theodotionValue } = require("../data/theodotion")
+const versified = require("../data/versified")
 const { formatOsis, formatOsisNumeric } = require("../format/osis")
 
 /**
@@ -725,6 +726,27 @@ class ReferenceParser {
     }
 
     /**
+     * Last verse of a chapter in a native numbering (MT, LXX, LXX-Th), read from
+     * the versification table, or undefined for English or when the table has no
+     * verse in that chapter.
+     * @private
+     */
+    static #nativeChapterEnd(book, chapter, abbr) {
+        if (!["mt", "lxx", "th"].includes(abbr)) return undefined
+        const table = versified[book]
+        if (!table) return undefined
+        let last
+        for (const entry of Object.values(table)) {
+            const native = abbr === "th" ? theodotionValue(book, entry) : entry[abbr]
+            if (!native) continue
+            for (const e of ReferenceParser.expandVersificationValue(native)) {
+                if (e.chapter === Number(chapter) && (last === undefined || e.verse > last)) last = e.verse
+            }
+        }
+        return last
+    }
+
+    /**
      * Populates passage with expanded verse objects
      * @private
      */
@@ -743,7 +765,8 @@ class ReferenceParser {
             type === ReferenceParser.REFERENCE_TYPES.COMMA_SEPARATED ||
             type === ReferenceParser.REFERENCE_TYPES.CHAPTER_VERSE_RANGE
         ) {
-            return PassageUtils.expandVerses(book, chapter, verses)
+            const nativeLast = ReferenceParser.#nativeChapterEnd(book, chapter, passage.version?.abbreviation)
+            return PassageUtils.expandVerses(book, chapter, verses, nativeLast)
         }
 
         if (type === ReferenceParser.REFERENCE_TYPES.CHAPTER_RANGE) {

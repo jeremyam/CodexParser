@@ -122,3 +122,24 @@ test("combine merges a Theodotion-native passage with an English one", () => {
     assert.equal(combined.scripture.passage, "Daniel 4:1,4")
     assert.equal(combined.version.value, "ENG")
 })
+
+// ---------------------------------------------------------------------------
+// Tagged ranges that run past the English chapter
+// ---------------------------------------------------------------------------
+test("a tagged range runs to the native chapter end, not the English one", () => {
+    // English Jeremiah 40 ends at v. 16; Ziegler's 40 (θ′ supplement) ends at 26.
+    const jer = first("Jeremiah 40:14-26 LXX-Th")
+    assert.equal(jer.passages.length, 13)
+    assert.equal(jer.getEnglish().scripture.cv, "33:14-26")
+    assert.equal(first("Jeremiah 40:14-26 LXX").passages.length, 13)
+    // English Daniel 3 ends at v. 30; Theodotion and the MT run to 33.
+    assert.equal(first("Daniel 3:24-33 LXX-Th").getEnglish().scripture.cv, "3:24-30; 4:1-3")
+    assert.equal(first("Daniel 3:24-33 MT").passages.length, 10)
+    assert.equal(first("Psalms 51:1-21 MT").passages.length, 21)
+})
+
+test("an untagged range is still capped at the English chapter", () => {
+    const p = first("Jeremiah 40:14-26")
+    assert.equal(p.passages.length, 3)
+    assert.notEqual(p.valid, true)
+})
