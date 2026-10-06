@@ -113,7 +113,20 @@ test("Theodotion-native verses map back to English and stay valid", () => {
 test("Theodotion-native verses convert to the MT and the Old Greek", () => {
     const p = first("Daniel 3:31 LXX-Th")
     assert.equal(p.getMT().scripture.cv, "3:31")
-    assert.equal(p.getLXX().scripture.cv, "4:34a")
+    assert.equal(p.getLXX().scripture.cv, "4:34c")
+})
+
+test("Old Greek Daniel 4 lettered verses carry the MT content they print", () => {
+    const lxx = (ref) => first(ref).getLXX().scripture.cv
+    // The proclamation (MT 3:31-33) sits in the OG's 4:34c, not across 34a-c.
+    assert.equal(lxx("Daniel 4:1"), "4:34c")
+    assert.equal(lxx("Daniel 4:3"), "4:34c")
+    // MT 4:30 = OG 30 + 30a-b; MT 4:31 = OG 30c; MT 4:32 is an OG minus.
+    assert.equal(lxx("Daniel 4:33"), "4:30,30a,30b")
+    assert.equal(lxx("Daniel 4:34"), "4:30c")
+    assert.equal(lxx("Daniel 4:37"), "4:34")
+    const suffixes = first("Daniel 4:33").getLXX().passages.map((x) => `${x.verse}${x.verseSuffix || ""}`)
+    assert.deepEqual(suffixes, ["30", "30a", "30b"])
 })
 
 test("combine merges a Theodotion-native passage with an English one", () => {

@@ -2,6 +2,22 @@
 
 All notable changes to this project are documented here. For full details, see the Release Notes in README and the GitHub Releases page.
 
+## 0.7.1 — 2026-10-06
+
+### Fixed
+
+- **Old Greek Daniel 4 points at the lettered verses that hold the text.** Read against
+  Göttingen XVI,2 (Munnich), whose OG numbers chapter 4 like the MT and prints its pluses as
+  4:14a, 30a-c and 34a-c:
+  - English 4:1-3 (MT 3:31-33), the proclamation "to all the nations … peace be multiplied …
+    his kingdom is for ever", → `4:34c` for all three (was `4:34a`, `4:34b`, `4:34c`). 34a is
+    the king's vow and 34b the frame of the encyclical letter, both OG pluses.
+  - English 4:33 (MT 4:30) → `4:30,30a,30b` (was `4:30`): until morning all will be
+    fulfilled; bound seven years and fed grass like an ox; hair like eagle's wings.
+  - English 4:34 (MT 4:31) → `4:30c` (was `4:31`, which the OG does not have): at the end of
+    the seven years the time of redemption came.
+  - English 4:35 (MT 4:32) stays an OG minus.
+
 ## 0.7.0 — 2026-10-05
 
 ### Added

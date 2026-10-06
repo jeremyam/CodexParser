@@ -508,13 +508,17 @@ module.exports = {
         eng: null,
     },
     // Chapter 4
+    // Edition note (verified against Göttingen XVI,2 2026-10-06): the OG prints the
+    // proclamation of MT 3:31-33 inside its own 4:34c ("to all the nations … peace be
+    // multiplied … his kingdom is for ever"). 34a (the king's vow) and 34b (the frame of
+    // the encyclical letter) are OG pluses with no MT counterpart.
     "3:31": {
-        lxx: "4:34a",
+        lxx: "4:34c",
         mt: "3:31",
         eng: "4:1",
     },
     "3:32": {
-        lxx: "4:34b",
+        lxx: "4:34c",
         mt: "3:32",
         eng: "4:2",
     },
@@ -524,12 +528,12 @@ module.exports = {
         eng: "4:3",
     },
     "4:1": {
-        lxx: "4:34a",
+        lxx: "4:34c",
         mt: "3:31",
         eng: "4:1",
     },
     "4:2": {
-        lxx: "4:34b",
+        lxx: "4:34c",
         mt: "3:32",
         eng: "4:2",
     },
@@ -683,13 +687,18 @@ module.exports = {
         mt: "4:29",
         eng: "4:32",
     },
+    // The OG tells the madness and restoration in its own lettered verses: 30 ("until
+    // morning all will be fulfilled"), 30a (bound seven years, fed grass like an ox) and
+    // 30b (hair like eagle's wings, nails like a lion's) carry MT 4:30; 30c (at the end of
+    // the seven years, the time of redemption, the angel's call) carries MT 4:31. MT 4:32
+    // is an OG minus.
     "4:33": {
-        lxx: "4:30",
+        lxx: "4:30,30a,30b",
         mt: "4:30",
         eng: "4:33",
     },
     "4:34": {
-        lxx: "4:31",
+        lxx: "4:30c",
         mt: "4:31",
         eng: "4:34",
     },
