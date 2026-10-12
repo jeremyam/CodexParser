@@ -653,4 +653,38 @@ module.exports = {
         mt: "30:17",
         eng: "30:16",
     },
+    // Wevers closes the previous verse with the opening words of the Hebrew one,
+    // marked by its number in parentheses: "(10) τῶν υἱῶν Ἰωσήφ …" ends G 1:9,
+    // "(15) ἡ συναγωγὴ κυρίῳ." ends G 15:14, "(7) καὶ ἐγενήθη πνεῦμα θεοῦ ἐπʼ αὐτῷ·"
+    // ends G 23:6 (art. GSIII1NU). The Hebrew verse maps to the range.
+    "1:9": {
+        lxx: "1:9",
+        mt: "1:9",
+        eng: "1:9",
+    },
+    "1:10": {
+        lxx: "1:9-10",
+        mt: "1:10",
+        eng: "1:10",
+    },
+    "15:14": {
+        lxx: "15:14",
+        mt: "15:14",
+        eng: "15:14",
+    },
+    "15:15": {
+        lxx: "15:14-15",
+        mt: "15:15",
+        eng: "15:15",
+    },
+    "23:6": {
+        lxx: "23:6",
+        mt: "23:6",
+        eng: "23:6",
+    },
+    "23:7": {
+        lxx: "23:6-7",
+        mt: "23:7",
+        eng: "23:7",
+    },
 }

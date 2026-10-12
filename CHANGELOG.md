@@ -2,6 +2,32 @@
 
 All notable changes to this project are documented here. For full details, see the Release Notes in README and the GitHub Releases page.
 
+## 0.7.2 — 2026-10-12
+
+### Fixed
+
+- **Exodus 36-39 map every Hebrew verse to the Göttingen Greek that holds it.** Read against
+  Wevers' text and his table of the two orders (Einleitung C.5, p. 51). Before, most of the
+  construction account had no entry and fell through to the same number in the Greek, which
+  there holds other material: English 36:10 (the curtains) returned the priestly garments,
+  37:19-21 (the lampstand's cups) the tabernacle record and its craftsmen, 37:23-28
+  nothing. Now:
+  - MT 36:10-34, 37:11-12, 19-21, 24-28, 38:6 and 39:39, which Wevers prints only as
+    bracketed hexaplaric additions, are LXX minuses.
+  - MT 37:4 → `38:11`, 37:13 → `38:10`, 37:23 (the seven lamps) → `38:17`, 38:1-2 → `38:22`,
+    38:5 and 38:7 → `38:24`.
+  - MT 38:28-31 → `39:6`, `39:7`, `39:8,10`, `39:9` (were one verse early), and MT 39:17-31
+    → `36:25-40` (were one or two verses early).
+  - Where Wevers prints an MT number in parentheses inside a verse, the Hebrew verse maps to
+    the range that holds it: 37:17 → `38:13-14`, 37:18 → `38:14-15`, 38:14 → `37:11-12`,
+    38:26 → `39:2-3`, 38:27 → `39:4-5`, 39:16 → `36:23-24`, 39:30 → `36:38-39`,
+    39:32 → `39:10-11`, 39:37 → `39:16-17`, 39:40 → `39:20-21`; 39:34 → `39:21`,
+    39:35 → `39:15`, 39:36 → `39:18`, 39:38 → `39:16`, 39:41 → `39:19`.
+- **Hebrew verses that a Göttingen boundary splits map to the covering range**, as Genesis
+  31:48 and Lamentations 1:16 already did: Leviticus 11:15, 23:41, 25:53, 26:6; Numbers 1:10,
+  15:15, 23:7; Jeremiah 47:2 (Ziegler 29:1-2); 2 Chronicles 4:22, 30:12, 31:6, 35:20 (Hanhart).
+- `lxx-editions` lists 2 Chronicles as Göttingen (Hanhart 2014).
+
 ## 0.7.1 — 2026-10-06
 
 ### Fixed

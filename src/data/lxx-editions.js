@@ -28,7 +28,7 @@ module.exports = {
     "1 Kings": "rahlfs",
     "2 Kings": "rahlfs",
     "1 Chronicles": "rahlfs",
-    "2 Chronicles": "rahlfs",
+    "2 Chronicles": "gottingen", // Hanhart 2014 (Paralipomenon II)
     Ezra: "gottingen", // 1 Esdras / 2 Esdras (Hanhart)
     Nehemiah: "gottingen",
     Esther: "gottingen", // Hanhart 1983

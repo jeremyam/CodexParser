@@ -166,4 +166,52 @@ module.exports = {
         mt: "14:14",
         eng: "14:15",
     },
+    // Hanhart closes the previous verse with the opening words of the Hebrew one,
+    // marked by the Hebrew number in parentheses: "(22) καὶ τὰς φιάλας …" ends
+    // G 4:21, "(12) καὶ εἰς Ἰούδαν." ends G 30:11, "(6) οἱ υἱοὶ Ἰσραὴλ καὶ Ἰούδα."
+    // ends G 31:5, "(20) μετὰ ταῦτα πάντα, ἃ ἥδρασεν Ἰωσίας ἐν τῷ οἴκῳ." ends G 35:19
+    // (art. CH2.4, 30, 31, 35). The Hebrew verse maps to the range. The lettered
+    // verses 35:19a-d between them are Greek pluses (subverse docs) and are not
+    // part of either range. MT 5:1a ("the work was finished") likewise ends G 4:22,
+    // but a value cannot cross a chapter, so MT 5:1 keeps G 5:1.
+    "4:21": {
+        lxx: "4:21",
+        mt: "4:21",
+        eng: "4:21",
+    },
+    "4:22": {
+        lxx: "4:21-22",
+        mt: "4:22",
+        eng: "4:22",
+    },
+    "30:11": {
+        lxx: "30:11",
+        mt: "30:11",
+        eng: "30:11",
+    },
+    "30:12": {
+        lxx: "30:11-12",
+        mt: "30:12",
+        eng: "30:12",
+    },
+    "31:5": {
+        lxx: "31:5",
+        mt: "31:5",
+        eng: "31:5",
+    },
+    "31:6": {
+        lxx: "31:5-6",
+        mt: "31:6",
+        eng: "31:6",
+    },
+    "35:19": {
+        lxx: "35:19",
+        mt: "35:19",
+        eng: "35:19",
+    },
+    "35:20": {
+        lxx: "35:19-20",
+        mt: "35:20",
+        eng: "35:20",
+    },
 }

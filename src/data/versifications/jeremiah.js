@@ -3052,8 +3052,10 @@ module.exports = {
         mt: "47:1",
         eng: "47:1",
     },
+    // Ziegler prints "(2) Τάδε λέγει κύριος" before his verse 2, so the formula
+    // that opens MT 47:2 closes G 29:1 (art. JE.29); MT 47:2 spans G 29:1-2.
     "47:2": {
-        lxx: "29:2",
+        lxx: "29:1-2",
         mt: "47:2",
         eng: "47:2",
     },

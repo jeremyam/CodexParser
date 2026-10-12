@@ -342,4 +342,50 @@ module.exports = {
         mt: "7:38",
         eng: "7:38",
     },
+    // Where Wevers' verse division differs from the Hebrew, he prints the Hebrew
+    // (= Rahlfs) number in parentheses and the words before his own next number
+    // close the previous verse: "(15) καὶ κόρακα …" ends G 11:14, "(41) τοῦ
+    // ἐνιαυτοῦ·" ends G 23:40, "(53) ὡς μισθωτὸς" ends G 25:52, "(6) καὶ πόλεμος …"
+    // ends G 26:5 (art. GSII02LE). The Hebrew verse therefore spans two Göttingen
+    // verses and maps to the range, as with Genesis 31:48.
+    "11:14": {
+        lxx: "11:14",
+        mt: "11:14",
+        eng: "11:14",
+    },
+    "11:15": {
+        lxx: "11:14-15",
+        mt: "11:15",
+        eng: "11:15",
+    },
+    "23:40": {
+        lxx: "23:40",
+        mt: "23:40",
+        eng: "23:40",
+    },
+    "23:41": {
+        lxx: "23:40-41",
+        mt: "23:41",
+        eng: "23:41",
+    },
+    "25:52": {
+        lxx: "25:52",
+        mt: "25:52",
+        eng: "25:52",
+    },
+    "25:53": {
+        lxx: "25:52-53",
+        mt: "25:53",
+        eng: "25:53",
+    },
+    "26:5": {
+        lxx: "26:5",
+        mt: "26:5",
+        eng: "26:5",
+    },
+    "26:6": {
+        lxx: "26:5-6",
+        mt: "26:6",
+        eng: "26:6",
+    },
 }
