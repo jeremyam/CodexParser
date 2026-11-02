@@ -2,6 +2,30 @@
 
 All notable changes to this project are documented here. For full details, see the Release Notes in README and the GitHub Releases page.
 
+## 0.7.3 — 2026-11-02
+
+### Changed
+
+- **`Ez` now resolves to Ezekiel, not Ezra.** The sources use it that way: NA and Muraoka
+  print it for Ezekiel, and 900 printed `Ez` citations in the project Library have a chapter
+  above 10, which Ezra does not have. `Ezr` and `Ezra` still read Ezra. This reverses the
+  0.6.0 change that restored Ezra.
+
+### Fixed
+
+- **A book name no longer matches the tail of a word.** The scanner tested for a book at
+  every character and never looked behind it, so `page 12` read as Genesis 12:1 (`ge 12`),
+  `the 3` as Hebrews 3:1 (`he 3`), `Jubilees 3:1` as Esther 3:1 (`es 3:1`), and
+  `Sap 3:1` as Revelation 3:1 (`ap 3:1`). A book must now start a word; a digit may still
+  precede it (`2Sam 1:1`). The exported `bookRegex` and `scripturesRegex` carry the same
+  rule.
+- **A version tag now belongs only to its own reference.** The scanner took `MT`, `LXX`, or
+  `LXX-Th` from anywhere later in the text, in any case, and then skipped that many
+  characters. So `Gen 1:1; Mt 5:3` tagged Genesis as MT, `Ezek 13:5 (MT 3:4)` ended at
+  `(M`, and in a sentence with a tag further on, the next book lost its first letters and
+  its reference was dropped. A tag must now follow the reference or the rest of its list
+  (`Ps 1:1; 2:2 LXX`), and a tag followed by a number is a book (`Mt 5:3`).
+
 ## 0.7.2 — 2026-10-12
 
 ### Fixed

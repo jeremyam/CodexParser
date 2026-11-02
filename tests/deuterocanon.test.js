@@ -104,7 +104,10 @@ test("converted passages keep their helpers, so conversions chain", () => {
     assert.equal(typeof nt.getEnglish, "function")
 })
 
-test("Ez abbreviation resolves to Ezra; Ezek still wins for Ezekiel", () => {
-    assert.equal(first("Ez 1:3").book, "Ezra")
+test("Ez abbreviation resolves to Ezekiel; Ezr still reads Ezra", () => {
+    assert.equal(first("Ez 34:2").book, "Ezekiel")
+    assert.equal(first("Ez 1:3").book, "Ezekiel")
     assert.equal(first("Ezek 1:3").book, "Ezekiel")
+    assert.equal(first("Ezr 1:3").book, "Ezra")
+    assert.equal(first("Ezra 1:3").book, "Ezra")
 })

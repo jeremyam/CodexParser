@@ -322,3 +322,50 @@ test("replace() swaps references for abbreviated form", () => {
     assert.ok(out.includes("Gen. 1:1"), `expected abbreviated ref in: ${out}`)
     assert.ok(!out.includes("Genesis 1:1"), "full name should be replaced")
 })
+
+test("a book name does not match the tail of a word (0.7.3)", () => {
+    for (const text of ["page 12", "the 3", "Jubilees 3:1", "Sap 3:1", "see Jubilees 3:1 and page 12"]) {
+        assert.equal(all(text).length, 0, text)
+    }
+})
+
+test("a book may follow a digit or punctuation, and is still found after a false tail (0.7.3)", () => {
+    assert.equal(first("2Sam 1:1").book, "2 Samuel")
+    assert.equal(first("1Cor 13:4").book, "1 Corinthians")
+    assert.equal(first("(cf.Gen 1:1)").book, "Genesis")
+    const found = first("see page 12 and John 3:16")
+    assert.equal(found.book, "John")
+    assert.equal(found.startIndex, 16)
+})
+
+test("the exported book regexes keep to word starts (0.7.3)", () => {
+    const { bookRegex, scripturesRegex } = require("../src/utils/regex")
+    assert.deepEqual("page 12".match(bookRegex), null)
+    assert.deepEqual("Jubilees 3:1".match(scripturesRegex), null)
+    assert.ok("see John 3:16".match(bookRegex))
+    assert.ok("see John 3:16".match(scripturesRegex))
+})
+
+test("a version tag belongs only to its own reference (0.7.3)", () => {
+    const refs = all("Gen 1:1; Mt 5:3")
+    assert.equal(refs[0].book, "Genesis")
+    assert.notEqual(refs[0].version?.value, "MT")
+    assert.equal(refs[0].originalText, "Gen 1:1")
+    assert.equal(refs[1].book, "Matthew")
+})
+
+test("a tag further on neither tags a reference nor drops the next book (0.7.3)", () => {
+    const text = "Isa. 13:6, 9; Ezek. 13:5; Joel 1:15 and in Ps 18:25 MT"
+    assert.deepEqual([...all(text)].map((p) => p.book), ["Isaiah", "Ezekiel", "Joel", "Psalms"])
+    assert.equal(all(text)[0].originalText, "Isa. 13:6, 9")
+})
+
+test("an adjacent tag still applies, across its own list too (0.7.3)", () => {
+    assert.equal(first("Ps 21:2 LXX").originalText, "Ps 21:2 LXX")
+    assert.equal(first("Ps 22:2 MT").originalText, "Ps 22:2 MT")
+    assert.equal(first("Dan 7:13 LXX-Th").originalText, "Dan 7:13 LXX-Th")
+    const list = all("Ps 21:2; 22:3 LXX")
+    assert.equal(list[0].version?.value, list[1].version?.value)
+    assert.equal(list[0].originalText, "Ps 21:2")
+    assert.equal(all("Ps 21:2 LXX; Isa 6:9")[1].book, "Isaiah")
+})

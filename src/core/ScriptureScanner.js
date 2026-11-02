@@ -59,6 +59,13 @@ class ScriptureScanner {
             }
             if (i >= lowerCaseText.length) break
 
+            // A book starts a word: "ge 12" inside "page 12" is not Genesis. A digit
+            // may precede, since a numbered book can run on ("2Sam 1:1").
+            if (i > 0 && /[\p{L}\p{M}]/u.test(lowerCaseText[i - 1])) {
+                i++
+                continue
+            }
+
             // Check for full book names
             for (let j = 0; j < lowercaseBibleFullNames.length; j++) {
                 const book = lowercaseBibleFullNames[j]
@@ -128,6 +135,7 @@ class ScriptureScanner {
                     }
                 }
 
+                let tagEnd = i
                 references.forEach(({ ref, start, end }) => {
                     const type = this.#determineReferenceType(ref)
                     const suffixData = this.#detectSuffix(normalizedText, end)
@@ -138,8 +146,11 @@ class ScriptureScanner {
                     // instead of the old indexOf remapping (which drifted and
                     // truncated references that followed punctuation).
                     let originalStartIndex = start
-                    let originalEndIndex = suffixData ? end + suffixData.length : end
-                    if (suffixData) i += suffixData.length
+                    // An earlier reference in a list shares the tag ("Ps 1:1; 2:2 LXX")
+                    // but ends at its own semicolon, not at the tag.
+                    const ownTag = suffixData && !/\S/.test(normalizedText.slice(end, end + suffixData.gap))
+                    let originalEndIndex = ownTag ? end + suffixData.gap + suffixData.length : end
+                    if (suffixData) tagEnd = Math.max(tagEnd, end + suffixData.gap + suffixData.length)
 
                     // Trim leading separators/whitespace (e.g. after "(", ";", ".")
                     while (
@@ -168,6 +179,7 @@ class ScriptureScanner {
                         originalText: originalText,
                     })
                 })
+                i = tagEnd
             } else {
                 i++
             }
@@ -213,13 +225,17 @@ class ScriptureScanner {
     }
 
     /**
-     * Detects version suffix (LXX-Th, LXX, MT). LXX-Th is tried first so the
-     * Theodotion tag is not read as a bare LXX.
+     * Detects a version suffix (LXX-Th, LXX, MT) on the reference ending at
+     * startIndex. LXX-Th is tried first so the Theodotion tag is not read as a
+     * bare LXX. The tag must belong to this reference: only the rest of its own
+     * list may come between them ("Ps 1:1; 2:2 LXX"). A number after it makes it
+     * a book, not a tag ("Mt 5:3"). gap is the distance from startIndex to the tag.
      * @private
      */
     #detectSuffix(text, startIndex) {
-        const suffixMatch = text.substring(startIndex).match(/\b(LXX-Th|LXX|MT)\b/i)
-        return suffixMatch ? { suffix: suffixMatch[0].toUpperCase(), length: suffixMatch[0].length } : null
+        const suffixMatch = /^([\d:,;\-\s]*)(LXX-Th|LXX|MT)\b(?!\s*\d)/i.exec(text.substring(startIndex))
+        if (!suffixMatch) return null
+        return { suffix: suffixMatch[2].toUpperCase(), gap: suffixMatch[1].length, length: suffixMatch[2].length }
     }
 
     /**

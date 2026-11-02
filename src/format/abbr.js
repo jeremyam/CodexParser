@@ -296,7 +296,7 @@ const abbrevations = {
     "3J": "3 John",
     Jd: "Jude",
     Ap: "Revelation",
-    Ez: "Ezra",
+    Ez: "Ezekiel",
 
     // Deuterocanonical books (Septuagint)
     Tob: "Tobit",
