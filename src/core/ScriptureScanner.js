@@ -103,7 +103,7 @@ class ScriptureScanner {
                         break
                     }
                     if (normalizedText[i] === ";") {
-                        const formattedReference = chapterVerse.trim()
+                        const formattedReference = this.#cleanReference(chapterVerse)
                         if (formattedReference) {
                             const refEndIndex = i
                             references.push({
@@ -124,7 +124,7 @@ class ScriptureScanner {
                 }
 
                 if (chapterVerse.trim().length > 0) {
-                    const formattedReference = chapterVerse.trim()
+                    const formattedReference = this.#cleanReference(chapterVerse)
                     if (formattedReference) {
                         const refEndIndex = i
                         references.push({
@@ -186,6 +186,17 @@ class ScriptureScanner {
         }
 
         return found
+    }
+
+    /**
+     * The chapter/verse text of one reference, without the separator that ended it. A comma before the next
+     * book ("Jn 3:16, Rom 8:28") belongs to the sentence, not to the verse list; kept, it showed up in the
+     * abbreviation ("John 3:16,") and replace() printed it twice.
+     * @param {string} chapterVerse - Raw chapter/verse text as scanned
+     * @returns {string}
+     */
+    #cleanReference(chapterVerse) {
+        return chapterVerse.trim().replace(/[\s,]+$/, "")
     }
 
     /**

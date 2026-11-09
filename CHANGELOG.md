@@ -2,6 +2,16 @@
 
 All notable changes to this project are documented here. For full details, see the Release Notes in README and the GitHub Releases page.
 
+## 0.7.4 — 2026-11-09
+
+### Fixed
+
+- **A comma after a reference no longer sticks to it.** In running text such as
+  `"Jn 3:16, Rom 8:28"` the comma before the next book stayed on the first reference, so its
+  `abbr` read `John 3:16,` and `replace()` printed the comma twice (`John 3:16,, Rom. 8:28`).
+  The scanner now drops a trailing comma from each reference; commas inside a verse list
+  (`Ps 51:1-4, 6`) are unchanged, as are `startIndex`, `endIndex` and `originalText`.
+
 ## 0.7.3 — 2026-11-02
 
 ### Changed

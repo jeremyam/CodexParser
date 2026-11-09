@@ -113,6 +113,17 @@ test("replace() rewrites to abbreviations or full names in place", () => {
     assert.equal(fullParser.replace(text, false), "But he turned —Matthew 16:23 a. Luke 1:1 end")
 })
 
+test("a comma before the next book stays in the sentence, not the reference", () => {
+    const text = "See Jn 3:16, Rom 8:28-30, and Ps 51:1-4, 6."
+    const parser = new CodexParser()
+    parser.parse(text)
+    assert.deepEqual(
+        [...parser.getPassages()].map((p) => p.abbr),
+        ["John 3:16", "Rom. 8:28-30", "Ps. 51:1-4, 6"]
+    )
+    assert.equal(parser.replace(text), "See John 3:16, Rom. 8:28-30, and Ps. 51:1-4, 6.")
+})
+
 test("replace() expands a chapter-switching comma list into '; '-joined refs", () => {
     const parser = new CodexParser()
     const text = "Read Daniel 8:16-18,9:21,23 today"
